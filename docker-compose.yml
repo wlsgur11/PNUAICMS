@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────
+# 교내 서버 자체 호스팅용 (나중 단계).
+#   docker compose up -d
+# Supabase 에서 옮겨올 때: pg_dump 로 받은 데이터를 db 컨테이너에 복원하고
+# app 의 DATABASE_URL 을 아래 로컬 db 로 바꾸면 끝.
+# ─────────────────────────────────────────────────────────
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cms
+      POSTGRES_PASSWORD: change-me-please
+      POSTGRES_DB: cms
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: 'postgresql://cms:change-me-please@db:5432/cms'
+      DIRECT_URL: 'postgresql://cms:change-me-please@db:5432/cms'
+      DEMO_USER_EMAIL: 'demo@pusan.ac.kr'
+      DEMO_USER_NAME: '교내 사용자'
+      # 운영 전환 시 NextAuth(Google) 환경변수를 여기에 추가
+    ports:
+      - '3000:3000'
+
+volumes:
+  pgdata:
