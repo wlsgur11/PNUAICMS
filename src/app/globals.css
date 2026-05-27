@@ -243,3 +243,55 @@ table.data-table { width: 100%; border-collapse: collapse; }
 .muted { color: var(--slate-400); }
 .hidden { display: none !important; }
 .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--indigo-600); font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+
+/* ─────────────────────────────────────────────────────────
+   모바일 대응 (태블릿/폰)
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* 사이드바 → 상단 가로 바 */
+  .app-shell { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: static;
+    flex-direction: row; align-items: center; flex-wrap: wrap;
+    gap: 8px 12px; padding: 12px 16px;
+  }
+  .brand { margin-bottom: 0; text-align: left; display: flex; align-items: center; gap: 8px; }
+  .brand-logo { font-size: 22px; }
+  .brand-name { font-size: 18px; margin-top: 0; }
+  .brand-sub, .brand-divider, .sidebar-footer { display: none; }
+  .nav { flex-direction: row; flex-wrap: wrap; gap: 6px; width: 100%; }
+  .nav-item { padding: 8px 12px; font-size: 13px; }
+
+  /* 본문 여백 축소 */
+  .main { padding: 16px; }
+  .page-head { flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .page-title { font-size: 20px; }
+  .page-date { font-size: 12px; }
+
+  /* 카드/그리드 1열 */
+  .card { padding: 16px; }
+  .card + .card { margin-top: 16px; }
+  .form-grid, .collab-grid, .detail-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .stat-card { padding: 16px; gap: 12px; }
+  .stat-icon { width: 44px; height: 44px; font-size: 20px; }
+  .stat-meta .stat-value { font-size: 24px; }
+
+  /* 필터바: 입력/셀렉트 전체폭 */
+  .filter-bar { padding: 12px; gap: 8px; }
+  .filter-bar input, .filter-bar select { min-width: 0; flex: 1 1 100%; }
+  .filter-bar .spacer { display: none; }
+
+  /* 표는 가로 스크롤 (짓눌림 방지) */
+  .table-wrap { overflow-x: auto; }
+  table.data-table { min-width: 560px; }
+
+  /* 모달/상세 라벨 */
+  .modal-card { margin-top: 24px; padding: 20px; }
+  .info-label { min-width: 72px; }
+  .ellipsis { max-width: 200px; }
+}
+
+@media (max-width: 420px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
