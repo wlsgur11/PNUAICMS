@@ -11,8 +11,17 @@ const NAV = [
   { href: '/grid', label: '엑셀 입력', icon: '📋' },
 ];
 
-export default function Sidebar() {
+type Props = {
+  userEmail?: string | null;
+  userName?: string | null;
+  logoutSlot?: React.ReactNode;
+};
+
+export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
   const pathname = usePathname();
+
+  // 로그인 페이지에는 사이드바 숨김 (전체 화면 로그인 UI)
+  if (pathname === '/login') return null;
 
   // 가장 길게(가장 구체적으로) 일치하는 항목 하나만 활성 처리.
   const activeHref = (() => {
@@ -46,6 +55,13 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+      {userEmail && (
+        <div className="sidebar-user">
+          <div className="user-name">{userName || userEmail.split('@')[0]}</div>
+          <div className="user-email">{userEmail}</div>
+          {logoutSlot}
+        </div>
+      )}
       <div className="sidebar-footer">v2.0.0 © 2026</div>
     </aside>
   );

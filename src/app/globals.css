@@ -81,7 +81,145 @@ a { color: inherit; text-decoration: none; }
 .nav-item.active { background: var(--indigo-600); color: #fff; box-shadow: var(--shadow); }
 .nav-icon { width: 18px; text-align: center; }
 
-.sidebar-footer { margin-top: auto; text-align: center; font-size: 12px; color: var(--indigo-100); opacity: 0.6; }
+.sidebar-footer { text-align: center; font-size: 12px; color: var(--indigo-100); opacity: 0.6; padding-top: 12px; }
+
+/* 사이드바 사용자 영역 (로그인 정보 + 로그아웃) */
+.sidebar-user {
+  margin-top: auto;
+  padding: 14px 12px;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.sidebar-user .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+.sidebar-user .user-email { font-size: 11px; color: var(--indigo-100); opacity: 0.75; margin-top: 2px; word-break: break-all; }
+.logout-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  color: var(--indigo-100);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.logout-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.32); color: #fff; }
+
+/* ── 로그인 페이지 (카드 + 부산대 로고 + 색감) ── */
+.login-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(99, 102, 241, 0.25) 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(67, 56, 202, 0.22) 0%, transparent 45%),
+    linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+  padding: 40px 20px;
+  z-index: 100;
+}
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 48px 40px 36px;
+  text-align: center;
+  box-shadow:
+    0 24px 70px rgba(67, 56, 202, 0.22),
+    0 6px 18px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  overflow: hidden;
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--indigo-500) 0%, var(--indigo-700) 50%, var(--indigo-500) 100%);
+}
+.login-logo {
+  display: block;
+  height: 48px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  object-fit: contain;
+}
+.login-divider {
+  width: 44px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--indigo-500), var(--indigo-700));
+  border-radius: 2px;
+  margin: 0 auto 26px;
+}
+.login-main { margin-bottom: 32px; }
+.login-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--indigo-900);
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--slate-500);
+  margin: 0;
+}
+.login-error {
+  background: #fef2f2;
+  color: var(--red-600);
+  border: 1px solid #fecaca;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+.login-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: #fff;
+  color: var(--slate-900);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.login-btn:hover {
+  background: var(--slate-50);
+  border-color: var(--slate-400);
+  box-shadow: var(--shadow);
+}
+.login-btn svg { flex-shrink: 0; }
+.login-note {
+  font-size: 12px;
+  color: var(--slate-500);
+  margin: 18px 0 0;
+}
+.login-footer {
+  position: absolute;
+  bottom: 24px;
+  font-size: 12px;
+  color: var(--slate-400);
+}
+@media (max-width: 480px) {
+  .login-title { font-size: 26px; }
+  .login-header { margin-bottom: 32px; }
+  .login-main { margin-bottom: 32px; }
+}
 
 /* ── 메인 ── */
 .main { flex: 1; min-width: 0; padding: 32px 40px; }
@@ -265,6 +403,17 @@ table.data-table { width: 100%; border-collapse: collapse; }
   .brand-sub, .brand-divider, .sidebar-footer { display: none; }
   .nav { flex-direction: row; flex-wrap: wrap; gap: 6px; width: 100%; }
   .nav-item { padding: 8px 12px; font-size: 13px; }
+
+  /* 사용자 영역: 모바일에서는 우측 정렬, 컴팩트 */
+  .sidebar-user {
+    margin-top: 0; margin-bottom: 0;
+    margin-left: auto;
+    padding: 6px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sidebar-user .user-name { font-size: 12px; }
+  .sidebar-user .user-email { display: none; }
+  .logout-btn { margin-top: 0; width: auto; padding: 6px 10px; font-size: 11px; }
 
   /* 본문 여백 축소 */
   .main { padding: 16px; }
