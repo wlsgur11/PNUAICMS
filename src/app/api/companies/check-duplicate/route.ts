@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     if (!name) return ok({ duplicate: false });
     const match = await prisma.company.findUnique({
       where: { name },
-      select: { id: true, code: true, name: true },
+      select: { id: true, code: true, name: true, isActive: true },
     });
     return ok({ duplicate: !!match, match: match ?? undefined });
   });

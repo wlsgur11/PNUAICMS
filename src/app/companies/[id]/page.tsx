@@ -1,63 +1,122 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import useSWR, { mutate as globalMutate } from 'swr';
 import { api, today } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
 import { COLLAB_FIELDS, ENUMS } from '@/lib/enums';
 
-type Person = { id: string; code: string; name: string; dept?: string; position?: string; email?: string; phone?: string; lastContactAt?: string };
-type History = { id: string; contactDate: string; histStatus: string; content?: string; method?: string; professor?: string; person?: { name: string } | null };
+/** 변경 후 기업 목록·대시보드 캐시도 함께 무효화 */
+function revalidateAllCompanies() {
+  return globalMutate((key) => typeof key === 'string' && (
+    key.startsWith('/api/companies') || key === '/api/dashboard' || key === '/api/grid'
+  ));
+}
+
+type Person = {
+  id: string; code: string; version?: number;
+  name: string; dept?: string; position?: string;
+  email?: string; phone?: string; contactPref?: string;
+  lastContactAt?: string;
+};
+type History = {
+  id: string; version?: number;
+  contactDate: string; histStatus: string;
+  content?: string; method?: string; professor?: string;
+  personId?: string | null;
+  person?: { name: string } | null;
+};
 type Collab = Record<string, boolean | string | number | null> & { version: number };
 type Full = {
   id: string; code: string; name: string; region?: string; aiField?: string; homepage?: string;
   professor1?: string; professor2?: string; mou: boolean; priority?: string; status: string;
-  addressDetail?: string; mainIndustry?: string; summary?: string; version: number;
+  addressDetail?: string; mainIndustry?: string; summary?: string;
+  isActive: boolean; version: number;
   collaboration: Collab | null; persons: Person[]; histories: History[];
 };
 
 export default function CompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [c, setC] = useState<Full | null>(null);
-  const [err, setErr] = useState('');
+  const swrKey = `/api/companies/${id}`;
+  const { data: c, error, mutate: refresh } = useSWR<Full>(swrKey);
   const [modal, setModal] = useState<null | 'person' | 'history' | 'collab'>(null);
+  const [editPerson, setEditPerson] = useState<Person | null>(null);
+  const [editHistory, setEditHistory] = useState<History | null>(null);
   const [histDetail, setHistDetail] = useState<HistoryDetail | null>(null);
   const [showSummary, setShowSummary] = useState(false);
 
-  const load = useCallback(() => {
-    api<Full>(`/api/companies/${id}`).then(setC).catch((e) => setErr(e.message));
-  }, [id]);
-  useEffect(load, [load]);
+  // 변경 후 상세 + 목록 + 대시보드 캐시 모두 무효화
+  const reload = async () => { await refresh(); revalidateAllCompanies(); };
 
   async function deactivate() {
     if (!confirm('이 기업을 비활성 처리할까요? (데이터는 보존되며 목록에서 숨겨집니다)')) return;
-    try { await api(`/api/companies/${id}`, { method: 'DELETE' }); toast('비활성 처리되었습니다.', 'success'); router.push('/companies'); }
+    try { await api(`/api/companies/${id}`, { method: 'DELETE' }); toast('비활성 처리되었습니다.', 'success'); revalidateAllCompanies(); router.push('/companies'); }
     catch (e) { toast((e as Error).message, 'error'); }
   }
 
-  if (err) return (<><PageHeader title="기업 상세 정보" /><div className="card empty">{err}</div></>);
+  async function reactivate() {
+    if (!c) return;
+    try {
+      await api(`/api/companies/${id}`, { method: 'PUT', body: JSON.stringify({ isActive: true, version: c.version }) });
+      toast('다시 활성화되었습니다.', 'success');
+      reload();
+    } catch (e) { toast((e as Error).message, 'error'); }
+  }
+
+  async function hardDelete() {
+    if (!c) return;
+    // 2단계 확인 (실수 방지)
+    if (!confirm(`"${c.name}" 을(를) 완전 삭제할까요?\n\n실무자·컨택 이력까지 모두 함께 삭제되며 복구할 수 없습니다.`)) return;
+    if (!confirm(`마지막 확인 — "${c.name}" 의 모든 데이터를 영구 삭제합니다.\n정말 진행할까요?`)) return;
+    try {
+      await api(`/api/companies/${id}?hard=1`, { method: 'DELETE' });
+      toast('완전 삭제되었습니다.', 'success');
+      revalidateAllCompanies();
+      router.push('/companies');
+    } catch (e) { toast((e as Error).message, 'error'); }
+  }
+
+  async function deletePerson(p: Person) {
+    if (!confirm(`실무자 "${p.name}" 을(를) 삭제할까요? (목록에서 숨겨집니다)`)) return;
+    try { await api(`/api/persons/${p.id}`, { method: 'DELETE' }); toast('삭제되었습니다.', 'success'); reload(); }
+    catch (e) { toast((e as Error).message, 'error'); }
+  }
+
+  async function deleteHistory(h: HistoryDetail) {
+    if (!h.id) return;
+    if (!confirm('이 컨택 이력을 삭제할까요? (복구할 수 없습니다)')) return;
+    try { await api(`/api/histories/${h.id}`, { method: 'DELETE' }); toast('삭제되었습니다.', 'success'); setHistDetail(null); reload(); }
+    catch (e) { toast((e as Error).message, 'error'); }
+  }
+
+  if (error) return (<><PageHeader title="기업 상세 정보" /><div className="card empty">{(error as Error).message}</div></>);
   if (!c) return (<><PageHeader title="기업 상세 정보" /><div className="loading">불러오는 중…</div></>);
 
   return (
     <>
       <PageHeader title="기업 상세 정보" />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link className="back-link" href="/companies">← 목록으로 돌아가기</Link>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <Link className="back-link" href="/companies" style={{ marginBottom: 0 }}>← 목록으로 돌아가기</Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn" onClick={() => router.push(`/companies/${id}/edit`)}>✎ 기본정보 수정</button>
-          <button className="btn btn-danger" onClick={deactivate}>비활성</button>
+          {c.isActive
+            ? <button className="btn btn-danger" onClick={deactivate}>비활성</button>
+            : <button className="btn" onClick={reactivate}>↻ 다시 활성화</button>}
+          <button className="btn btn-danger" onClick={hardDelete}>완전 삭제</button>
         </div>
       </div>
+      <div style={{ height: 20 }} />
 
       <div className="detail-grid">
         {/* 기업 기본정보 */}
         <div className="card">
           <div className="card-head">
-            <div className="card-title">🏢 {c.name}</div>
+            <div className="card-title"><span className="accent-bar" />{c.name}</div>
             {c.priority && <span className={`badge badge-${c.priority}`}>{c.priority} 등급</span>}
           </div>
           <div className="info-list">
@@ -84,7 +143,7 @@ export default function CompanyDetailPage() {
         {/* 인턴십 및 채용연계 정보 */}
         <div className="card">
           <div className="card-head">
-            <div className="card-title">🎓 인턴십 및 채용연계 정보</div>
+            <div className="card-title"><span className="accent-bar" />인턴십 및 채용연계 정보</div>
             <button className="btn btn-ghost btn-sm" onClick={() => setModal('collab')}>✎ 수정</button>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -104,18 +163,27 @@ export default function CompanyDetailPage() {
         {/* 실무자 목록 */}
         <div className="card">
           <div className="card-head">
-            <div className="card-title">👥 실무자 목록</div>
+            <div className="card-title"><span className="accent-bar" />실무자 목록</div>
             <button className="btn btn-ghost btn-sm" onClick={() => setModal('person')}>＋ 추가</button>
           </div>
           {c.persons.length === 0 ? <div className="empty">등록된 실무자가 없습니다.</div> : (
             <table className="data-table">
-              <thead><tr><th>이름/직책</th><th>연락처</th><th>이메일</th></tr></thead>
+              <thead><tr>
+                <th>이름/직책</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th style={{ whiteSpace: 'nowrap', width: 120 }}>관리</th>
+              </tr></thead>
               <tbody>
                 {c.persons.map((p) => (
                   <tr key={p.id}>
                     <td><strong>{p.name}</strong><br /><span className="muted">{p.position || ''}</span></td>
                     <td>{p.phone || '-'}</td>
                     <td>{p.email || '-'}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button className="btn btn-sm" onClick={() => setEditPerson(p)}>수정</button>
+                      <button className="btn btn-sm btn-danger" style={{ marginLeft: 6 }} onClick={() => deletePerson(p)}>삭제</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -126,7 +194,7 @@ export default function CompanyDetailPage() {
         {/* 컨택 이력 및 성과 */}
         <div className="card">
           <div className="card-head">
-            <div className="card-title">🤝 컨택 이력 및 성과</div>
+            <div className="card-title"><span className="accent-bar" />컨택 이력 및 성과</div>
             <button className="btn btn-ghost btn-sm" onClick={() => setModal('history')}>＋ 기록 추가</button>
           </div>
           {c.histories.length === 0 ? <div className="empty">컨택 이력이 없습니다.</div> : (
@@ -139,7 +207,12 @@ export default function CompanyDetailPage() {
               <tbody>
                 {c.histories.map((h) => (
                   <tr key={h.id} className="row-click"
-                    onClick={() => setHistDetail({ contactDate: h.contactDate, histStatus: h.histStatus, method: h.method, professor: h.professor, personName: h.person?.name ?? null, companyName: c.name, content: h.content })}>
+                    onClick={() => setHistDetail({
+                      id: h.id, version: h.version, personId: h.personId ?? null,
+                      contactDate: h.contactDate, histStatus: h.histStatus,
+                      method: h.method, professor: h.professor,
+                      personName: h.person?.name ?? null, companyName: c.name, content: h.content,
+                    })}>
                     <td style={{ whiteSpace: 'nowrap' }}>{h.contactDate}</td>
                     <td style={{ whiteSpace: 'nowrap' }}><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus}</span></td>
                     <td><span className="ellipsis" style={{ maxWidth: 240 }}>{h.content || '-'}</span></td>
@@ -148,30 +221,93 @@ export default function CompanyDetailPage() {
               </tbody>
             </table>
           )}
+          <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 행을 클릭하면 전체 내용을 보거나 수정·삭제할 수 있습니다.</p>
         </div>
       </div>
 
-      {modal === 'person' && <PersonModal companyId={id} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
-      {modal === 'history' && <HistoryModal companyId={id} persons={c.persons} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
-      {modal === 'collab' && <CollabModal companyId={id} collab={c.collaboration} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
-      <HistoryDetailModal history={histDetail} onClose={() => setHistDetail(null)} />
+      {/* 모달: 추가 */}
+      {modal === 'person' && <PersonModal companyId={id} onClose={() => setModal(null)} onSaved={() => { setModal(null); reload(); }} />}
+      {modal === 'history' && <HistoryModal companyId={id} persons={c.persons} onClose={() => setModal(null)} onSaved={() => { setModal(null); reload(); }} />}
+      {modal === 'collab' && <CollabModal companyId={id} collab={c.collaboration} onClose={() => setModal(null)} onSaved={() => { setModal(null); reload(); }} />}
+
+      {/* 모달: 수정 (편집 모드) */}
+      {editPerson && (
+        <PersonModal
+          companyId={id}
+          initial={editPerson}
+          onClose={() => setEditPerson(null)}
+          onSaved={() => { setEditPerson(null); reload(); }}
+        />
+      )}
+      {editHistory && (
+        <HistoryModal
+          companyId={id}
+          persons={c.persons}
+          initial={editHistory}
+          onClose={() => setEditHistory(null)}
+          onSaved={() => { setEditHistory(null); reload(); }}
+        />
+      )}
+
+      {/* 컨택이력 상세 모달 (수정·삭제 콜백 포함) */}
+      <HistoryDetailModal
+        history={histDetail}
+        onClose={() => setHistDetail(null)}
+        onEdit={(h) => {
+          setHistDetail(null);
+          if (!h.id) return;
+          setEditHistory({
+            id: h.id, version: h.version, contactDate: h.contactDate ?? today(),
+            histStatus: h.histStatus ?? '논의중', content: h.content ?? '',
+            method: h.method ?? '미팅', professor: h.professor ?? '',
+            personId: h.personId ?? null,
+          });
+        }}
+        onDelete={deleteHistory}
+      />
     </>
   );
 }
 
-/* ── 모달: 실무자 추가 ── */
-function PersonModal({ companyId, onClose, onSaved }: { companyId: string; onClose: () => void; onSaved: () => void }) {
-  const [f, setF] = useState({ name: '', position: '', dept: '', phone: '', email: '', contactPref: '' });
+/* ── 모달: 실무자 추가/수정 ── */
+function PersonModal({
+  companyId, initial, onClose, onSaved,
+}: { companyId: string; initial?: Person | null; onClose: () => void; onSaved: () => void }) {
+  const editing = !!initial?.id;
+  const [f, setF] = useState({
+    name: initial?.name ?? '',
+    position: initial?.position ?? '',
+    dept: initial?.dept ?? '',
+    phone: initial?.phone ?? '',
+    email: initial?.email ?? '',
+    contactPref: initial?.contactPref ?? '',
+  });
   const [saving, setSaving] = useState(false);
-  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
   async function save() {
     if (!f.name.trim()) { toast('이름은 필수입니다.', 'error'); return; }
     setSaving(true);
-    try { await api(`/api/companies/${companyId}/persons`, { method: 'POST', body: JSON.stringify(f) }); toast('실무자 추가됨', 'success'); onSaved(); }
-    catch (e) { toast((e as Error).message, 'error'); } finally { setSaving(false); }
+    try {
+      if (editing && initial?.id) {
+        await api(`/api/persons/${initial.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...f, version: initial.version }),
+        });
+        toast('실무자가 수정되었습니다.', 'success');
+      } else {
+        await api(`/api/companies/${companyId}/persons`, {
+          method: 'POST',
+          body: JSON.stringify(f),
+        });
+        toast('실무자가 추가되었습니다.', 'success');
+      }
+      onSaved();
+    } catch (e) { toast((e as Error).message, 'error'); } finally { setSaving(false); }
   }
+
   return (
-    <Modal title="실무자 추가" onClose={onClose} onSave={save} saving={saving}>
+    <Modal title={editing ? '실무자 수정' : '실무자 추가'} onClose={onClose} onSave={save} saving={saving}>
       <div className="form-grid">
         <div className="form-field"><label>이름<span className="req">*</span></label><input value={f.name} onChange={(e) => set('name', e.target.value)} /></div>
         <div className="form-field"><label>직책</label><input value={f.position} onChange={(e) => set('position', e.target.value)} /></div>
@@ -188,23 +324,49 @@ function PersonModal({ companyId, onClose, onSaved }: { companyId: string; onClo
   );
 }
 
-/* ── 모달: 컨택이력 추가 ── */
-function HistoryModal({ companyId, persons, onClose, onSaved }: { companyId: string; persons: Person[]; onClose: () => void; onSaved: () => void }) {
-  const [f, setF] = useState({ contactDate: today(), personId: '', professor: '', method: '미팅', content: '', histStatus: '논의중' });
+/* ── 모달: 컨택이력 추가/수정 ── */
+function HistoryModal({
+  companyId, persons, initial, onClose, onSaved,
+}: { companyId: string; persons: Person[]; initial?: History | null; onClose: () => void; onSaved: () => void }) {
+  const editing = !!initial?.id;
+  const [f, setF] = useState({
+    contactDate: initial?.contactDate ?? today(),
+    personId: initial?.personId ?? '',
+    professor: initial?.professor ?? '',
+    method: initial?.method ?? '미팅',
+    content: initial?.content ?? '',
+    histStatus: initial?.histStatus ?? '논의중',
+  });
   const [saving, setSaving] = useState(false);
-  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
   async function save() {
     if (!f.contactDate) { toast('컨택일자는 필수입니다.', 'error'); return; }
     setSaving(true);
-    try { await api(`/api/companies/${companyId}/histories`, { method: 'POST', body: JSON.stringify(f) }); toast('컨택이력 추가됨', 'success'); onSaved(); }
-    catch (e) { toast((e as Error).message, 'error'); } finally { setSaving(false); }
+    try {
+      if (editing && initial?.id) {
+        await api(`/api/histories/${initial.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...f, version: initial.version }),
+        });
+        toast('컨택이력이 수정되었습니다.', 'success');
+      } else {
+        await api(`/api/companies/${companyId}/histories`, {
+          method: 'POST',
+          body: JSON.stringify(f),
+        });
+        toast('컨택이력이 추가되었습니다.', 'success');
+      }
+      onSaved();
+    } catch (e) { toast((e as Error).message, 'error'); } finally { setSaving(false); }
   }
+
   return (
-    <Modal title="컨택 이력 추가" onClose={onClose} onSave={save} saving={saving}>
+    <Modal title={editing ? '컨택 이력 수정' : '컨택 이력 추가'} onClose={onClose} onSave={save} saving={saving}>
       <div className="form-grid">
         <div className="form-field"><label>컨택일자<span className="req">*</span></label><input type="date" value={f.contactDate} onChange={(e) => set('contactDate', e.target.value)} /></div>
         <div className="form-field"><label>실무자</label>
-          <select value={f.personId} onChange={(e) => set('personId', e.target.value)}>
+          <select value={f.personId ?? ''} onChange={(e) => set('personId', e.target.value)}>
             <option value="">선택 안함</option>{persons.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>

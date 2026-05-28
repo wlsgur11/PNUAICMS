@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/client';
+import { useState } from 'react';
+import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
 
@@ -16,15 +16,10 @@ type Dashboard = {
 };
 
 export default function DashboardPage() {
-  const [data, setData] = useState<Dashboard | null>(null);
-  const [err, setErr] = useState('');
+  const { data, error } = useSWR<Dashboard>('/api/dashboard');
   const [selected, setSelected] = useState<HistoryDetail | null>(null);
 
-  useEffect(() => {
-    api<Dashboard>('/api/dashboard').then(setData).catch((e) => setErr(e.message));
-  }, []);
-
-  if (err) return (<><PageHeader title="시스템 대시보드" /><div className="card empty">불러오기 실패: {err}</div></>);
+  if (error) return (<><PageHeader title="시스템 대시보드" /><div className="card empty">불러오기 실패: {(error as Error).message}</div></>);
   if (!data) return (<><PageHeader title="시스템 대시보드" /><div className="loading">불러오는 중…</div></>);
 
   const stats = [
@@ -49,7 +44,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="card">
+      <div className="card" style={{ marginTop: 16 }}>
         <div className="card-head"><div className="card-title"><span className="accent-bar" />시스템 안내</div></div>
         <p style={{ color: 'var(--slate-700)', margin: 0 }}>
           본 시스템은 부산·울산·경남 지역의 AI 관련 기업 정보를 관리하고 인턴십 및 취업 연계 현황을 모니터링하기 위한 플랫폼입니다.
@@ -60,7 +55,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="card">
+      <div className="card" style={{ marginTop: 16 }}>
         <div className="card-head"><div className="card-title"><span className="accent-bar" />최근 컨택 이력</div></div>
         {data.recentHistories.length === 0 ? (
           <div className="empty">컨택 이력이 없습니다.</div>

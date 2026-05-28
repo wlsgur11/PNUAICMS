@@ -78,6 +78,8 @@ model Collaboration {
   fieldTrainingOrg    Boolean @default(false) // 표준현장실습기관등록여부
   overseasEducation   Boolean @default(false) // 해외교육여부
   valueSpread         Boolean @default(false) // 가치확산여부
+  startup             Boolean @default(false) // 창업
+  etc                 Boolean @default(false) // 기타협력
 
   // 인턴십/채용연계 상세 (교수님 시안의 카드 내용)
   requiredSkills      String? // 요구역량 (예: Python, PyTorch)

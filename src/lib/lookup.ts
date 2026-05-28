@@ -211,19 +211,8 @@ export async function lookupCompany(name: string): Promise<LookupResult> {
     /* 무시 */
   }
 
-  // 네이버 지역검색 (주소/홈페이지)
-  try {
-    const nav = await naverLocal(name);
-    if (nav) {
-      if (nav.address) result.addressDetail = nav.address;
-      if (nav.link) result.homepage = normalizeUrl(nav.link);
-      result.sources.push('NAVER');
-    }
-  } catch {
-    /* 무시: 부분 결과 유지 */
-  }
-
-  // DART (DART_API_KEY 가 있고 corp_code 캐시가 동기화된 경우)
+  // DART 를 먼저 적용 (상장/외감 기업은 공식 본사 주소가 가장 정확).
+  // 매칭되지 않은(중소·스타트업) 회사는 다음 단계의 네이버가 보강한다.
   if (keys().dart) {
     try {
       const corpCode = await findDartCorpCode(name);
@@ -231,8 +220,8 @@ export async function lookupCompany(name: string): Promise<LookupResult> {
         const info = await dartCompanyInfo(corpCode);
         if (info) {
           result.ceo = info.ceo || result.ceo;
-          if (!result.addressDetail && info.address) result.addressDetail = info.address;
-          if (!result.homepage && info.homepage) result.homepage = info.homepage;
+          if (info.address) result.addressDetail = info.address;
+          if (info.homepage) result.homepage = info.homepage;
           result.industry = info.industry || result.industry;
           result.foundedAt = info.foundedAt || result.foundedAt;
         }
@@ -243,6 +232,20 @@ export async function lookupCompany(name: string): Promise<LookupResult> {
     } catch {
       /* 무시: 캐시 미동기화/네트워크 오류여도 부분 결과 유지 */
     }
+  }
+
+  // 네이버 지역검색 — DART 가 못 채운 빈 칸만 보강 (지점/매장 결과가 본사 주소를 덮어쓰지 않도록)
+  try {
+    const nav = await naverLocal(name);
+    if (nav) {
+      const filledAddr = !result.addressDetail && nav.address;
+      const filledLink = !result.homepage && nav.link;
+      if (filledAddr) result.addressDetail = nav.address;
+      if (filledLink) result.homepage = normalizeUrl(nav.link);
+      if (filledAddr || filledLink) result.sources.push('NAVER');
+    }
+  } catch {
+    /* 무시: 부분 결과 유지 */
   }
 
   // 지역 추정 (DART/네이버 주소 기준)

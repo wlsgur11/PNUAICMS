@@ -17,6 +17,8 @@ export async function GET(req: Request) {
     const region = sp.get('region')?.trim();
     const priority = sp.get('priority')?.trim();
     const status = sp.get('status')?.trim();
+    const aiField = sp.get('aiField')?.trim();
+    const mou = sp.get('mou') === '1';
     const includeInactive = sp.get('includeInactive') === '1';
 
     const where: Record<string, unknown> = {};
@@ -25,10 +27,38 @@ export async function GET(req: Request) {
     if (region) where.region = region;
     if (priority) where.priority = priority;
     if (status) where.status = status;
+    if (aiField) where.aiField = { contains: aiField, mode: 'insensitive' };
+    if (mou) where.mou = true;
+
+    // 협력 항목(체크된 항목 모두 만족 — AND)
+    const COLLAB_KEYS = [
+      'internship', 'industryProject', 'curriculumCommittee', 'guestLecture',
+      'employment', 'overseasEducation', 'valueSpread', 'fieldTrainingOrg',
+      'startup', 'etc',
+    ] as const;
+    const collabConds: Record<string, true> = {};
+    for (const k of COLLAB_KEYS) if (sp.get(k) === '1') collabConds[k] = true;
+    if (Object.keys(collabConds).length) where.collaboration = { is: collabConds };
+
+    // 정렬: sort 파라미터로 동적 정렬. 이름순/연도/우선순위/상태/수정일 등.
+    const sort = sp.get('sort') || 'name_asc';
+    const orderBy = (() => {
+      const nameAsc = { name: 'asc' as const };
+      switch (sort) {
+        case 'name_desc': return [{ name: 'desc' as const }];
+        case 'year_desc': return [{ joinYear: { sort: 'desc' as const, nulls: 'last' as const } }, nameAsc];
+        case 'year_asc': return [{ joinYear: { sort: 'asc' as const, nulls: 'last' as const } }, nameAsc];
+        case 'priority_asc': return [{ priority: { sort: 'asc' as const, nulls: 'last' as const } }, nameAsc];
+        case 'status_asc': return [{ status: 'asc' as const }, nameAsc];
+        case 'updated_desc': return [{ updatedAt: 'desc' as const }];
+        case 'meeting_desc': return [nameAsc]; // 최근미팅일은 컬럼이 아니라 fetch 후 정렬
+        default: return [nameAsc]; // name_asc
+      }
+    })();
 
     const companies = await prisma.company.findMany({
       where,
-      orderBy: { name: 'asc' },
+      orderBy,
       include: {
         collaboration: { select: { internship: true, employment: true } },
         histories: { orderBy: { contactDate: 'desc' }, take: 1, select: { contactDate: true } },
@@ -50,6 +80,9 @@ export async function GET(req: Request) {
       status: c.status,
       isActive: c.isActive,
     }));
+
+    // 컬럼이 아닌 파생값(최근미팅일)은 후처리 정렬
+    if (sort === 'meeting_desc') rows.sort((a, b) => (b.lastMeeting || '').localeCompare(a.lastMeeting || ''));
     return ok(rows);
   });
 }
@@ -64,7 +97,9 @@ export async function POST(req: Request) {
 
     // 중복 체크 (기관명 unique)
     const dup = await prisma.company.findUnique({ where: { name: input.name } });
-    if (dup) return fail(`이미 등록된 기관명입니다: ${input.name}`, 409);
+    if (dup && dup.isActive) {
+      return fail(`이미 등록된 기관명입니다: ${input.name}`, 409);
+    }
 
     // 자동조회 (이름 입력→자동 채움). 실패해도 등록은 진행.
     let auto = null as Awaited<ReturnType<typeof lookupCompany>> | null;
@@ -74,6 +109,40 @@ export async function POST(req: Request) {
       } catch {
         auto = null;
       }
+    }
+
+    // 비활성 동명 기업이 있으면 → 새로 만들지 않고 "재활성화"한다.
+    // 입력의 비어있지 않은 값과 자동조회 결과를 빈 칸 위주로 반영.
+    if (dup && !dup.isActive) {
+      const patch: Record<string, unknown> = { isActive: true };
+      const overlay: Record<string, unknown> = {
+        joinYear: input.joinYear,
+        region: input.region ?? auto?.region,
+        addressDetail: input.addressDetail ?? auto?.addressDetail,
+        orgType: input.orgType,
+        revenueScale: input.revenueScale ?? auto?.revenueScale,
+        avgSalary: input.avgSalary ?? auto?.avgSalary,
+        newcomerSalary: input.newcomerSalary ?? auto?.newcomerSalary,
+        homepage: input.homepage ?? auto?.homepage,
+        mainIndustry: input.mainIndustry ?? auto?.industry,
+        aiField: input.aiField,
+        professor1: input.professor1,
+        professor2: input.professor2,
+        mou: input.mou,
+        priority: input.priority,
+        status: input.status,
+        summary: input.summary ?? auto?.summary,
+      };
+      for (const [k, v] of Object.entries(overlay)) {
+        if (v == null) continue;
+        if (typeof v === 'string' && !v.trim()) continue;
+        patch[k] = v;
+      }
+      const reactivated = await prisma.company.update({
+        where: { id: dup.id },
+        data: { ...patch, version: { increment: 1 } },
+      });
+      return ok({ id: reactivated.id, code: reactivated.code, reactivated: true, auto }, { status: 200 });
     }
 
     const company = await prisma.$transaction(async (tx) => {

@@ -35,6 +35,7 @@ export const companyCreateSchema = z.object({
 
 export const companyUpdateSchema = companyCreateSchema.partial().extend({
   version: z.coerce.number().int(), // 낙관적 락 필수
+  isActive: z.boolean().optional(),
 });
 
 export const collaborationSchema = z.object({
@@ -46,6 +47,8 @@ export const collaborationSchema = z.object({
   fieldTrainingOrg: z.boolean().optional(),
   overseasEducation: z.boolean().optional(),
   valueSpread: z.boolean().optional(),
+  startup: z.boolean().optional(),
+  etc: z.boolean().optional(),
   requiredSkills: optStr,
   preferredMajor: optStr,
   capacity: z.coerce.number().int().optional().nullable(),
@@ -75,4 +78,14 @@ export const historyCreateSchema = z.object({
   method: z.enum(ENUMS.CONTACT_METHOD as unknown as [string, ...string[]]).optional().nullable(),
   content: optStr,
   histStatus: z.enum(ENUMS.HISTORY_STATUS as unknown as [string, ...string[]]).optional(),
+});
+
+export const historyUpdateSchema = z.object({
+  personId: optStr,
+  professor: optStr,
+  contactDate: z.string().trim().min(1).optional(),
+  method: z.enum(ENUMS.CONTACT_METHOD as unknown as [string, ...string[]]).optional().nullable(),
+  content: optStr,
+  histStatus: z.enum(ENUMS.HISTORY_STATUS as unknown as [string, ...string[]]).optional(),
+  version: z.coerce.number().int(),
 });

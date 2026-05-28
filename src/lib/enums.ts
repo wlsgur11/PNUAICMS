@@ -14,7 +14,7 @@ export const ENUMS = {
   HISTORY_STATUS: ['논의중', '진행완료'],
 } as const;
 
-// 협업정보 boolean 8종 — 화면 라벨 매핑 (Prisma 필드명 ↔ 한글 라벨)
+// 협업정보 boolean — 화면 라벨 매핑 (Prisma 필드명 ↔ 한글 라벨)
 export const COLLAB_FIELDS: { key: string; label: string }[] = [
   { key: 'internship', label: '인턴십' },
   { key: 'industryProject', label: '산학프로젝트' },
@@ -24,4 +24,6 @@ export const COLLAB_FIELDS: { key: string; label: string }[] = [
   { key: 'fieldTrainingOrg', label: '표준현장실습기관 등록' },
   { key: 'overseasEducation', label: '해외교육' },
   { key: 'valueSpread', label: '가치확산' },
+  { key: 'startup', label: '창업' },
+  { key: 'etc', label: '기타' },
 ];

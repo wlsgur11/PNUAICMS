@@ -2,9 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { mutate as globalMutate } from 'swr';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { ENUMS } from '@/lib/enums';
+
+function invalidateCompaniesCache() {
+  return globalMutate((key) => typeof key === 'string' && (
+    key.startsWith('/api/companies') || key === '/api/dashboard' || key === '/api/grid'
+  ));
+}
 
 export type CompanyFormData = {
   id?: string;
@@ -34,6 +41,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
   const router = useRouter();
   const [f, setF] = useState<CompanyFormData>(initial ?? EMPTY);
   const [dupMsg, setDupMsg] = useState('');
+  const [dupBlocks, setDupBlocks] = useState(false); // 활성 동명 기업이면 등록 차단
   const [looking, setLooking] = useState(false);
   const [saving, setSaving] = useState(false);
   const dupTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -48,10 +56,17 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
     if (!name) { setDupMsg(''); return; }
     dupTimer.current = setTimeout(async () => {
       try {
-        const r = await api<{ duplicate: boolean; match?: { name: string } }>(
+        const r = await api<{ duplicate: boolean; match?: { name: string; isActive: boolean } }>(
           `/api/companies/check-duplicate?name=${encodeURIComponent(name)}`
         );
-        setDupMsg(r.duplicate ? `⚠ 이미 등록된 기관명입니다 (${r.match?.name}).` : '');
+        if (!r.duplicate || !r.match) { setDupMsg(''); setDupBlocks(false); return; }
+        if (r.match.isActive) {
+          setDupMsg(`⚠ 이미 등록된 기관명입니다 (${r.match.name}).`);
+          setDupBlocks(true);
+        } else {
+          setDupMsg(`ℹ 비활성 상태인 동일 기관이 있습니다. 등록하면 다시 활성화됩니다.`);
+          setDupBlocks(false);
+        }
       } catch { /* 무시 */ }
     }, 400);
     return () => clearTimeout(dupTimer.current);
@@ -88,16 +103,18 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!f.name.trim()) { toast('기관명은 필수입니다.', 'error'); return; }
-    if (mode === 'create' && dupMsg) { toast('중복된 기관명입니다.', 'error'); return; }
+    if (mode === 'create' && dupBlocks) { toast('이미 등록된(활성) 기관입니다.', 'error'); return; }
     setSaving(true);
     try {
       if (mode === 'create') {
-        const r = await api<{ id: string }>('/api/companies', { method: 'POST', body: JSON.stringify(f) });
-        toast('등록되었습니다.', 'success');
+        const r = await api<{ id: string; reactivated?: boolean }>('/api/companies', { method: 'POST', body: JSON.stringify(f) });
+        toast(r.reactivated ? '비활성 상태였던 기관을 다시 활성화했습니다.' : '등록되었습니다.', 'success');
+        invalidateCompaniesCache();
         router.push(`/companies/${r.id}`);
       } else {
         await api(`/api/companies/${f.id}`, { method: 'PUT', body: JSON.stringify(f) });
         toast('수정되었습니다.', 'success');
+        invalidateCompaniesCache();
         router.push(`/companies/${f.id}`);
       }
     } catch (e) {
@@ -112,7 +129,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
       <div className="card-head">
         <div className="card-title"><span className="accent-bar" />기업 기본정보 {mode === 'create' ? '등록' : '수정'}</div>
         <button type="button" className="btn btn-sm" onClick={autoFill} disabled={looking}>
-          {looking ? '조회 중…' : '🔍 이름으로 자동 채움'}
+          {looking ? '조회 중…' : '이름으로 자동 채움'}
         </button>
       </div>
 

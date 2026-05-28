@@ -32,8 +32,10 @@ const rowSchema = z.object({
   curriculumCommittee: z.boolean().optional(),
   guestLecture: z.boolean().optional(),
   valueSpread: z.boolean().optional(),
-  startup: z.string().optional().nullable(), // 창업 (전용 필드 없음 → 메모)
-  etc: z.string().optional().nullable(), // 기타 → 메모
+  employment: z.boolean().optional(),
+  fieldTrainingOrg: z.boolean().optional(),
+  startup: z.boolean().optional(), // 창업 (체크)
+  etc: z.boolean().optional(), // 기타 (체크)
   // 담당자
   contactName: z.string().optional().nullable(),
   contactPosition: z.string().optional().nullable(),
@@ -45,7 +47,11 @@ const rowSchema = z.object({
   ceoEmail: z.string().optional().nullable(),
 });
 
-const COLLAB_BOOLS = ['internship', 'overseasEducation', 'industryProject', 'curriculumCommittee', 'guestLecture', 'valueSpread'] as const;
+const COLLAB_BOOLS = [
+  'internship', 'overseasEducation', 'industryProject', 'curriculumCommittee',
+  'guestLecture', 'valueSpread', 'employment', 'fieldTrainingOrg',
+  'startup', 'etc',
+] as const;
 
 export async function GET() {
   return handle(async () => {
@@ -74,7 +80,11 @@ export async function GET() {
         curriculumCommittee: co?.curriculumCommittee ?? false,
         guestLecture: co?.guestLecture ?? false,
         valueSpread: co?.valueSpread ?? false,
-        etc: co?.memo ?? '',
+        employment: co?.employment ?? false,
+        fieldTrainingOrg: co?.fieldTrainingOrg ?? false,
+        // 아래 두 필드는 새로 추가된 컬럼. db push 후 prisma client 가 재생성되면 깔끔히 매핑됨.
+        startup: (co as { startup?: boolean } | null)?.startup ?? false,
+        etc: (co as { etc?: boolean } | null)?.etc ?? false,
         contactName: contact?.name ?? '',
         contactPosition: contact?.position ?? '',
         contactPhone: contact?.phone ?? '',
@@ -84,7 +94,6 @@ export async function GET() {
         ceoEmail: ceo?.email ?? '',
         domestic: '',
         country: '',
-        startup: '',
       };
     });
     return ok(rows);
@@ -106,13 +115,10 @@ export async function POST(req: Request) {
       }
       const r = parsed.data;
 
-      // 비고/메모 조립 (전용 필드 없는 원본 컬럼 보존)
+      // 기업 비고: 국내외/국가는 별도 컬럼이 없어 note에 보존
       const noteParts: string[] = [];
       if (r.domestic) noteParts.push(`국내외:${r.domestic}`);
       if (r.country) noteParts.push(`국가:${r.country}`);
-      const memoParts: string[] = [];
-      if (r.startup) memoParts.push(`창업:${r.startup}`);
-      if (r.etc) memoParts.push(r.etc);
 
       const companyData = {
         orgType: r.orgType || null,
@@ -122,7 +128,6 @@ export async function POST(req: Request) {
       };
       const collabData: Record<string, boolean | string | null> = {};
       for (const k of COLLAB_BOOLS) collabData[k] = r[k] ?? false;
-      if (memoParts.length) collabData.memo = memoParts.join(' / ');
 
       try {
         await prisma.$transaction(async (tx) => {

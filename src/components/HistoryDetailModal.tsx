@@ -1,7 +1,11 @@
 'use client';
 
-/** 컨택이력 상세 모달 — 대시보드/기업상세 어디서든 항목 클릭 시 전체 내용 표시. */
+/** 컨택이력 상세 모달 — 대시보드/기업상세 어디서든 항목 클릭 시 전체 내용 표시.
+ *  onEdit/onDelete 콜백이 주어지면 ‘수정’·‘삭제’ 버튼을 함께 보여준다. */
 export type HistoryDetail = {
+  id?: string;
+  version?: number;
+  personId?: string | null;
   contactDate?: string;
   histStatus?: string;
   method?: string | null;
@@ -11,7 +15,17 @@ export type HistoryDetail = {
   content?: string | null;
 };
 
-export default function HistoryDetailModal({ history, onClose }: { history: HistoryDetail | null; onClose: () => void }) {
+export default function HistoryDetailModal({
+  history,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  history: HistoryDetail | null;
+  onClose: () => void;
+  onEdit?: (h: HistoryDetail) => void;
+  onDelete?: (h: HistoryDetail) => void;
+}) {
   if (!history) return null;
   const h = history;
   return (
@@ -34,6 +48,8 @@ export default function HistoryDetailModal({ history, onClose }: { history: Hist
           </div>
         </div>
         <div className="form-actions">
+          {onDelete && <button className="btn btn-danger" onClick={() => onDelete(h)}>삭제</button>}
+          {onEdit && <button className="btn" onClick={() => onEdit(h)}>✎ 수정</button>}
           <button className="btn btn-primary" onClick={onClose}>닫기</button>
         </div>
       </div>

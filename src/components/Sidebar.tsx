@@ -3,19 +3,28 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-/** 사이드바 네비게이션 (교수님 시안: 다크 인디고 + 칩 로고) */
+/** 사이드바 네비게이션. */
 const NAV = [
-  { href: '/', label: '대시보드', icon: '📊', exact: true },
-  { href: '/companies', label: '기업 리스트', icon: '🏢', exact: false },
-  { href: '/companies/new', label: '신규 기업 등록', icon: '＋', exact: true },
-  { href: '/grid', label: '엑셀 입력', icon: '📋', exact: true },
+  { href: '/', label: '대시보드', icon: '📊' },
+  { href: '/companies', label: '기업 리스트', icon: '🏢' },
+  { href: '/companies/new', label: '신규 기업 등록', icon: '＋' },
+  { href: '/grid', label: '엑셀 입력', icon: '📋' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
-  const isActive = (href: string, exact: boolean) =>
-    exact ? pathname === href : pathname === href || pathname.startsWith(href + '/');
+  // 가장 길게(가장 구체적으로) 일치하는 항목 하나만 활성 처리.
+  const activeHref = (() => {
+    let best: string | null = null;
+    for (const item of NAV) {
+      const match = item.href === '/'
+        ? pathname === '/'
+        : pathname === item.href || pathname.startsWith(item.href + '/');
+      if (match && (!best || item.href.length > best.length)) best = item.href;
+    }
+    return best;
+  })();
 
   return (
     <aside className="sidebar">
@@ -30,7 +39,7 @@ export default function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
-            className={`nav-item${isActive(item.href, item.exact) ? ' active' : ''}`}
+            className={`nav-item${activeHref === item.href ? ' active' : ''}`}
           >
             <span className="nav-icon">{item.icon}</span>
             <span>{item.label}</span>

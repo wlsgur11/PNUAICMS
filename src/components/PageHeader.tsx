@@ -10,7 +10,7 @@ export default function PageHeader({ title, right }: { title: string; right?: Re
   return (
     <div className="page-head">
       <h1 className="page-title">{title}</h1>
-      {right ?? <div className="page-date">🕐 {date}</div>}
+      {right ?? <div className="page-date">{date}</div>}
     </div>
   );
 }

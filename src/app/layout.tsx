@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
 import Toaster from '@/components/Toaster';
+import SWRProvider from '@/components/SWRProvider';
 
 export const metadata: Metadata = {
   title: '부울경 AI기업 관리 시스템',
@@ -12,11 +13,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
-        <div className="app-shell">
-          <Sidebar />
-          <main className="main">{children}</main>
-        </div>
-        <Toaster />
+        <SWRProvider>
+          <div className="app-shell">
+            <Sidebar />
+            <main className="main">{children}</main>
+          </div>
+          <Toaster />
+        </SWRProvider>
       </body>
     </html>
   );
