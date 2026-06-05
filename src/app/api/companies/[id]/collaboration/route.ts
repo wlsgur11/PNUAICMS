@@ -13,7 +13,12 @@ export async function PUT(req: Request, { params }: Ctx) {
     await requireUser();
     const parsed = collaborationSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
-    const { version, ...data } = parsed.data;
+    const { version, mou, ...data } = parsed.data;
+
+    // MOU 는 Company 에 저장한다 (데이터는 기업 단위 유지, 표시·수정만 협업정보 카드에서).
+    if (mou !== undefined) {
+      await prisma.company.update({ where: { id: params.id }, data: { mou } });
+    }
 
     const existing = await prisma.collaboration.findUnique({ where: { companyId: params.id } });
     if (!existing) {

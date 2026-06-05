@@ -31,7 +31,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    const user = await requireUser();
     const body = await req.json();
     const parsed = companyUpdateSchema.safeParse(body);
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
@@ -40,7 +40,7 @@ export async function PUT(req: Request, { params }: Ctx) {
     // 낙관적 락: 현재 version 과 일치할 때만 갱신 + version 증가
     const result = await prisma.company.updateMany({
       where: { id: params.id, version },
-      data: { ...data, version: { increment: 1 } },
+      data: { ...data, updatedBy: user.email, version: { increment: 1 } },
     });
     if (result.count === 0) {
       // id 가 없거나, version 이 달라짐(=다른 사용자가 먼저 수정)

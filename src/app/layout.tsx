@@ -7,8 +7,8 @@ import LogoutForm from '@/components/LogoutForm';
 import { auth } from '@/auth';
 
 export const metadata: Metadata = {
-  title: '부울경 AI기업 관리 시스템',
-  description: '부산·울산·경남 AI기업 인턴십·취업연계·산학협력 관리',
+  title: 'AI 산학협력 관리 시스템',
+  description: 'AI기업 인턴십·취업연계·산학협력 관리',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

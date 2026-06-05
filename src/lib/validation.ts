@@ -53,6 +53,8 @@ export const collaborationSchema = z.object({
   preferredMajor: optStr,
   capacity: z.coerce.number().int().optional().nullable(),
   memo: optStr,
+  // MOU 는 Company 필드지만 표시·수정을 협업정보 카드에서 하므로 여기서 함께 받는다.
+  mou: z.boolean().optional(),
   version: z.coerce.number().int().optional(),
 });
 
@@ -74,6 +76,7 @@ export const personUpdateSchema = personCreateSchema.partial().extend({
 export const historyCreateSchema = z.object({
   personId: optStr,
   professor: optStr,
+  business: z.enum(ENUMS.BUSINESS as unknown as [string, ...string[]]).optional().nullable(),
   contactDate: z.string().trim().min(1, '컨택일자는 필수입니다.'),
   method: z.enum(ENUMS.CONTACT_METHOD as unknown as [string, ...string[]]).optional().nullable(),
   content: optStr,
@@ -83,6 +86,7 @@ export const historyCreateSchema = z.object({
 export const historyUpdateSchema = z.object({
   personId: optStr,
   professor: optStr,
+  business: z.enum(ENUMS.BUSINESS as unknown as [string, ...string[]]).optional().nullable(),
   contactDate: z.string().trim().min(1).optional(),
   method: z.enum(ENUMS.CONTACT_METHOD as unknown as [string, ...string[]]).optional().nullable(),
   content: optStr,

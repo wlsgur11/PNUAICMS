@@ -8,6 +8,7 @@ import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { companyCreateSchema } from '@/lib/validation';
 import { lookupCompany } from '@/lib/lookup';
+import { autoLinkRecords } from '@/lib/company-autolink';
 
 export async function GET(req: Request) {
   return handle(async () => {
@@ -89,7 +90,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireUser();
+    const user = await requireUser();
     const body = await req.json();
     const parsed = companyCreateSchema.safeParse(body);
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
@@ -140,8 +141,9 @@ export async function POST(req: Request) {
       }
       const reactivated = await prisma.company.update({
         where: { id: dup.id },
-        data: { ...patch, version: { increment: 1 } },
+        data: { ...patch, updatedBy: user.email, version: { increment: 1 } },
       });
+      await autoLinkRecords(reactivated.id, reactivated.name);
       return ok({ id: reactivated.id, code: reactivated.code, reactivated: true, auto }, { status: 200 });
     }
 
@@ -174,11 +176,13 @@ export async function POST(req: Request) {
           status: input.status ?? '미접촉',
           summary: input.summary ?? auto?.summary ?? null,
           note,
+          createdBy: user.email,
           collaboration: { create: {} }, // 1:1 빈 협업정보 생성
         },
       });
     });
 
+    await autoLinkRecords(company.id, company.name);
     return ok({ id: company.id, code: company.code, auto }, { status: 201 });
   });
 }

@@ -53,10 +53,14 @@ model Company {
   version       Int      @default(1) // 낙관적 락 버전
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  createdBy     String? // 등록자(이메일)
+  updatedBy     String? // 수정자(이메일)
 
   collaboration Collaboration?
   persons       ContactPerson[]
   histories     ContactHistory[]
+  projects      Project[]
+  internships   Internship[]
 
   @@index([name])
   @@index([region])
@@ -115,6 +119,8 @@ model ContactPerson {
   version       Int      @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  createdBy     String? // 등록자(이메일)
+  updatedBy     String? // 수정자(이메일)
 
   histories     ContactHistory[]
 
@@ -132,6 +138,7 @@ model ContactHistory {
   person       ContactPerson? @relation(fields: [personId], references: [id], onDelete: SetNull)
 
   professor    String? // 교육원담당교수명
+  business     String? // 사업단(관심사업분야): 중심대학/부트캠프
   contactDate  String // 컨택일자 (yyyy-MM-dd)
   method       String? // 컨택방식: 미팅/전화/이메일/기타
   content      String? // 컨택내용
@@ -167,4 +174,137 @@ model Counter {
   value Int    @default(0)
 
   @@map("counters")
+}
+
+// ── 학생 (학번 키) ───────────────────────────────────────
+model Student {
+  studentNo   String   @id // 학번 (식별키)
+  nameMasked  String? // 마스킹 이름 (김*혁)
+  department  String? // 정컴/DS/비SW학과
+  createdAt   DateTime @default(now())
+
+  projects    ProjectStudent[]
+  internships InternshipStudent[]
+
+  @@map("students")
+}
+
+// ── 연구실 ───────────────────────────────────────────────
+model Lab {
+  id            String   @id @default(cuid())
+  professorName String // 지도교수
+  labName       String? // 연구실명
+  affiliation   String? // 소속학과 (정컴/DS)
+  createdAt     DateTime @default(now())
+
+  projects      Project[]
+
+  @@index([professorName])
+  @@map("labs")
+}
+
+// ── 분과 참조 (연도별 2버전) ─────────────────────────────
+model Division {
+  id      String @id @default(cuid())
+  version String // 'old5'(구 5개) | 'new6'(신 6개)
+  code    String // A~F
+  name    String // 인공지능 등
+
+  @@unique([version, code])
+  @@map("divisions")
+}
+
+// ── 산학협력 프로젝트 ────────────────────────────────────
+model Project {
+  id              String   @id @default(cuid())
+  year            Int? // 연도
+  dept            String? // 정컴/DS
+  category        String? // 학과졸업과제/교육원연계
+  type            String? // 졸업과제/R&D/용역/캡스톤
+  title           String? // 연구주제
+  period          String? // 연구기간
+  track           String? // SW중심대학 특성화트랙
+  divisionVersion String? // 분과 버전
+  divisionCode    String? // 분과 코드
+  cntPhd          Int? // 박사생 수
+  cntMaster       Int? // 석사생 수
+  cntUndergrad    Int? // 학부생 수
+  studentNamesRaw String? // 학번 없는 학부생 이름(콤마)
+
+  companyId       String?
+  company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyNameRaw  String? // 엑셀 원본 기업명 (미매칭 보존)
+  labId           String?
+  lab             Lab?     @relation(fields: [labId], references: [id], onDelete: SetNull)
+
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  students        ProjectStudent[]
+
+  @@index([companyId])
+  @@index([year])
+  @@map("projects")
+}
+
+// ── 인턴십 ───────────────────────────────────────────────
+model Internship {
+  id             String   @id @default(cuid())
+  year           Int?
+  programName    String? // 프로그램명
+  hostType       String? // 주관: 자체/학점연계
+  method         String? // 교육방식
+  domestic       String? // 국내외
+  country        String?
+  startDate      String? // 인턴시작일
+  endDate        String? // 인턴종료일
+  weeks          Int? // 인턴기간(주)
+  hoursPerWeek   Int? // 실습시간(1주 기준)
+  credits        Int? // 인정학점
+  cntCSE         Int? // 교육인원(정컴)
+  cntDS          Int? // 교육인원(DS)
+  cntNonSW       Int? // 교육인원(비SW학과)
+  empSW          Int? // 연계취업자(SW)
+  empNonSW       Int? // 연계취업자(비SW)
+
+  companyId      String?
+  company        Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyNameRaw String? // 원본 기업명
+
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  students       InternshipStudent[]
+
+  @@index([companyId])
+  @@index([year])
+  @@map("internships")
+}
+
+// ── 프로젝트-학생 연결 (N:M) ─────────────────────────────
+model ProjectStudent {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  studentNo String
+  student   Student @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+
+  @@unique([projectId, studentNo])
+  @@index([studentNo])
+  @@map("project_students")
+}
+
+// ── 인턴십-학생 연결 (N:M) ───────────────────────────────
+model InternshipStudent {
+  id           String     @id @default(cuid())
+  internshipId String
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  studentNo    String
+  student      Student    @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+
+  @@unique([internshipId, studentNo])
+  @@index([studentNo])
+  @@map("internship_students")
 }

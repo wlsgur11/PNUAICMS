@@ -22,10 +22,7 @@
 import { salaryLookup } from './salary';
 import { industryName } from './ksic';
 import { prisma } from './db';
-
-function normName(s: string): string {
-  return (s || '').replace(/[\s㈜()（）　]/g, '').replace(/주식회사/g, '').toLowerCase();
-}
+import { normName } from './normalize';
 
 function formatDartDate(s: string): string {
   if (!s || s.length !== 8) return s || '';

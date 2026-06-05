@@ -148,9 +148,9 @@ export default function GridPage() {
         .filter(([, v]) => v > 0)
         .map(([k, v]) => `${labelMap[k] || k} ${v}`)
         .join(', ');
-      const msg = `총 ${d.total}건 — 신규 ${d.created}, 갱신 ${d.updated}` +
+      const msg = `총 ${d.total}건 - 신규 ${d.created}, 갱신 ${d.updated}` +
         (d.errors.length ? `, 실패 ${d.errors.length}` : '') +
-        `\n협력 항목: ${collabSummary || '(없음 — 컬럼 인식 실패일 수 있음)'}` +
+        `\n협력 항목: ${collabSummary || '(없음 - 컬럼 인식 실패일 수 있음)'}` +
         `\n(자세한 컬럼 매핑은 브라우저 콘솔에서 확인)`;
       toast(msg, d.errors.length ? 'error' : 'success');
       if (fileRef.current) fileRef.current.value = '';

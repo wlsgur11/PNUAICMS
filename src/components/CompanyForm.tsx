@@ -193,13 +193,6 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
           <input value={f.professor2 ?? ''} onChange={(e) => set('professor2', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>MOU 체결여부</label>
-          <select value={f.mou ? '1' : '0'} onChange={(e) => set('mou', e.target.value === '1')}>
-            <option value="0">미체결</option>
-            <option value="1">체결</option>
-          </select>
-        </div>
-        <div className="form-field">
           <label>협력우선순위</label>
           <select value={f.priority ?? ''} onChange={(e) => set('priority', e.target.value || null)}>
             <option value="">선택</option>
