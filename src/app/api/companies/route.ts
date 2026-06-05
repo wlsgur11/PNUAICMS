@@ -20,6 +20,7 @@ export async function GET(req: Request) {
     const status = sp.get('status')?.trim();
     const aiField = sp.get('aiField')?.trim();
     const mou = sp.get('mou') === '1';
+    const business = sp.get('business')?.trim();
     const includeInactive = sp.get('includeInactive') === '1';
 
     const where: Record<string, unknown> = {};
@@ -30,6 +31,8 @@ export async function GET(req: Request) {
     if (status) where.status = status;
     if (aiField) where.aiField = { contains: aiField, mode: 'insensitive' };
     if (mou) where.mou = true;
+    // 사업단: 해당 사업단으로 컨택한 이력이 있는 기업만 (사업단은 컨택이력에 기록됨)
+    if (business) where.histories = { some: { business } };
 
     // 협력 항목(체크된 항목 모두 만족 — AND)
     const COLLAB_KEYS = [

@@ -308,3 +308,23 @@ model InternshipStudent {
   @@index([studentNo])
   @@map("internship_students")
 }
+
+// ── 연도별 정량실적 현황판 (엑셀 '전체현황' 시트에서 읽은 값) ──
+model YearStat {
+  year                    Int      @id
+  enrolledCSE             Int? // 정컴 재학생 수
+  enrolledDS              Int? // DS 재학생 수
+  industryTargetCSE       Int? // 산학 목표 기준치 인원(정컴)
+  industryTargetDS        Int? // 산학 목표 기준치 인원(DS)
+  internTargetCSE         Int? // 인턴십 목표 기준치 인원(정컴)
+  internTargetDS          Int? // 인턴십 목표 기준치 인원(DS)
+  industryTargetRatio     Float? // 산학협력 목표 비율
+  industryAchievedRatio   Float? // 산학협력 달성 비율
+  industryStudents        Int? // 산학협력 참여 학부생 수
+  internshipTargetRatio   Float? // 인턴십 목표 비율
+  internshipAchievedRatio Float? // 인턴십 달성 비율
+  internshipStudents      Int? // 인턴십 참여 학부생 수
+  updatedAt               DateTime @updatedAt
+
+  @@map("year_stats")
+}

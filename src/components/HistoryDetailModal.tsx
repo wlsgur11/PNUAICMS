@@ -39,7 +39,7 @@ export default function HistoryDetailModal({
           <div className="info-row"><span className="info-label">일자</span><span className="info-value">{h.contactDate || '-'}</span></div>
           <div className="info-row"><span className="info-label">상태</span><span className="info-value"><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus || '-'}</span></span></div>
           <div className="info-row"><span className="info-label">방식</span><span className="info-value">{h.method || '-'}</span></div>
-          <div className="info-row"><span className="info-label">사업단</span><span className="info-value">{h.business || '-'}</span></div>
+          <div className="info-row"><span className="info-label">관심사업분야</span><span className="info-value">{h.business || '-'}</span></div>
           <div className="info-row"><span className="info-label">담당교수</span><span className="info-value">{h.professor || '-'}</span></div>
           {h.personName ? <div className="info-row"><span className="info-label">실무자</span><span className="info-value">{h.personName}</span></div> : null}
         </div>

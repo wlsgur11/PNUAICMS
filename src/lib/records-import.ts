@@ -95,6 +95,12 @@ export async function importRecords(parsed: ParseResult): Promise<ImportSummary>
       });
     }
 
+    // 연도별 현황판 값 (엑셀 전체현황 시트) upsert
+    for (const ys of parsed.yearStats) {
+      const { year, ...data } = ys;
+      await tx.yearStat.upsert({ where: { year }, update: data, create: { year, ...data } });
+    }
+
     return {
       projects: parsed.projects.length,
       internships: parsed.internships.length,

@@ -389,7 +389,7 @@ function HistoryModal({
           </select>
         </div>
         <div className="form-field"><label>담당교수</label><input value={f.professor} onChange={(e) => set('professor', e.target.value)} /></div>
-        <div className="form-field"><label>사업단</label>
+        <div className="form-field"><label>관심사업분야(사업단)</label>
           <select value={f.business} onChange={(e) => set('business', e.target.value)}>
             <option value="">선택 안함</option>{ENUMS.BUSINESS.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
