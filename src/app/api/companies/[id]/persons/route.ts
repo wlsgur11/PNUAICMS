@@ -23,13 +23,13 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function POST(req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    const user = await requireUser();
     const parsed = personCreateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
 
     const person = await prisma.$transaction(async (tx) => {
       const code = await nextCode(tx, 'person');
-      return tx.contactPerson.create({ data: { code, companyId: params.id, ...parsed.data } });
+      return tx.contactPerson.create({ data: { code, companyId: params.id, ...parsed.data, createdBy: user.email } });
     });
     return ok(person, { status: 201 });
   });

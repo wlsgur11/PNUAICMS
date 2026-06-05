@@ -5,7 +5,7 @@ type Props = {
 };
 
 export const metadata = {
-  title: '로그인 - 부울경 AI기업 관리 시스템',
+  title: '로그인 - AI 산학협력 관리 시스템',
 };
 
 /** Google 공식 G 로고 (4색). */
@@ -33,8 +33,8 @@ export default function LoginPage({ searchParams }: Props) {
         <div className="login-divider" />
 
         <div className="login-main">
-          <h1 className="login-title">AI Biz Connect</h1>
-          <p className="login-sub">부울경 산학협력 관리망</p>
+          <h1 className="login-title">AI 산학협력 관리 시스템</h1>
+          <p className="login-sub">부산대학교 AI융합교육원</p>
         </div>
 
         {error && (
