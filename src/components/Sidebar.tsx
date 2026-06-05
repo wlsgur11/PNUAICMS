@@ -102,7 +102,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
           {logoutSlot}
         </div>
       )}
-      <div className="sidebar-footer">v2.0.0 © 2026</div>
+      <div className="sidebar-footer">v2.0.1 © 2026</div>
     </aside>
   );
 }
