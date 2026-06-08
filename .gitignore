@@ -32,3 +32,8 @@ yarn-error.log*
 
 # prisma
 /prisma/*.db
+
+# 분석·설계 작업 산출물 (커밋 제외)
+.understand-anything/
+.superpowers/
+docs/superpowers/

@@ -1,6 +1,6 @@
 {
   "name": "buulgyeong-ai-cms",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "description": "부울경 AI기업 관리 시스템 v2 (Next.js + Supabase/PostgreSQL)",
   "engines": {
@@ -14,6 +14,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-divisions": "tsx prisma/seed-divisions.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

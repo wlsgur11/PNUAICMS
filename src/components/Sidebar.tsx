@@ -1,14 +1,36 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-/** 사이드바 네비게이션. */
-const NAV = [
-  { href: '/', label: '대시보드', icon: '📊' },
-  { href: '/companies', label: '기업 리스트', icon: '🏢' },
-  { href: '/companies/new', label: '신규 기업 등록', icon: '＋' },
-  { href: '/grid', label: '엑셀 입력', icon: '📋' },
+/** 사이드바 네비게이션. 대시보드는 단독, 나머지는 도메인별 접이식 그룹. */
+type Item = { href: string; label: string };
+type Group = { key: string; label: string; icon: string; items: Item[] };
+
+const DASHBOARD = { href: '/', label: '대시보드', icon: '📊' };
+
+const GROUPS: Group[] = [
+  {
+    key: 'company',
+    label: '기업 관리',
+    icon: '🏢',
+    items: [
+      { href: '/companies', label: '기업 리스트' },
+      { href: '/companies/new', label: '신규 기업 등록' },
+      { href: '/grid', label: '엑셀 입력' },
+    ],
+  },
+  {
+    key: 'records',
+    label: '산학·인턴십 실적',
+    icon: '📈',
+    items: [
+      { href: '/projects', label: '산학협력 현황' },
+      { href: '/internships', label: '인턴십 현황' },
+      { href: '/records/import', label: '실적 업로드' },
+    ],
+  },
 ];
 
 type Props = {
@@ -20,39 +42,57 @@ type Props = {
 export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
   const pathname = usePathname();
 
-  // 로그인 페이지에는 사이드바 숨김 (전체 화면 로그인 UI)
-  if (pathname === '/login') return null;
-
-  // 가장 길게(가장 구체적으로) 일치하는 항목 하나만 활성 처리.
+  // 가장 구체적으로 일치하는 href 하나만 활성 처리.
+  const allHrefs = [DASHBOARD.href, ...GROUPS.flatMap((g) => g.items.map((i) => i.href))];
   const activeHref = (() => {
     let best: string | null = null;
-    for (const item of NAV) {
-      const match = item.href === '/'
-        ? pathname === '/'
-        : pathname === item.href || pathname.startsWith(item.href + '/');
-      if (match && (!best || item.href.length > best.length)) best = item.href;
+    for (const href of allHrefs) {
+      const match = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
+      if (match && (!best || href.length > best.length)) best = href;
     }
     return best;
   })();
+
+  // 현재 페이지가 속한 그룹은 펼친 상태로 시작.
+  const [open, setOpen] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(GROUPS.map((g) => [g.key, g.items.some((i) => i.href === activeHref)])),
+  );
+  const toggle = (k: string) => setOpen((p) => ({ ...p, [k]: !p[k] }));
+
+  // 로그인 페이지에는 사이드바 숨김 (전체 화면 로그인 UI)
+  if (pathname === '/login') return null;
 
   return (
     <aside className="sidebar">
       <div className="brand">
         <div className="brand-logo">🔲</div>
-        <div className="brand-name">AI Biz Connect</div>
-        <div className="brand-sub">부울경 산학협력 관리망</div>
+        <div className="brand-name">AI 산학협력 관리 시스템</div>
+        <div className="brand-sub">부산대학교 AI융합교육원</div>
       </div>
       <div className="brand-divider" />
       <nav className="nav">
-        {NAV.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`nav-item${activeHref === item.href ? ' active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
+        <Link href={DASHBOARD.href} className={`nav-item${activeHref === DASHBOARD.href ? ' active' : ''}`}>
+          <span className="nav-icon">{DASHBOARD.icon}</span>
+          <span>{DASHBOARD.label}</span>
+        </Link>
+
+        {GROUPS.map((g) => (
+          <div key={g.key} className="nav-group">
+            <button type="button" className="nav-group-header" onClick={() => toggle(g.key)}>
+              <span className="nav-icon">{g.icon}</span>
+              <span>{g.label}</span>
+              <span className="nav-caret">{open[g.key] ? '▾' : '▸'}</span>
+            </button>
+            {open[g.key] && g.items.map((it) => (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={`nav-item nav-sub${activeHref === it.href ? ' active' : ''}`}
+              >
+                <span>{it.label}</span>
+              </Link>
+            ))}
+          </div>
         ))}
       </nav>
       {userEmail && (
@@ -62,7 +102,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
           {logoutSlot}
         </div>
       )}
-      <div className="sidebar-footer">v2.0.0 © 2026</div>
+      <div className="sidebar-footer">v2.0.1 © 2026</div>
     </aside>
   );
 }

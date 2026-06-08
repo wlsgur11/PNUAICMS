@@ -16,6 +16,7 @@ type Row = {
 
 type Filters = {
   q: string; region: string; priority: string; status: string; aiField: string;
+  business: string;
   sort: string;
   mou: boolean; includeInactive: boolean;
   internship: boolean; industryProject: boolean; curriculumCommittee: boolean;
@@ -24,6 +25,7 @@ type Filters = {
 };
 const EMPTY_FILTERS: Filters = {
   q: '', region: '', priority: '', status: '', aiField: '',
+  business: '',
   sort: 'name_asc',
   mou: false, includeInactive: false,
   internship: false, industryProject: false, curriculumCommittee: false,
@@ -93,6 +95,10 @@ export default function CompaniesPage() {
             <option value="">진행상태 전체</option>
             {ENUMS.STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
+          <select value={filters.business} onChange={(e) => set('business', e.target.value)} title="관심사업분야(사업단) - 컨택이력 기준">
+            <option value="">관심사업분야 전체</option>
+            {ENUMS.BUSINESS.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
           <select value={filters.sort} onChange={(e) => set('sort', e.target.value)} title="정렬 기준">
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -144,7 +150,12 @@ export default function CompaniesPage() {
         </div>
       </form>
 
-      <div className="table-wrap" style={{ marginTop: 16 }}>
+      {rows && (
+        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length}</strong>건
+        </div>
+      )}
+      <div className="table-wrap" style={{ marginTop: 8 }}>
         <table className="data-table">
           <thead>
             <tr>

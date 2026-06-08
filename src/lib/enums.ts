@@ -12,6 +12,7 @@ export const ENUMS = {
   CONTACT_METHOD: ['미팅', '전화', '이메일', '기타'],
   CONTACT_PREF: ['미팅', '전화', '이메일'],
   HISTORY_STATUS: ['논의중', '진행완료'],
+  BUSINESS: ['중심대학', '부트캠프'], // 사업단(관심사업분야)
 } as const;
 
 // 협업정보 boolean — 화면 라벨 매핑 (Prisma 필드명 ↔ 한글 라벨)
