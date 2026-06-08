@@ -10,6 +10,15 @@ type Group = { key: string; label: string; icon: string; items: Item[] };
 
 const DASHBOARD = { href: '/', label: '대시보드', icon: '📊' };
 
+// 외부 서비스 바로가기 (패밀리 사이트). 새 탭으로 열림.
+// hint 는 부가 안내(예: 교내망 전용)용 — 없으면 생략.
+type ExternalLink = { href: string; label: string; icon: string; hint?: string };
+const FAMILY: ExternalLink[] = [
+  { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터', icon: '💻' },
+  { href: 'https://pnu-emp.vercel.app', label: '정컴 취업현황', icon: '💼' },
+  { href: 'http://10.126.34.165:15980', label: 'AI 지식검색 (KB)', icon: '🔎', hint: '교내' },
+];
+
 const GROUPS: Group[] = [
   {
     key: 'company',
@@ -95,6 +104,25 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
           </div>
         ))}
       </nav>
+
+      <div className="nav-family">
+        <div className="nav-family-label">패밀리 사이트</div>
+        {FAMILY.map((f) => (
+          <a
+            key={f.href}
+            href={f.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item nav-external"
+          >
+            <span className="nav-icon">{f.icon}</span>
+            <span>{f.label}</span>
+            {f.hint && <span className="nav-hint">{f.hint}</span>}
+            <span className="nav-ext-arrow">↗</span>
+          </a>
+        ))}
+      </div>
+
       {userEmail && (
         <div className="sidebar-user">
           <div className="user-name">{userName || userEmail.split('@')[0]}</div>
