@@ -13,6 +13,10 @@ import Google from 'next-auth/providers/google';
 
 const ALLOWED_DOMAIN = 'pusan.ac.kr';
 
+// 인증 우회 토글. AUTH_BYPASS=true 면 모든 경로를 미인증 상태로도 통과시킨다.
+// (lib/auth.ts 의 getCurrentUser 도 같은 플래그로 더미 사용자를 반환)
+const AUTH_BYPASS = process.env.AUTH_BYPASS === 'true';
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -49,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     // middleware.ts 에서 사용. 미인증 시 signIn 페이지로 리다이렉트.
     async authorized({ auth: session, request }) {
+      if (AUTH_BYPASS) return true;
       const isLoggedIn = !!session?.user;
       const { pathname } = request.nextUrl;
       // /login 은 미인증 상태에서 접근 가능. 이미 로그인했으면 홈으로.

@@ -14,6 +14,18 @@ export type AppUser = {
 
 const ALLOWED_DOMAINS = ['pusan.ac.kr'];
 
+/**
+ * 인증 우회 토글. AUTH_BYPASS=true 면 로그인 없이 더미 사용자로 통과한다.
+ * 테스트·시연용 임시 스위치. 운영 배포에서는 절대 켜두지 말 것.
+ * (middleware authorized 콜백은 src/auth.ts 에서 같은 플래그를 본다.)
+ */
+export const AUTH_BYPASS = process.env.AUTH_BYPASS === 'true';
+
+const BYPASS_USER: AppUser = {
+  email: 'test@pusan.ac.kr',
+  name: '테스트 계정',
+};
+
 export function isAllowedEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   const domain = email.split('@')[1]?.toLowerCase();
@@ -22,6 +34,7 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
 
 /** 현재 로그인 사용자. NextAuth 세션에서 조회. */
 export async function getCurrentUser(): Promise<AppUser | null> {
+  if (AUTH_BYPASS) return BYPASS_USER;
   const session = await auth();
   const email = session?.user?.email;
   if (!email || !isAllowedEmail(email)) return null;
