@@ -136,7 +136,6 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
             rel="noopener noreferrer"
             className="nav-item nav-external"
           >
-            <span className="nav-icon">{f.icon}</span>
             <span>{f.label}</span>
             {f.hint && <span className="nav-hint">{f.hint}</span>}
             <span className="nav-ext-arrow">↗</span>

@@ -98,9 +98,10 @@ a { color: inherit; text-decoration: none; }
 /* 패밀리 사이트 (외부 서비스 바로가기). margin-top:auto 로 하단 정렬. */
 .nav-family { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 18px; }
 .nav-family-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-  color: var(--indigo-100); opacity: 0.5; padding: 0 16px 4px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+  color: #fff; opacity: 0.95; padding: 6px 16px;
 }
+.nav-family-label:hover { background: rgba(255,255,255,0.08); border-radius: var(--radius-sm); }
 .nav-external { padding-top: 9px; padding-bottom: 9px; }
 .nav-external .nav-ext-arrow { margin-left: auto; flex-shrink: 0; font-size: 12px; opacity: 0.55; }
 .nav-external:hover .nav-ext-arrow { opacity: 0.9; }
