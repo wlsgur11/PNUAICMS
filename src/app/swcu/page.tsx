@@ -203,14 +203,38 @@ export default function SwcuDashboardPage() {
                     {g.category || '기타'}
                     <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>({g.items.length})</span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6 }}>
-                    {g.items.map((r, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 10px', background: 'var(--slate-50)', borderRadius: 6, fontSize: 13 }}>
-                        <span className="muted" title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-                        <strong style={{ flexShrink: 0 }}>{r.value ?? '-'}</strong>
+                  {(() => {
+                    const blocks: Raw[][] = [];
+                    let cur: Raw[] = [];
+                    for (const it of g.items) {
+                      cur.push(it);
+                      if (it.label === '계') { blocks.push(cur); cur = []; }
+                    }
+                    if (cur.length) blocks.push(cur);
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+                        {blocks.map((blk, bi) => (
+                          <div key={bi} style={{ border: '1px solid var(--slate-200)', borderRadius: 8, overflow: 'hidden' }}>
+                            {blk.map((r, ri) => {
+                              const isSum = r.label === '계';
+                              return (
+                                <div key={ri} style={{
+                                  display: 'flex', justifyContent: 'space-between', gap: 8,
+                                  padding: '5px 10px', fontSize: 13,
+                                  background: isSum ? 'var(--slate-50)' : '#fff',
+                                  borderTop: isSum ? '1px solid var(--slate-200)' : 'none',
+                                  fontWeight: isSum ? 700 : 400,
+                                }}>
+                                  <span className={isSum ? '' : 'muted'} title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isSum ? '계' : r.label}</span>
+                                  <span style={{ flexShrink: 0, fontWeight: isSum ? 700 : 600 }}>{r.value ?? '-'}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
                 </div>
               ));
             })()}
