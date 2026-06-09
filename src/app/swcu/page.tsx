@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 
@@ -146,13 +146,13 @@ export default function SwcuDashboardPage() {
             </thead>
             <tbody>
               {nameOrder.map((name) => (
-                <Fragment key={name}>
-                <tr>
+                <tr key={name}>
                   <td
-                    onClick={() => setExpanded(expanded === name ? null : name)}
+                    onClick={() => setExpanded(name)}
+                    title="클릭하면 연도별 추이·산출 근거"
                     style={{ position: 'sticky', left: 0, background: '#fff', fontWeight: 600, cursor: 'pointer' }}
                   >
-                    <span className="muted" style={{ fontWeight: 400, marginRight: 4 }}>{expanded === name ? '▾' : '▸'}</span>
+                    <span className="muted" style={{ fontWeight: 400, marginRight: 4 }}>▸</span>
                     {name}{unitOf[name] ? <span className="muted" style={{ fontWeight: 400 }}> ({unitOf[name]})</span> : ''}
                   </td>
                   {years.map((y) => {
@@ -176,32 +176,11 @@ export default function SwcuDashboardPage() {
                     );
                   })}
                 </tr>
-                {expanded === name && (
-                  <tr>
-                    <td colSpan={years.length + 1} style={{ background: 'var(--slate-50)', padding: '12px 16px' }}>
-                      {years.map((y) => {
-                        const ind = valOf(y, name);
-                        if (!ind || (!ind.formula && ind.numValue == null)) return null;
-                        const norm = (s: string | null) => (s ?? '').replace(/\s+/g, ' ').trim();
-                        return (
-                          <div key={y.year} style={{ marginBottom: 8, fontSize: 13 }}>
-                            <strong>{y.year}</strong>
-                            {ind.numValue != null && (
-                              <span className="muted"> · 분자 {norm(ind.numLabel)} = {ind.numValue} / 분모 {norm(ind.denLabel)} = {ind.denValue}</span>
-                            )}
-                            {ind.formula && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{norm(ind.formula)}</div>}
-                          </div>
-                        );
-                      })}
-                    </td>
-                  </tr>
-                )}
-                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성(교원 1인당 학생수처럼 낮을수록 좋은 지표는 목표 이하면 달성). 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 연도별 추이와 산출 근거를 볼 수 있습니다. 초록=목표 달성(교원 1인당 학생수처럼 낮을수록 좋은 지표는 목표 이하면 달성). 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
       </div>
 
       <div className="card">
@@ -291,6 +270,39 @@ export default function SwcuDashboardPage() {
                 <button className="btn btn-sm" onClick={() => setRawSel(null)}>닫기</button>
               </div>
               <div style={{ marginTop: 12 }}><RawTrend series={series} /></div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {expanded && (() => {
+        const name = expanded;
+        const norm = (s: string | null) => (s ?? '').replace(/\s+/g, ' ').trim();
+        const hasBasis = years.some((y) => { const ind = valOf(y, name); return ind && (ind.formula || ind.numValue != null); });
+        return (
+          <div onClick={() => setExpanded(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 20, width: 480, maxWidth: '92vw', maxHeight: '88vh', overflow: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{name}{unitOf[name] ? <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}> ({unitOf[name]})</span> : ''}</div>
+                <button className="btn btn-sm" onClick={() => setExpanded(null)}>닫기</button>
+              </div>
+              <KpiTrend title="연도별 추이" years={years} indicatorName={name} />
+              <div style={{ marginTop: 12, borderTop: '1px solid var(--slate-100)', paddingTop: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>산출 근거</div>
+                {hasBasis ? years.map((y) => {
+                  const ind = valOf(y, name);
+                  if (!ind || (!ind.formula && ind.numValue == null)) return null;
+                  return (
+                    <div key={y.year} style={{ marginBottom: 8, fontSize: 13 }}>
+                      <strong>{y.year}</strong>
+                      {ind.numValue != null && (
+                        <span className="muted"> · 분자 {norm(ind.numLabel)} = {ind.numValue} / 분모 {norm(ind.denLabel)} = {ind.denValue}</span>
+                      )}
+                      {ind.formula && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{norm(ind.formula)}</div>}
+                    </div>
+                  );
+                }) : <div className="muted" style={{ fontSize: 12 }}>산출 근거 정보가 없습니다.</div>}
+              </div>
             </div>
           </div>
         );
