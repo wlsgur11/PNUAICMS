@@ -40,6 +40,15 @@ const GROUPS: Group[] = [
       { href: '/records/import', label: '실적 업로드' },
     ],
   },
+  {
+    key: 'swcu',
+    label: 'SW중심대학 성과',
+    icon: '🏅',
+    items: [
+      { href: '/swcu', label: '성과 대시보드' },
+      { href: '/swcu/import', label: '실적 엑셀 업로드' },
+    ],
+  },
 ];
 
 type Props = {
