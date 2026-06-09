@@ -374,7 +374,7 @@ model SwcuRaw {
   value     Float?
   sortOrder Int      @default(0)
 
-  @@unique([year, scope, label])
+  @@unique([year, scope, sortOrder])
   @@index([year])
   @@map("swcu_raws")
 }
