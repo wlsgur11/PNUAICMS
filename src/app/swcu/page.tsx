@@ -187,36 +187,33 @@ export default function SwcuDashboardPage() {
         {!rawData || rawData.raws.length === 0 ? (
           <div className="empty">원시값이 없습니다.</div>
         ) : (
-          <div className="table-wrap" style={{ boxShadow: 'none', border: '1px solid var(--slate-200)', maxHeight: 420, overflow: 'auto' }}>
-            <table className="data-table">
-              <thead><tr><th>항목</th><th className="center">값</th></tr></thead>
-              <tbody>
-                {(() => {
-                  let prevKey: string | null = null;
-                  const rows: React.ReactNode[] = [];
-                  rawData.raws.forEach((r, idx) => {
-                    const groupKey = `${r.scope} ${r.category ?? ''}`;
-                    if (groupKey !== prevKey) {
-                      prevKey = groupKey;
-                      rows.push(
-                        <tr key={`h-${idx}`}>
-                          <td colSpan={2} style={{ background: 'var(--slate-50)', fontWeight: 700 }}>
-                            {r.scope}{r.category ? ` · ${r.category}` : ''}
-                          </td>
-                        </tr>
-                      );
-                    }
-                    rows.push(
-                      <tr key={idx}>
-                        <td style={{ paddingLeft: 24 }}>{r.label}</td>
-                        <td className="center" style={{ fontWeight: 600 }}>{r.value ?? '-'}</td>
-                      </tr>
-                    );
-                  });
-                  return rows;
-                })()}
-              </tbody>
-            </table>
+          <div style={{ maxHeight: 520, overflow: 'auto', paddingRight: 4 }}>
+            {(() => {
+              type G = { key: string; scope: string; category: string | null; items: Raw[] };
+              const groups: G[] = [];
+              for (const r of rawData.raws) {
+                const last = groups[groups.length - 1];
+                if (last && last.scope === r.scope && (last.category ?? '') === (r.category ?? '')) last.items.push(r);
+                else groups.push({ key: `${r.scope}|${r.category ?? ''}|${groups.length}`, scope: r.scope, category: r.category, items: [r] });
+              }
+              return groups.map((g) => (
+                <div key={g.key} style={{ marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--slate-700)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="tag tag-indigo">{g.scope}</span>
+                    {g.category || '기타'}
+                    <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>({g.items.length})</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6 }}>
+                    {g.items.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 10px', background: 'var(--slate-50)', borderRadius: 6, fontSize: 13 }}>
+                        <span className="muted" title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
+                        <strong style={{ flexShrink: 0 }}>{r.value ?? '-'}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ));
+            })()}
           </div>
         )}
       </div>
