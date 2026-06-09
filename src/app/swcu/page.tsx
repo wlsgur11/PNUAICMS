@@ -18,13 +18,18 @@ const fmt = (n: number | null, unit: string | null) => {
   return String(n);
 };
 
-// 핵심 차트로 띄울 지표 (스펙 결정)
-const KEY = ['산학협력 프로젝트 참여율', '인턴십 이수율', 'SW전공생 취업률', '수혜학생 만족도'];
+// 핵심 차트로 띄울 지표 (title=표시명, name=파서 CANONICAL_NAMES와 정확히 일치)
+const KEY: { title: string; name: string }[] = [
+  { title: '산학협력 프로젝트 참여율', name: '산학협력 프로젝트 참여율' },
+  { title: '인턴십 이수율', name: '인턴십 이수율' },
+  { title: 'SW전공생 취업률', name: '취업률' },
+  { title: '수혜학생 만족도', name: '수혜학생 만족도' },
+];
 
 /** 지표 하나의 연도별 추이 막대 (목표선 포함) */
 function KpiTrend({ title, years, indicatorName }: { title: string; years: YearData[]; indicatorName: string }) {
   const series = years.map((y) => {
-    const ind = y.indicators.find((i) => i.name.includes(indicatorName));
+    const ind = y.indicators.find((i) => i.name === indicatorName);
     return { year: y.year, actual: ind?.actual ?? null, target: ind?.target ?? null, unit: ind?.unit ?? null };
   });
   const unit = series.find((s) => s.unit)?.unit ?? null;
@@ -84,7 +89,7 @@ export default function SwcuDashboardPage() {
       <PageHeader title="SW중심대학 성과" />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 16 }}>
-        {KEY.map((k) => <KpiTrend key={k} title={k} years={years} indicatorName={k} />)}
+        {KEY.map((k) => <KpiTrend key={k.name} title={k.title} years={years} indicatorName={k.name} />)}
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
