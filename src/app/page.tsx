@@ -116,7 +116,7 @@ function TrendChart({ stats }: { stats: YearStat[] }) {
           </span>
         ))}
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--slate-500)' }}>
-          <svg width={22} height={8}><line x1={0} y1={4} x2={22} y2={4} stroke="#64748b" strokeWidth={1.5} /></svg>
+          <svg width={22} height={8}><line x1={0} y1={4} x2={22} y2={4} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" /></svg>
           목표치
         </span>
       </div>
@@ -146,7 +146,7 @@ function TrendChart({ stats }: { stats: YearStat[] }) {
                   <g key={s.key}>
                     <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={s.color} />
                     {tv > 0 && (
-                      <line x1={x - 5} y1={yOf(tv)} x2={x + barW + 5} y2={yOf(tv)} stroke="#64748b" strokeWidth={1.5} />
+                      <line x1={x - 5} y1={yOf(tv)} x2={x + barW + 5} y2={yOf(tv)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />
                     )}
                     <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={s.color}>
                       {(v * 100).toFixed(2)}%
