@@ -233,7 +233,7 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
     if (a && FOOTER(a)) break;
     const fileName = nameCol >= 0 ? cell(rows, r, nameCol) : '';
     if (fileName && FOOTER(fileName)) break;
-    if (a) area = a;
+    if (a && isNaN(Number(a))) area = a; // 숫자(미해결 병합셀 인덱스)는 영역으로 취급 안 하고 직전 영역명 유지
     // 데이터 행 = 단위 열에 값이 있는 행(빈 줄/footer 제외)
     const unit = unitCol >= 0 ? cell(rows, r, unitCol) : '';
     if (!unit) continue;
