@@ -35,12 +35,14 @@ const KEY: { title: string; name: string }[] = [
 function KpiTrend({ title, years, indicatorName }: { title: string; years: YearData[]; indicatorName: string }) {
   const series = years.map((y) => {
     const ind = y.indicators.find((i) => i.name === indicatorName);
-    return { year: y.year, actual: ind?.actual ?? null, target: ind?.target ?? null, unit: ind?.unit ?? null };
+    const rawT = ind?.target ?? null;
+    const target = ind?.unit === '점' && rawT != null && rawT > 0 && rawT < 1 ? rawT * 100 : rawT;
+    return { year: y.year, actual: ind?.actual ?? null, target, unit: ind?.unit ?? null };
   });
   const unit = series.find((s) => s.unit)?.unit ?? null;
   const vals = series.flatMap((s) => [s.actual ?? 0, s.target ?? 0]);
   const axisMax = Math.max(0.0001, ...vals) * 1.18;
-  const W = 360, H = 180, padL = 40, padR = 12, padT = 16, padB = 28;
+  const W = 360, H = 200, padL = 40, padR = 12, padT = 16, padB = 46;
   const plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
   const gw = plotW / Math.max(1, series.length);
   const bw = Math.min(48, gw - 24);
@@ -62,7 +64,8 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
               <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill={barColor} />
               {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} />}
               <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
-              <text x={x + bw / 2} y={baseY + 18} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
+              <text x={x + bw / 2} y={baseY + 16} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
+              {s.target != null && <text x={x + bw / 2} y={baseY + 32} textAnchor="middle" fontSize={10} fill="var(--slate-400)">목표 {fmt(s.target, unit)}</text>}
             </g>
           );
         })}
