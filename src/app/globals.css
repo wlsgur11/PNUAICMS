@@ -92,16 +92,14 @@ a { color: inherit; text-decoration: none; }
   transition: background 0.12s, color 0.12s;
 }
 .nav-group-header:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.nav-caret { margin-left: auto; font-size: 16px; line-height: 1; opacity: 0.85; }
+/* 펼쳐진 그룹 헤더는 더 또렷하게 (열림/닫힘 구분) */
+.nav-group-header.open { color: #fff; background: rgba(255,255,255,0.06); }
+.nav-caret { margin-left: auto; font-size: 16px; line-height: 1; opacity: 0.85; transition: transform 0.15s; }
 .nav-sub { padding-left: 46px; font-size: 13px; font-weight: 500; }
 
 /* 패밀리 사이트 (외부 서비스 바로가기). margin-top:auto 로 하단 정렬. */
-.nav-family { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 18px; }
-.nav-family-label {
-  font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
-  color: #fff; opacity: 0.95; padding: 6px 16px;
-}
-.nav-family-label:hover { background: rgba(255,255,255,0.08); border-radius: var(--radius-sm); }
+/* 외부 링크 그룹: 내부 메뉴와 구분선으로 분리하고 하단 정렬 */
+.nav-family { gap: 4px; margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.12); }
 .nav-external { padding-top: 9px; padding-bottom: 9px; }
 .nav-external .nav-ext-arrow { margin-left: auto; flex-shrink: 0; font-size: 12px; opacity: 0.55; }
 .nav-external:hover .nav-ext-arrow { opacity: 0.9; }

@@ -100,7 +100,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
 
         {GROUPS.map((g) => (
           <div key={g.key} className="nav-group">
-            <button type="button" className="nav-group-header" onClick={() => toggle(g.key)}>
+            <button type="button" className={`nav-group-header${open[g.key] ? ' open' : ''}`} onClick={() => toggle(g.key)}>
               <span className="nav-icon">{g.icon}</span>
               <span>{g.label}</span>
               <span className="nav-caret">{open[g.key] ? '▾' : '▸'}</span>
@@ -118,15 +118,14 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
         ))}
       </nav>
 
-      <div className="nav-family">
+      <div className="nav-group nav-family">
         <button
           type="button"
-          className="nav-family-label"
+          className={`nav-group-header${familyOpen ? ' open' : ''}`}
           onClick={() => setFamilyOpen((o) => !o)}
-          style={{ display: 'flex', alignItems: 'center', width: '100%', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
         >
-          패밀리 사이트
-          <span className="nav-caret" style={{ marginLeft: 'auto' }}>{familyOpen ? '▾' : '▸'}</span>
+          <span>패밀리 사이트</span>
+          <span className="nav-caret">{familyOpen ? '▾' : '▸'}</span>
         </button>
         {familyOpen && FAMILY.map((f) => (
           <a
@@ -134,7 +133,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
             href={f.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-item nav-external"
+            className="nav-item nav-sub nav-external"
           >
             <span>{f.label}</span>
             {f.hint && <span className="nav-hint">{f.hint}</span>}
