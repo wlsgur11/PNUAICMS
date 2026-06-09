@@ -15,7 +15,7 @@ type YearData = { year: number; university: string | null; submittedAt: string |
 const fmt = (n: number | null, unit: string | null) => {
   if (n == null) return '-';
   if (unit === '%') return (n * 100).toFixed(1) + '%';
-  return String(n);
+  return String(Math.round(n * 100) / 100);
 };
 
 // 핵심 차트로 띄울 지표 (title=표시명, name=파서 CANONICAL_NAMES와 정확히 일치)
@@ -111,14 +111,19 @@ export default function SwcuDashboardPage() {
                   {years.map((y) => {
                     const ind = valOf(y, name);
                     if (!ind || ind.actual == null) return <td key={y.year} className="center muted">-</td>;
-                    const met = ind.target != null && ind.actual >= ind.target;
+                    const normTarget = ind.target != null && unitOf[name] === '점' && ind.target > 0 && ind.target < 1 ? ind.target * 100 : ind.target;
+                    const met = normTarget != null && ind.actual >= normTarget;
                     return (
                       <td key={y.year} className="center">
-                        <span style={{ fontWeight: 700, color: ind.target == null ? 'inherit' : met ? '#16a34a' : '#d97706' }}>
+                        <span style={{ fontWeight: 700, color: normTarget == null ? 'inherit' : met ? '#16a34a' : '#d97706' }}>
                           {fmt(ind.actual, unitOf[name])}
                         </span>
-                        {ind.target != null && <span className="muted" style={{ fontSize: 11, display: 'block' }}>목표 {fmt(ind.target, unitOf[name])}</span>}
-                        {ind.verifyResult && <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>검증 {ind.verifyResult}</span>}
+                        {normTarget != null && <span className="muted" style={{ fontSize: 11, display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
+                        {ind.verifyResult && (
+                          <span className="muted" style={{ fontSize: 11, display: 'block' }}>
+                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>{ind.verifyResult}</span>
+                          </span>
+                        )}
                       </td>
                     );
                   })}

@@ -17,7 +17,7 @@ type Preview = {
 const fmt = (n: number | null, unit: string | null) => {
   if (n == null) return '-';
   if (unit === '%') return (n * 100).toFixed(2) + '%';
-  return String(n);
+  return String(Math.round(n * 100) / 100);
 };
 
 export default function SwcuImportPage() {

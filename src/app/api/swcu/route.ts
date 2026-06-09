@@ -12,7 +12,7 @@ export async function GET() {
       orderBy: { year: 'asc' },
       include: {
         indicators: { orderBy: { sortOrder: 'asc' } },
-        raws: { orderBy: { sortOrder: 'asc' } },
+        raws: { orderBy: [{ scope: 'desc' }, { sortOrder: 'asc' }] },
       },
     });
     return ok(years);
