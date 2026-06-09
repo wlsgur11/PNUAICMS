@@ -204,29 +204,32 @@ export default function SwcuDashboardPage() {
                     <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>({g.items.length})</span>
                   </div>
                   {(() => {
-                    const blocks: Raw[][] = [];
+                    const isSum = (label: string) => { const n = label.replace(/\s+/g, ''); return n === '계' || /^계\(/.test(n); };
+                    const fmtVal = (v: number | null) => v == null ? '-' : (Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100));
+                    const allBlocks: Raw[][] = [];
                     let cur: Raw[] = [];
                     for (const it of g.items) {
                       cur.push(it);
-                      if (it.label === '계') { blocks.push(cur); cur = []; }
+                      if (isSum(it.label)) { allBlocks.push(cur); cur = []; }
                     }
-                    if (cur.length) blocks.push(cur);
+                    if (cur.length) allBlocks.push(cur);
+                    const blocks = allBlocks.filter(b => !(b.length === 1 && isSum(b[0].label)));
                     return (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
                         {blocks.map((blk, bi) => (
                           <div key={bi} style={{ border: '1px solid var(--slate-200)', borderRadius: 8, overflow: 'hidden' }}>
                             {blk.map((r, ri) => {
-                              const isSum = r.label === '계';
+                              const sum = isSum(r.label);
                               return (
                                 <div key={ri} style={{
                                   display: 'flex', justifyContent: 'space-between', gap: 8,
                                   padding: '5px 10px', fontSize: 13,
-                                  background: isSum ? 'var(--slate-50)' : '#fff',
-                                  borderTop: isSum ? '1px solid var(--slate-200)' : 'none',
-                                  fontWeight: isSum ? 700 : 400,
+                                  background: sum ? 'var(--slate-50)' : '#fff',
+                                  borderTop: sum ? '1px solid var(--slate-200)' : 'none',
+                                  fontWeight: sum ? 700 : 400,
                                 }}>
-                                  <span className={isSum ? '' : 'muted'} title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isSum ? '계' : r.label}</span>
-                                  <span style={{ flexShrink: 0, fontWeight: isSum ? 700 : 600 }}>{r.value ?? '-'}</span>
+                                  <span className={sum ? '' : 'muted'} title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label.replace(/\s+/g, ' ').trim()}</span>
+                                  <span style={{ flexShrink: 0, fontWeight: sum ? 700 : 600 }}>{fmtVal(r.value)}</span>
                                 </div>
                               );
                             })}
