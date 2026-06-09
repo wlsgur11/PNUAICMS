@@ -43,24 +43,28 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
   const bw = Math.min(48, gw - 24);
   const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
   return (
-    <div className="card" style={{ padding: 16 }}>
+    <div className="card" style={{ padding: 16, height: '100%' }}>
       <div className="card-title" style={{ marginBottom: 8 }}><span className="accent-bar" />{title}</div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%">
         <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="var(--slate-200)" />
         {series.map((s, i) => {
           const x = padL + i * gw + (gw - bw) / 2;
           const y = s.actual == null ? baseY : yOf(s.actual);
+          const barColor =
+            s.actual != null && s.target != null
+              ? s.actual >= s.target ? '#16a34a' : '#d97706'
+              : 'var(--indigo-600)';
           return (
             <g key={s.year}>
-              <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill="var(--indigo-600)" />
+              <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill={barColor} />
               {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#0ea5e9" strokeWidth={2} strokeDasharray="4 3" />}
-              <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill="var(--indigo-600)">{fmt(s.actual, unit)}</text>
+              <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
               <text x={x + bw / 2} y={baseY + 18} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
             </g>
           );
         })}
       </svg>
-      <div className="muted" style={{ fontSize: 12 }}>막대=실적, 점선=목표</div>
+      <div className="muted" style={{ fontSize: 12 }}>막대=실적(초록=목표달성·주황=미달), 점선=목표</div>
     </div>
   );
 }
@@ -91,7 +95,7 @@ export default function SwcuDashboardPage() {
     <>
       <PageHeader title="SW중심대학 성과" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 16 }}>
+      <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 16 }}>
         {KEY.map((k) => <KpiTrend key={k.name} title={k.title} years={years} indicatorName={k.name} />)}
       </div>
 
@@ -128,7 +132,7 @@ export default function SwcuDashboardPage() {
                         </span>
                         {normTarget != null && <span className="muted" style={{ fontSize: 11, display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
                         {ind.verifyResult && (
-                          <span className="muted" style={{ fontSize: 11, display: 'block' }}>
+                          <span className="muted" style={{ fontSize: 11, display: 'block' }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
                             검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>{ind.verifyResult}</span>
                           </span>
                         )}
@@ -161,7 +165,7 @@ export default function SwcuDashboardPage() {
             </tbody>
           </table>
         </div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성, 주황=미달. KMAC 검증이 있는 해는 검증결과(O/X) 표시.</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성, 주황=미달. 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
       </div>
 
       <div className="card">
