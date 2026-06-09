@@ -19,6 +19,12 @@ export type SwcuIndicatorRow = {
   actual: number | null;
   verifiedActual: number | null;
   verifyResult: string | null;
+  // 산출 근거(있는 해만). 2025부터 지표설명(formula)·분자/분모(label·value)를 채운다.
+  formula: string | null; // 산출식/지표설명
+  numLabel: string | null; // 분자 항목명
+  numValue: number | null; // 분자 값
+  denLabel: string | null; // 분모 항목명
+  denValue: number | null; // 분모 값
   sortOrder: number;
 };
 export type SwcuRawRow = {
@@ -155,6 +161,49 @@ function detectActualCol(bands: string[][], maxCol: number): number {
 }
 
 /**
+ * 분자/분모 열 자동 탐지.
+ * 양식에 '분자'/'분모' 라벨 텍스트가 없으므로(2025 포함) 구조로 검출한다.
+ *   2025: 데이터 행에서 [텍스트 라벨][숫자 값] 쌍이 연속 두 번 나타난다.
+ *         (예: E=분자라벨 F=분자값 G=분모라벨 H=분모값)
+ *   2023·2024: 그런 쌍이 없으므로(실적 열만 숫자) 검출되지 않아 null 유지.
+ * 반환: { numLabelCol, denLabelCol } (각 값 열은 +1). 미검출 시 -1.
+ */
+function detectFractionCols(
+  rows: string[][],
+  hdr: number,
+  unitCol: number,
+  targetCol: number,
+  actualCol: number,
+  maxCol: number,
+): { numLabelCol: number; denLabelCol: number } {
+  // 분자/분모 라벨·값은 '당해연도 목표' 열과 (자동산출) 실적 열 사이 구간에만 존재한다.
+  // 그 밖(단위·목표·실적 열)을 세면 단위(%/명)+목표(숫자) 같은 가짜 쌍이 잡히므로 구간을 한정한다.
+  const lo = targetCol + 1;
+  const hi = actualCol > targetCol ? actualCol : maxCol; // 실적 열 미만까지만
+  if (lo >= hi) return { numLabelCol: -1, denLabelCol: -1 };
+  // 데이터 행에서, 각 열 c가 '텍스트 라벨 + 다음 열 숫자' 쌍인 빈도를 센다.
+  const pairCount = new Array(maxCol).fill(0);
+  let dataRows = 0;
+  for (let r = hdr + 1; r < rows.length; r++) {
+    const a = cell(rows, r, 0);
+    if (a && FOOTER(a)) break;
+    if (unitCol >= 0 && !cell(rows, r, unitCol)) continue;
+    dataRows++;
+    for (let c = lo; c < hi && c < maxCol - 1; c++) {
+      const label = cell(rows, r, c);
+      if (label && num(label) == null && num(cell(rows, r, c + 1)) != null) pairCount[c]++;
+    }
+  }
+  if (dataRows === 0) return { numLabelCol: -1, denLabelCol: -1 };
+  // 충분히 자주(데이터 행의 1/4 이상) 라벨+값 쌍을 이루는 열 두 개를 좌→우 순으로 분자/분모로 본다.
+  const thresh = Math.max(2, Math.ceil(dataRows / 4));
+  const labelCols: number[] = [];
+  for (let c = lo; c < hi; c++) if (pairCount[c] >= thresh) labelCols.push(c);
+  if (labelCols.length < 2) return { numLabelCol: -1, denLabelCol: -1 };
+  return { numLabelCol: labelCols[0], denLabelCol: labelCols[1] };
+}
+
+/**
  * 성과지표 시트 파싱.
  * 데이터 행 식별: 헤더 다음 행부터, '단위' 열에 값이 있고 footer 가 아닌 행.
  * 지표명은 파일 텍스트(있으면) → 없으면 위치 기준 CANONICAL_NAMES.
@@ -171,6 +220,9 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
   const unitCol = findCol(bands, (h) => h.includes('단위'), maxCol);
   const targetCol = findCol(bands, (h) => h.includes('목표'), maxCol);
   const actualCol = detectActualCol(bands, maxCol);
+  // 산출 근거: formula = '지표설명' 열(2023·24=J, 2025=N), 분자/분모는 구조로 검출(2025만).
+  const formulaCol = findCol(bands, (h) => h.includes('지표설명'), maxCol);
+  const { numLabelCol, denLabelCol } = detectFractionCols(rows, hdr, unitCol, targetCol, actualCol, maxCol);
 
   const normalize = (s: string) => s.replace(/\s+/g, '');
   const out: SwcuIndicatorRow[] = [];
@@ -196,6 +248,24 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
       );
     }
     const name = fileName || CANONICAL_NAMES[order] || `지표${order + 1}`;
+    const formula = formulaCol >= 0 ? cell(rows, r, formulaCol) || null : null;
+    let numLabel: string | null = null;
+    let numValue: number | null = null;
+    let denLabel: string | null = null;
+    let denValue: number | null = null;
+    if (numLabelCol >= 0 && denLabelCol >= 0) {
+      const nl = cell(rows, r, numLabelCol);
+      // 라벨이 텍스트일 때만 분자/분모로 인정(숫자/빈칸이면 비율행이 아님 → null 유지).
+      if (nl && num(nl) == null) {
+        numLabel = nl;
+        numValue = num(cell(rows, r, numLabelCol + 1));
+        const dl = cell(rows, r, denLabelCol);
+        if (dl && num(dl) == null) {
+          denLabel = dl;
+          denValue = num(cell(rows, r, denLabelCol + 1));
+        }
+      }
+    }
     out.push({
       area,
       name,
@@ -204,6 +274,11 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
       actual: actualCol >= 0 ? num(cell(rows, r, actualCol)) : null,
       verifiedActual: null,
       verifyResult: null,
+      formula,
+      numLabel,
+      numValue,
+      denLabel,
+      denValue,
       sortOrder: order++,
     });
   }
