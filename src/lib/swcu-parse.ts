@@ -257,18 +257,31 @@ function applyKmac(sheets: SheetRows[], indicators: SwcuIndicatorRow[]): void {
   }
 }
 
-/** 총괄 시트: 3행 헤더(그룹/중간/리프) + 값행(index 3) → label=value 행 */
+/**
+ * 총괄 시트: 헤더 밴드(row0·row1) + 리프(row2) + 값행(row3) → label=value 행.
+ * 대분류(category)는 병합된 그룹 헤더(교육혁신/인력양성/산학협력/만족도 등)인데,
+ * 병합 셀이라 값이 row0 또는 row1 중 한쪽에만 들어가고, 같은 칸에 소계 숫자
+ * (695·428·290 …)가 섞여 있다. 따라서 row0·row1 두 행을 모두 보되 '숫자가 아닌'
+ * 한국어 텍스트 셀만 그룹 헤더로 인정해 carry-forward 한다. (숫자는 소계라 무시)
+ */
 function parseRaw(sheet: SheetRows, scope: '공통' | 'AI'): SwcuRawRow[] {
   const rows = sheet.rows;
-  const groupRow = rows[0] ?? [];
+  const groupRow0 = rows[0] ?? [];
+  const groupRow1 = rows[1] ?? [];
   const leafRow = rows[2] ?? [];
   const valRow = rows[3] ?? [];
-  const maxCol = Math.max(groupRow.length, leafRow.length, valRow.length);
+  const maxCol = Math.max(groupRow0.length, groupRow1.length, leafRow.length, valRow.length);
+  // 숫자(소계)는 그룹명이 아니다. 텍스트만 그룹 헤더로 인정.
+  const groupText = (s: string): string => {
+    const t = (s ?? '').trim();
+    if (!t || num(t) != null) return '';
+    return t;
+  };
   const out: SwcuRawRow[] = [];
   let category: string | null = null;
   let order = 0;
   for (let c = 2; c < maxCol; c++) {
-    const g = (groupRow[c] ?? '').trim();
+    const g = groupText(groupRow0[c]) || groupText(groupRow1[c]);
     if (g) category = g;
     const label = (leafRow[c] ?? '').trim();
     if (!label) continue;
