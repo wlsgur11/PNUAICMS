@@ -205,7 +205,7 @@ export default function SwcuDashboardPage() {
                   </div>
                   {(() => {
                     const isSum = (label: string) => { const n = label.replace(/\s+/g, ''); return n === '계' || /^계\(/.test(n); };
-                    const fmtVal = (v: number | null) => v == null ? '-' : (Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100));
+                    const fmtVal = (v: number | null) => v == null ? '-' : (Number.isInteger(v) ? String(v) : String(Math.round(v * 1000) / 1000));
                     const allBlocks: Raw[][] = [];
                     let cur: Raw[] = [];
                     for (const it of g.items) {
@@ -217,7 +217,7 @@ export default function SwcuDashboardPage() {
                     return (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
                         {blocks.map((blk, bi) => (
-                          <div key={bi} style={{ border: '1px solid var(--slate-200)', borderRadius: 8, overflow: 'hidden' }}>
+                          <div key={bi} style={{ border: '1px solid var(--slate-200)', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
                             {blk.map((r, ri) => {
                               const sum = isSum(r.label);
                               return (
@@ -227,9 +227,10 @@ export default function SwcuDashboardPage() {
                                   background: sum ? 'var(--slate-50)' : '#fff',
                                   borderTop: sum ? '1px solid var(--slate-200)' : 'none',
                                   fontWeight: sum ? 700 : 400,
+                                  marginTop: sum ? 'auto' : undefined,
                                 }}>
                                   <span className={sum ? '' : 'muted'} title={r.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label.replace(/\s+/g, ' ').trim()}</span>
-                                  <span style={{ flexShrink: 0, fontWeight: sum ? 700 : 600 }}>{fmtVal(r.value)}</span>
+                                  <span title={r.value != null ? `정확한 값: ${r.value}` : undefined} style={{ flexShrink: 0, fontWeight: sum ? 700 : 600, cursor: r.value != null && !Number.isInteger(r.value) ? 'help' : undefined }}>{fmtVal(r.value)}</span>
                                 </div>
                               );
                             })}
