@@ -172,6 +172,7 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
   const targetCol = findCol(bands, (h) => h.includes('목표'), maxCol);
   const actualCol = detectActualCol(bands, maxCol);
 
+  const normalize = (s: string) => s.replace(/\s+/g, '');
   const out: SwcuIndicatorRow[] = [];
   let area: string | null = null;
   let order = 0;
@@ -184,6 +185,16 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
     // 데이터 행 = 단위 열에 값이 있는 행(빈 줄/footer 제외)
     const unit = unitCol >= 0 ? cell(rows, r, unitCol) : '';
     if (!unit) continue;
+    // 드리프트 감지: 파일에 지표명이 실제로 있는 행(영역 경계 행 = 위치 0·3·10)은
+    // CANONICAL_NAMES 와 일치해야 한다. 불일치 시 양식의 지표 추가/삭제/이름변경으로
+    // 위치 매핑이 어긋난 것이므로 즉시 중단한다.
+    // (단, 이름 없는 영역 내부 행끼리의 순서만 바뀐 경우는 이 검사로 잡을 수 없다.)
+    if (fileName && CANONICAL_NAMES[order] && normalize(fileName) !== normalize(CANONICAL_NAMES[order])) {
+      throw new Error(
+        `성과지표 정렬 불일치: 위치 ${order}에 '${CANONICAL_NAMES[order]}' 기대, 파일은 '${fileName}'. ` +
+          `엑셀 양식에서 지표가 추가/삭제/재정렬된 것으로 보입니다. CANONICAL_NAMES 갱신이 필요합니다.`,
+      );
+    }
     const name = fileName || CANONICAL_NAMES[order] || `지표${order + 1}`;
     out.push({
       area,
@@ -211,6 +222,8 @@ function applyKmac(sheets: SheetRows[], indicators: SwcuIndicatorRow[]): void {
   const rows = sheet.rows;
   const hdr = findHeaderRow(rows);
   if (hdr < 0) return;
+  // KMAC 시트는 헤더 라벨이 매칭 행 위(hdr-1)에 걸쳐 있어 parseIndicators(hdr+1)와 달리
+  // hdr-1 밴드를 본다. 절대 +1 로 "고치지" 말 것.
   const bands = [rows[hdr] ?? [], rows[hdr - 1] ?? []];
   const maxCol = Math.max(...bands.map((b) => b.length), 0);
   const unitCol = findCol(bands, (h) => h.includes('단위'), maxCol);
@@ -233,6 +246,14 @@ function applyKmac(sheets: SheetRows[], indicators: SwcuIndicatorRow[]): void {
       if (v === 'O' || v === 'X') ind.verifyResult = v;
     }
     if (verifiedCol >= 0) ind.verifiedActual = num(cell(rows, r, verifiedCol));
+  }
+  // 가드: KMAC 데이터 행 수(order)는 성과지표 수와 일치해야 한다.
+  // 다르면 KMAC 양식이 바뀌어 위치 기반 매칭이 어긋난 것이므로 즉시 중단한다.
+  if (order !== indicators.length) {
+    throw new Error(
+      `KMAC 시트 행 수(${order})가 성과지표 수(${indicators.length})와 다릅니다. ` +
+        `KMAC 양식 변경으로 위치 기반 검증 매칭이 어긋났을 수 있습니다.`,
+    );
   }
 }
 
@@ -273,7 +294,8 @@ export function parseSwcu(sheets: SheetRows[], fileName?: string): ParsedSwcu {
   if (ai) raws.push(...parseRaw(ai, 'AI'));
 
   const university = indSheet.rows.find((row) => (row[0] ?? '').includes('학교명'))?.[1] ?? null;
-  const submittedAt = indSheet.rows.find((row) => (row[0] ?? '').includes('제출일'))?.[0] ?? null;
+  const submittedRaw = indSheet.rows.find((row) => (row[0] ?? '').includes('제출일'))?.[0] ?? null;
+  const submittedAt = submittedRaw ? submittedRaw.replace(/^제출일\s*[:：]\s*/, '').trim() || null : null;
 
-  return { year, university: university || null, submittedAt: submittedAt || null, indicators, raws };
+  return { year, university: university || null, submittedAt, indicators, raws };
 }
