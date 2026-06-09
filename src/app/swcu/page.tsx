@@ -75,10 +75,39 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
   );
 }
 
+/** 원시값 항목 하나의 연도별 추이 막대그래프 (모달용) */
+function RawTrend({ series }: { series: { year: number; value: number | null }[] }) {
+  const vals = series.map((s) => s.value ?? 0);
+  const axisMax = Math.max(1, ...vals) * 1.2;
+  const W = 380, H = 200, padL = 16, padR = 16, padT = 24, padB = 28;
+  const plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
+  const gw = plotW / Math.max(1, series.length);
+  const bw = Math.min(64, gw - 28);
+  const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
+  const fmtN = (v: number | null) => (v == null ? '-' : Number.isInteger(v) ? String(v) : String(Math.round(v * 1000) / 1000));
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%">
+      <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="var(--slate-200)" />
+      {series.map((s, i) => {
+        const x = padL + i * gw + (gw - bw) / 2;
+        const y = s.value == null ? baseY : yOf(s.value);
+        return (
+          <g key={s.year}>
+            <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill="var(--indigo-600)" />
+            <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--indigo-600)">{fmtN(s.value)}</text>
+            <text x={x + bw / 2} y={baseY + 18} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 export default function SwcuDashboardPage() {
   const { data, error } = useSWR<YearData[]>('/api/swcu');
   const [rawYear, setRawYear] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [rawSel, setRawSel] = useState<Raw | null>(null);
 
   if (error) return (<><PageHeader title="SW중심대학 성과" /><div className="card empty">불러오기 실패</div></>);
   if (!data) return (<><PageHeader title="SW중심대학 성과" /><div className="loading">불러오는 중…</div></>);
@@ -221,9 +250,9 @@ export default function SwcuDashboardPage() {
                             {blk.map((r, ri) => {
                               const sum = isSum(r.label);
                               return (
-                                <div key={ri} style={{
+                                <div key={ri} onClick={() => setRawSel(r)} title="클릭하면 연도별 추이" style={{
                                   display: 'flex', justifyContent: 'space-between', gap: 8,
-                                  padding: '5px 10px', fontSize: 13,
+                                  padding: '5px 10px', fontSize: 13, cursor: 'pointer',
                                   background: sum ? 'var(--slate-50)' : '#fff',
                                   borderTop: sum ? '1px solid var(--slate-200)' : 'none',
                                   fontWeight: sum ? 700 : 400,
@@ -245,6 +274,27 @@ export default function SwcuDashboardPage() {
           </div>
         )}
       </div>
+
+      {rawSel && (() => {
+        const series = years.map((y) => {
+          const m = y.raws.find((x) => x.scope === rawSel.scope && x.sortOrder === rawSel.sortOrder && x.label === rawSel.label);
+          return { year: y.year, value: m?.value ?? null };
+        });
+        return (
+          <div onClick={() => setRawSel(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 24, width: 440, maxWidth: '92vw' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>{rawSel.label.replace(/\s+/g, ' ').trim()}</div>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{rawSel.scope} · {rawSel.category || '기타'} · 연도별 추이</div>
+                </div>
+                <button className="btn btn-sm" onClick={() => setRawSel(null)}>닫기</button>
+              </div>
+              <div style={{ marginTop: 12 }}><RawTrend series={series} /></div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
