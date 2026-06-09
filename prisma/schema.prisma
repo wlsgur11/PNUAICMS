@@ -26,35 +26,35 @@ datasource db {
 
 // ── 1. 기업기본정보 ─────────────────────────────────────
 model Company {
-  id            String   @id @default(cuid())
+  id             String  @id @default(cuid())
   // 표시용 사람이 읽는 코드(C-001 ...). 화면·검색용. 채번은 애플리케이션에서.
-  code          String   @unique
-  name          String   @unique // 기관명 (중복 등록 방지)
-  joinYear      Int? // 사업참여연도
-  region        String? // 지역구분: 부산/울산/경남/수도권/기타
-  addressDetail String? // 소재지(상세)
-  orgType       String? // 유형: 기업/공공기관/연구소/대학
-  employeeCount String? // 직원수 (범위 문자열 허용)
-  revenueScale  String? // 매출규모 (라벨)
-  avgSalary     String? // 평균연봉
+  code           String  @unique
+  name           String  @unique // 기관명 (중복 등록 방지)
+  joinYear       Int? // 사업참여연도
+  region         String? // 지역구분: 부산/울산/경남/수도권/기타
+  addressDetail  String? // 소재지(상세)
+  orgType        String? // 유형: 기업/공공기관/연구소/대학
+  employeeCount  String? // 직원수 (범위 문자열 허용)
+  revenueScale   String? // 매출규모 (라벨)
+  avgSalary      String? // 평균연봉
   newcomerSalary String? // 신입사원연봉
-  homepage      String?
-  mainIndustry  String? // 주요산업분야
-  aiField       String? // AI기술분야
-  professor1    String? // 교육원담당교수명1
-  professor2    String? // 교육원담당교수명2
-  mou           Boolean  @default(false) // MOU체결여부
-  priority      String? // 협력우선순위: A/B/C
-  status        String   @default("미접촉") // 진행상태
-  summary       String? // 기업 소개 (위키피디아 자동조회 요약)
-  note          String? // 비고 (자동조회 메타 마커 포함)
+  homepage       String?
+  mainIndustry   String? // 주요산업분야
+  aiField        String? // AI기술분야
+  professor1     String? // 교육원담당교수명1
+  professor2     String? // 교육원담당교수명2
+  mou            Boolean @default(false) // MOU체결여부
+  priority       String? // 협력우선순위: A/B/C
+  status         String  @default("미접촉") // 진행상태
+  summary        String? // 기업 소개 (위키피디아 자동조회 요약)
+  note           String? // 비고 (자동조회 메타 마커 포함)
 
-  isActive      Boolean  @default(true) // soft delete (false = 비활성)
-  version       Int      @default(1) // 낙관적 락 버전
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String? // 등록자(이메일)
-  updatedBy     String? // 수정자(이메일)
+  isActive  Boolean  @default(true) // soft delete (false = 비활성)
+  version   Int      @default(1) // 낙관적 락 버전
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // 등록자(이메일)
+  updatedBy String? // 수정자(이메일)
 
   collaboration Collaboration?
   persons       ContactPerson[]
@@ -70,9 +70,9 @@ model Company {
 
 // ── 2. 협업정보 (기업 1:1) ──────────────────────────────
 model Collaboration {
-  id                  String  @id @default(cuid())
-  companyId           String  @unique
-  company             Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  companyId String  @unique
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   internship          Boolean @default(false) // 인턴십여부
   industryProject     Boolean @default(false) // 산학프로젝트여부
@@ -86,24 +86,24 @@ model Collaboration {
   etc                 Boolean @default(false) // 기타협력
 
   // 인턴십/채용연계 상세 (교수님 시안의 카드 내용)
-  requiredSkills      String? // 요구역량 (예: Python, PyTorch)
-  preferredMajor      String? // 우대전공 (예: 컴퓨터공학)
-  capacity            Int?    // 수용가능인원(명)
+  requiredSkills String? // 요구역량 (예: Python, PyTorch)
+  preferredMajor String? // 우대전공 (예: 컴퓨터공학)
+  capacity       Int? // 수용가능인원(명)
 
-  memo                String? // 기타협업메모
+  memo String? // 기타협업메모
 
-  version             Int      @default(1)
-  updatedAt           DateTime @updatedAt
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
 
   @@map("collaborations")
 }
 
 // ── 3. 실무자정보 (기업 1:N) ────────────────────────────
 model ContactPerson {
-  id            String   @id @default(cuid())
-  code          String   @unique // P-0001 ...
-  companyId     String
-  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  code      String  @unique // P-0001 ...
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   name          String // 실무자이름
   dept          String? // 부서
@@ -115,14 +115,14 @@ model ContactPerson {
   memo          String? // 관련메모
   note          String? // 비고
 
-  isActive      Boolean  @default(true)
-  version       Int      @default(1)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  createdBy     String? // 등록자(이메일)
-  updatedBy     String? // 수정자(이메일)
+  isActive  Boolean  @default(true)
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // 등록자(이메일)
+  updatedBy String? // 수정자(이메일)
 
-  histories     ContactHistory[]
+  histories ContactHistory[]
 
   @@index([companyId])
   @@map("contact_persons")
@@ -130,23 +130,23 @@ model ContactPerson {
 
 // ── 4. 컨택이력_협력성과 (기업 1:N, 실무자 1:N) ─────────
 model ContactHistory {
-  id           String   @id @default(cuid())
-  code         String   @unique // H-0001 ...
-  companyId    String
-  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  personId     String?
-  person       ContactPerson? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  id        String         @id @default(cuid())
+  code      String         @unique // H-0001 ...
+  companyId String
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  personId  String?
+  person    ContactPerson? @relation(fields: [personId], references: [id], onDelete: SetNull)
 
-  professor    String? // 교육원담당교수명
-  business     String? // 사업단(관심사업분야): 중심대학/부트캠프
-  contactDate  String // 컨택일자 (yyyy-MM-dd)
-  method       String? // 컨택방식: 미팅/전화/이메일/기타
-  content      String? // 컨택내용
-  histStatus   String   @default("논의중") // 컨택상태: 논의중/진행완료
+  professor   String? // 교육원담당교수명
+  business    String? // 사업단(관심사업분야): 중심대학/부트캠프
+  contactDate String // 컨택일자 (yyyy-MM-dd)
+  method      String? // 컨택방식: 미팅/전화/이메일/기타
+  content     String? // 컨택내용
+  histStatus  String  @default("논의중") // 컨택상태: 논의중/진행완료
 
-  version      Int      @default(1)
-  createdAt    DateTime @default(now())
-  createdBy    String? // 등록자
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  createdBy String? // 등록자
 
   @@index([companyId])
   @@index([contactDate])
@@ -178,10 +178,10 @@ model Counter {
 
 // ── 학생 (학번 키) ───────────────────────────────────────
 model Student {
-  studentNo   String   @id // 학번 (식별키)
-  nameMasked  String? // 마스킹 이름 (김*혁)
-  department  String? // 정컴/DS/비SW학과
-  createdAt   DateTime @default(now())
+  studentNo  String   @id // 학번 (식별키)
+  nameMasked String? // 마스킹 이름 (김*혁)
+  department String? // 정컴/DS/비SW학과
+  createdAt  DateTime @default(now())
 
   projects    ProjectStudent[]
   internships InternshipStudent[]
@@ -197,7 +197,7 @@ model Lab {
   affiliation   String? // 소속학과 (정컴/DS)
   createdAt     DateTime @default(now())
 
-  projects      Project[]
+  projects Project[]
 
   @@index([professorName])
   @@map("labs")
@@ -216,7 +216,7 @@ model Division {
 
 // ── 산학협력 프로젝트 ────────────────────────────────────
 model Project {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   year            Int? // 연도
   dept            String? // 정컴/DS
   category        String? // 학과졸업과제/교육원연계
@@ -231,17 +231,17 @@ model Project {
   cntUndergrad    Int? // 학부생 수
   studentNamesRaw String? // 학번 없는 학부생 이름(콤마)
 
-  companyId       String?
-  company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  companyNameRaw  String? // 엑셀 원본 기업명 (미매칭 보존)
-  labId           String?
-  lab             Lab?     @relation(fields: [labId], references: [id], onDelete: SetNull)
+  companyId      String?
+  company        Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyNameRaw String? // 엑셀 원본 기업명 (미매칭 보존)
+  labId          String?
+  lab            Lab?     @relation(fields: [labId], references: [id], onDelete: SetNull)
 
-  version         Int      @default(1)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  students        ProjectStudent[]
+  students ProjectStudent[]
 
   @@index([companyId])
   @@index([year])
@@ -250,33 +250,33 @@ model Project {
 
 // ── 인턴십 ───────────────────────────────────────────────
 model Internship {
-  id             String   @id @default(cuid())
-  year           Int?
-  programName    String? // 프로그램명
-  hostType       String? // 주관: 자체/학점연계
-  method         String? // 교육방식
-  domestic       String? // 국내외
-  country        String?
-  startDate      String? // 인턴시작일
-  endDate        String? // 인턴종료일
-  weeks          Int? // 인턴기간(주)
-  hoursPerWeek   Int? // 실습시간(1주 기준)
-  credits        Int? // 인정학점
-  cntCSE         Int? // 교육인원(정컴)
-  cntDS          Int? // 교육인원(DS)
-  cntNonSW       Int? // 교육인원(비SW학과)
-  empSW          Int? // 연계취업자(SW)
-  empNonSW       Int? // 연계취업자(비SW)
+  id           String  @id @default(cuid())
+  year         Int?
+  programName  String? // 프로그램명
+  hostType     String? // 주관: 자체/학점연계
+  method       String? // 교육방식
+  domestic     String? // 국내외
+  country      String?
+  startDate    String? // 인턴시작일
+  endDate      String? // 인턴종료일
+  weeks        Int? // 인턴기간(주)
+  hoursPerWeek Int? // 실습시간(1주 기준)
+  credits      Int? // 인정학점
+  cntCSE       Int? // 교육인원(정컴)
+  cntDS        Int? // 교육인원(DS)
+  cntNonSW     Int? // 교육인원(비SW학과)
+  empSW        Int? // 연계취업자(SW)
+  empNonSW     Int? // 연계취업자(비SW)
 
   companyId      String?
   company        Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   companyNameRaw String? // 원본 기업명
 
-  version        Int      @default(1)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  students       InternshipStudent[]
+  students InternshipStudent[]
 
   @@index([companyId])
   @@index([year])
@@ -327,4 +327,59 @@ model YearStat {
   updatedAt               DateTime @updatedAt
 
   @@map("year_stats")
+}
+
+// ── SW중심대학 사업 연차 ──────────────────────────────────
+model SwcuYear {
+  year        Int      @id // 사업연도 (2023~)
+  university  String? // 학교명 (부산대학교)
+  submittedAt String? // 제출일 텍스트
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  indicators SwcuIndicator[]
+  raws       SwcuRaw[]
+
+  @@map("swcu_years")
+}
+
+// ── 공통성과지표 (목표 대비 실적 + KMAC 검증) ─────────────
+model SwcuIndicator {
+  id             String   @id @default(cuid())
+  year           Int
+  yearRef        SwcuYear @relation(fields: [year], references: [year], onDelete: Cascade)
+  area           String? // 영역
+  name           String // 성과지표명
+  unit           String? // 단위 (%, 명, 점, 건, 개)
+  target         Float? // 당해년도 목표
+  actual         Float? // 자체 실적
+  verifiedActual Float? // KMAC 검증 실적 (있는 해만)
+  verifyResult   String? // KMAC 검증결과 'O'/'X' (있는 해만)
+  formula        String? // 산출식/지표설명
+  numLabel       String? // 분자 항목명
+  numValue       Float? // 분자 값
+  denLabel       String? // 분모 항목명
+  denValue       Float? // 분모 값
+  note           String?
+  sortOrder      Int      @default(0)
+
+  @@unique([year, name])
+  @@index([year])
+  @@map("swcu_indicators")
+}
+
+// ── 총괄 원시 집계값 ──────────────────────────────────────
+model SwcuRaw {
+  id        String   @id @default(cuid())
+  year      Int
+  yearRef   SwcuYear @relation(fields: [year], references: [year], onDelete: Cascade)
+  scope     String // '공통' | 'AI'
+  category  String? // 대분류
+  label     String // 항목명
+  value     Float?
+  sortOrder Int      @default(0)
+
+  @@unique([year, scope, sortOrder])
+  @@index([year])
+  @@map("swcu_raws")
 }

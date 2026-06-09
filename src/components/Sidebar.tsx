@@ -16,6 +16,8 @@ type ExternalLink = { href: string; label: string; icon: string; hint?: string }
 const FAMILY: ExternalLink[] = [
   { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터', icon: '💻' },
   { href: 'https://pnu-emp.vercel.app', label: '정컴 취업현황', icon: '💼' },
+  { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU', icon: '🤖' },
+  { href: 'https://pnuai.github.io/', label: '브로슈어 협업 시스템', icon: '📄' },
   { href: 'http://10.126.34.165:15980', label: 'AI 지식검색 (KB)', icon: '🔎', hint: '교내' },
 ];
 
@@ -38,6 +40,15 @@ const GROUPS: Group[] = [
       { href: '/projects', label: '산학협력 현황' },
       { href: '/internships', label: '인턴십 현황' },
       { href: '/records/import', label: '실적 업로드' },
+    ],
+  },
+  {
+    key: 'swcu',
+    label: 'SW중심대학 성과',
+    icon: '🏅',
+    items: [
+      { href: '/swcu', label: '성과 대시보드' },
+      { href: '/swcu/import', label: '실적 엑셀 업로드' },
     ],
   },
 ];
@@ -67,6 +78,8 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
     Object.fromEntries(GROUPS.map((g) => [g.key, g.items.some((i) => i.href === activeHref)])),
   );
   const toggle = (k: string) => setOpen((p) => ({ ...p, [k]: !p[k] }));
+  // 패밀리 사이트는 항목이 많아 기본 접힘 상태
+  const [familyOpen, setFamilyOpen] = useState(false);
 
   // 로그인 페이지에는 사이드바 숨김 (전체 화면 로그인 UI)
   if (pathname === '/login') return null;
@@ -87,7 +100,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
 
         {GROUPS.map((g) => (
           <div key={g.key} className="nav-group">
-            <button type="button" className="nav-group-header" onClick={() => toggle(g.key)}>
+            <button type="button" className={`nav-group-header${open[g.key] ? ' open' : ''}`} onClick={() => toggle(g.key)}>
               <span className="nav-icon">{g.icon}</span>
               <span>{g.label}</span>
               <span className="nav-caret">{open[g.key] ? '▾' : '▸'}</span>
@@ -105,17 +118,23 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
         ))}
       </nav>
 
-      <div className="nav-family">
-        <div className="nav-family-label">패밀리 사이트</div>
-        {FAMILY.map((f) => (
+      <div className="nav-group nav-family">
+        <button
+          type="button"
+          className={`nav-group-header${familyOpen ? ' open' : ''}`}
+          onClick={() => setFamilyOpen((o) => !o)}
+        >
+          <span>패밀리 사이트</span>
+          <span className="nav-caret">{familyOpen ? '▾' : '▸'}</span>
+        </button>
+        {familyOpen && FAMILY.map((f) => (
           <a
             key={f.href}
             href={f.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-item nav-external"
+            className="nav-item nav-sub nav-external"
           >
-            <span className="nav-icon">{f.icon}</span>
             <span>{f.label}</span>
             {f.hint && <span className="nav-hint">{f.hint}</span>}
             <span className="nav-ext-arrow">↗</span>
@@ -130,7 +149,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot }: Props) {
           {logoutSlot}
         </div>
       )}
-      <div className="sidebar-footer">v2.0.1 © 2026</div>
+      <div className="sidebar-footer">v2.1.0 © 2026</div>
     </aside>
   );
 }
