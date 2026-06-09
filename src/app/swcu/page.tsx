@@ -20,6 +20,9 @@ const fmt = (n: number | null, unit: string | null) => {
   return String(Math.round(n * 100) / 100);
 };
 
+// 낮을수록 좋은 지표 (목표 이하면 달성)
+const LOWER_BETTER = new Set<string>(['참여학과 교원 1인당 학생수']);
+
 // 핵심 차트로 띄울 지표 (title=표시명, name=파서 CANONICAL_NAMES와 정확히 일치)
 const KEY: { title: string; name: string }[] = [
   { title: '산학협력 프로젝트 참여율', name: '산학협력 프로젝트 참여율' },
@@ -51,20 +54,20 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
           const x = padL + i * gw + (gw - bw) / 2;
           const y = s.actual == null ? baseY : yOf(s.actual);
           const barColor =
-            s.actual != null && s.target != null
-              ? s.actual >= s.target ? '#16a34a' : '#d97706'
+            s.actual != null && s.target != null && s.actual >= s.target
+              ? '#16a34a'
               : 'var(--indigo-600)';
           return (
             <g key={s.year}>
               <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill={barColor} />
-              {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#0ea5e9" strokeWidth={2} strokeDasharray="4 3" />}
+              {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} />}
               <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
               <text x={x + bw / 2} y={baseY + 18} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
             </g>
           );
         })}
       </svg>
-      <div className="muted" style={{ fontSize: 12 }}>막대=실적(초록=목표달성·주황=미달), 점선=목표</div>
+      <div className="muted" style={{ fontSize: 12 }}>막대=실적(초록=목표 달성), 가는 검정선=목표</div>
     </div>
   );
 }
@@ -124,10 +127,11 @@ export default function SwcuDashboardPage() {
                     const ind = valOf(y, name);
                     if (!ind || ind.actual == null) return <td key={y.year} className="center muted">-</td>;
                     const normTarget = ind.target != null && unitOf[name] === '점' && ind.target > 0 && ind.target < 1 ? ind.target * 100 : ind.target;
-                    const met = normTarget != null && ind.actual >= normTarget;
+                    const met = normTarget != null && ind.actual != null &&
+                      (LOWER_BETTER.has(name) ? ind.actual <= normTarget : ind.actual >= normTarget);
                     return (
                       <td key={y.year} className="center">
-                        <span style={{ fontWeight: 700, color: normTarget == null ? 'inherit' : met ? '#16a34a' : '#d97706' }}>
+                        <span style={{ fontWeight: 700, color: met ? '#16a34a' : 'inherit' }}>
                           {fmt(ind.actual, unitOf[name])}
                         </span>
                         {normTarget != null && <span className="muted" style={{ fontSize: 11, display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
@@ -165,7 +169,7 @@ export default function SwcuDashboardPage() {
             </tbody>
           </table>
         </div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성, 주황=미달. 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성(교원 1인당 학생수처럼 낮을수록 좋은 지표는 목표 이하면 달성). 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
       </div>
 
       <div className="card">
