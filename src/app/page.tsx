@@ -195,6 +195,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="muted" style={{ fontSize: 12, marginBottom: 12, lineHeight: 1.6 }}>
+            ※ CMS가 자체 추적하는 산학·인턴십 정량실적입니다 (SW중심대학 성과 탭의 공식 평가지표와는 별개 자료). 일부 과거 연도에서 산학협력 달성이 0%로 보이는 것은 원본(4차연도 현황) 엑셀에 해당 연도 값이 비어 있어서이며, 실제 미달성이 아닙니다.
+          </div>
+
           {view === 'all' ? (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 18 }}>
