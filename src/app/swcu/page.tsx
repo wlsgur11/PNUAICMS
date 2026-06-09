@@ -62,7 +62,7 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
           return (
             <g key={s.year}>
               <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill={barColor} />
-              {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} />}
+              {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />}
               <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
               <text x={x + bw / 2} y={baseY + 16} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
               {s.target != null && <text x={x + bw / 2} y={baseY + 32} textAnchor="middle" fontSize={10} fill="var(--slate-400)">목표 {fmt(s.target, unit)}</text>}
