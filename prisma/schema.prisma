@@ -355,6 +355,11 @@ model SwcuIndicator {
   actual         Float? // 자체 실적
   verifiedActual Float? // KMAC 검증 실적 (있는 해만)
   verifyResult   String? // KMAC 검증결과 'O'/'X' (있는 해만)
+  formula        String? // 산출식/지표설명
+  numLabel       String? // 분자 항목명
+  numValue       Float? // 분자 값
+  denLabel       String? // 분모 항목명
+  denValue       Float? // 분모 값
   note           String?
   sortOrder      Int      @default(0)
 
