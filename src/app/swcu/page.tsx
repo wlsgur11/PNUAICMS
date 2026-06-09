@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 
@@ -8,6 +8,8 @@ type Indicator = {
   area: string | null; name: string; unit: string | null;
   target: number | null; actual: number | null;
   verifiedActual: number | null; verifyResult: string | null; sortOrder: number;
+  formula: string | null; numLabel: string | null; numValue: number | null;
+  denLabel: string | null; denValue: number | null;
 };
 type Raw = { scope: string; category: string | null; label: string; value: number | null; sortOrder: number };
 type YearData = { year: number; university: string | null; submittedAt: string | null; indicators: Indicator[]; raws: Raw[] };
@@ -66,6 +68,7 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
 export default function SwcuDashboardPage() {
   const { data, error } = useSWR<YearData[]>('/api/swcu');
   const [rawYear, setRawYear] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   if (error) return (<><PageHeader title="SW중심대학 성과" /><div className="card empty">불러오기 실패</div></>);
   if (!data) return (<><PageHeader title="SW중심대학 성과" /><div className="loading">불러오는 중…</div></>);
@@ -104,8 +107,13 @@ export default function SwcuDashboardPage() {
             </thead>
             <tbody>
               {nameOrder.map((name) => (
-                <tr key={name}>
-                  <td style={{ position: 'sticky', left: 0, background: '#fff', fontWeight: 600 }}>
+                <Fragment key={name}>
+                <tr>
+                  <td
+                    onClick={() => setExpanded(expanded === name ? null : name)}
+                    style={{ position: 'sticky', left: 0, background: '#fff', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <span className="muted" style={{ fontWeight: 400, marginRight: 4 }}>{expanded === name ? '▾' : '▸'}</span>
                     {name}{unitOf[name] ? <span className="muted" style={{ fontWeight: 400 }}> ({unitOf[name]})</span> : ''}
                   </td>
                   {years.map((y) => {
@@ -128,11 +136,32 @@ export default function SwcuDashboardPage() {
                     );
                   })}
                 </tr>
+                {expanded === name && (
+                  <tr>
+                    <td colSpan={years.length + 1} style={{ background: 'var(--slate-50)', padding: '12px 16px' }}>
+                      {years.map((y) => {
+                        const ind = valOf(y, name);
+                        if (!ind || (!ind.formula && ind.numValue == null)) return null;
+                        const norm = (s: string | null) => (s ?? '').replace(/\s+/g, ' ').trim();
+                        return (
+                          <div key={y.year} style={{ marginBottom: 8, fontSize: 13 }}>
+                            <strong>{y.year}</strong>
+                            {ind.numValue != null && (
+                              <span className="muted"> · 분자 {norm(ind.numLabel)} = {ind.numValue} / 분모 {norm(ind.denLabel)} = {ind.denValue}</span>
+                            )}
+                            {ind.formula && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{norm(ind.formula)}</div>}
+                          </div>
+                        );
+                      })}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>초록=목표 달성, 주황=미달. KMAC 검증이 있는 해는 검증결과(O/X) 표시.</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 산출 근거를 볼 수 있습니다. 초록=목표 달성, 주황=미달. KMAC 검증이 있는 해는 검증결과(O/X) 표시.</div>
       </div>
 
       <div className="card">
@@ -149,16 +178,32 @@ export default function SwcuDashboardPage() {
         ) : (
           <div className="table-wrap" style={{ boxShadow: 'none', border: '1px solid var(--slate-200)', maxHeight: 420, overflow: 'auto' }}>
             <table className="data-table">
-              <thead><tr><th>구분</th><th>대분류</th><th>항목</th><th className="center">값</th></tr></thead>
+              <thead><tr><th>항목</th><th className="center">값</th></tr></thead>
               <tbody>
-                {rawData.raws.map((r, idx) => (
-                  <tr key={idx}>
-                    <td className="center"><span className="tag tag-indigo">{r.scope}</span></td>
-                    <td className="muted">{r.category || ''}</td>
-                    <td>{r.label}</td>
-                    <td className="center" style={{ fontWeight: 600 }}>{r.value ?? '-'}</td>
-                  </tr>
-                ))}
+                {(() => {
+                  let prevKey: string | null = null;
+                  const rows: React.ReactNode[] = [];
+                  rawData.raws.forEach((r, idx) => {
+                    const groupKey = `${r.scope} ${r.category ?? ''}`;
+                    if (groupKey !== prevKey) {
+                      prevKey = groupKey;
+                      rows.push(
+                        <tr key={`h-${idx}`}>
+                          <td colSpan={2} style={{ background: 'var(--slate-50)', fontWeight: 700 }}>
+                            {r.scope}{r.category ? ` · ${r.category}` : ''}
+                          </td>
+                        </tr>
+                      );
+                    }
+                    rows.push(
+                      <tr key={idx}>
+                        <td style={{ paddingLeft: 24 }}>{r.label}</td>
+                        <td className="center" style={{ fontWeight: 600 }}>{r.value ?? '-'}</td>
+                      </tr>
+                    );
+                  });
+                  return rows;
+                })()}
               </tbody>
             </table>
           </div>
