@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
@@ -11,6 +12,10 @@ type Dashboard = {
   internshipCount: number;
   employmentCount: number;
   mouCount: number;
+  projectTotal: number;
+  internshipTotal: number;
+  studentTotal: number;
+  partnerCompanyTotal: number;
   regionCount: Record<string, number>;
   recentHistories: RecentHistory[];
 };
@@ -78,15 +83,97 @@ function MetricCard({ title, target, achieved, students }: { title: string; targ
   );
 }
 
+/** 연도별 달성률 추이 (산학협력·인턴십) 그룹 막대그래프. 차트 라이브러리 없이 SVG. */
+function TrendChart({ stats }: { stats: YearStat[] }) {
+  const data = [...stats].sort((a, b) => a.year - b.year);
+  const series = [
+    { key: 'industryAchievedRatio', targetKey: 'industryTargetRatio', label: '산학협력', color: 'var(--indigo-600)' },
+    { key: 'internshipAchievedRatio', targetKey: 'internshipTargetRatio', label: '인턴십', color: '#0ea5e9' },
+  ] as const;
+
+  // 달성률·목표치 모두 축 범위에 반영 (목표선이 잘리지 않도록)
+  const vals = data.flatMap((d) => series.flatMap((s) => [d[s.key] ?? 0, d[s.targetKey] ?? 0]));
+  const maxVal = Math.max(0.01, ...vals);
+  const axisMax = maxVal * 1.18; // 막대/목표선 위 여백
+
+  // 가로로 넓은 viewBox → 카드 폭을 채우면서도 높이는 적당히 (약 4:1 비율).
+  const W = 1120, H = 280, padL = 48, padR = 24, padT = 22, padB = 42;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const groupW = plotW / data.length;
+  const barW = Math.min(84, (groupW - 24) / series.length - 12);
+  const gap = 14;
+  const baseY = padT + plotH;
+  const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
+  const ticks = [0, axisMax / 2, axisMax];
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 18, marginBottom: 8, paddingLeft: 4 }}>
+        {series.map((s) => (
+          <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color }} />
+            {s.label} 달성률
+          </span>
+        ))}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--slate-500)' }}>
+          <svg width={22} height={8}><line x1={0} y1={4} x2={22} y2={4} stroke="var(--slate-400)" strokeWidth={2.5} strokeDasharray="5 4" /></svg>
+          목표치
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}>
+        {/* y축 눈금선 + 라벨 */}
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padL} y1={yOf(t)} x2={W - padR} y2={yOf(t)} stroke="var(--slate-100)" strokeWidth={1} />
+            <text x={padL - 10} y={yOf(t) + 4} textAnchor="end" fontSize={13} fill="var(--slate-400)">
+              {(t * 100).toFixed(t < 0.1 ? 1 : 0)}%
+            </text>
+          </g>
+        ))}
+        {/* 막대 + 값 라벨 + 연도 라벨 */}
+        {data.map((d, i) => {
+          const groupX = padL + i * groupW;
+          const cluster = series.length * barW + (series.length - 1) * gap;
+          const startX = groupX + (groupW - cluster) / 2;
+          return (
+            <g key={d.year}>
+              {series.map((s, j) => {
+                const v = d[s.key] ?? 0;
+                const tv = d[s.targetKey] ?? 0;
+                const x = startX + j * (barW + gap);
+                const y = yOf(v);
+                return (
+                  <g key={s.key}>
+                    <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={s.color} />
+                    {tv > 0 && (
+                      <line x1={x - 5} y1={yOf(tv)} x2={x + barW + 5} y2={yOf(tv)} stroke={s.color} strokeWidth={2.5} strokeDasharray="5 4" />
+                    )}
+                    <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={s.color}>
+                      {(v * 100).toFixed(2)}%
+                    </text>
+                  </g>
+                );
+              })}
+              <text x={groupX + groupW / 2} y={baseY + 24} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--slate-600)">
+                {d.year}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { data, error } = useSWR<Dashboard>('/api/dashboard');
   const { data: yearStats } = useSWR<YearStat[]>('/api/year-stats');
   const [selected, setSelected] = useState<HistoryDetail | null>(null);
-  const [year, setYear] = useState<number | null>(null);
+  // 'all' = 연도별 추이 그래프 / 숫자 = 해당 연도 목표·달성 게이지
+  const [view, setView] = useState<'all' | number>('all');
 
   const years = (yearStats ?? []).map((y) => y.year);
-  const activeYear = year ?? years[0] ?? null;
-  const cur = (yearStats ?? []).find((y) => y.year === activeYear) ?? null;
+  const cur = typeof view === 'number' ? (yearStats ?? []).find((y) => y.year === view) ?? null : null;
 
   if (error) return (<><PageHeader title="시스템 대시보드" /><div className="card empty">불러오기 실패: {(error as Error).message}</div></>);
   if (!data) return (<><PageHeader title="시스템 대시보드" /><div className="loading">불러오는 중…</div></>);
@@ -101,43 +188,65 @@ export default function DashboardPage() {
           <div className="card-head">
             <div className="card-title"><span className="accent-bar" />정량실적 현황판</div>
             <div style={{ display: 'flex', gap: 6 }}>
+              <button className={`btn btn-sm${view === 'all' ? ' btn-primary' : ''}`} onClick={() => setView('all')}>전체</button>
               {years.map((y) => (
-                <button key={y} className={`btn btn-sm${y === activeYear ? ' btn-primary' : ''}`} onClick={() => setYear(y)}>{y}</button>
+                <button key={y} className={`btn btn-sm${view === y ? ' btn-primary' : ''}`} onClick={() => setView(y)}>{y}</button>
               ))}
             </div>
           </div>
 
-          <div style={{ marginBottom: 8 }}>
-            {cur && (
-              <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', padding: '12px 16px', background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
-                <BaselineRow label="SW학과 재학생" cse={cur.enrolledCSE} ds={cur.enrolledDS} />
-                <BaselineRow label="산학 목표인원" cse={cur.industryTargetCSE} ds={cur.industryTargetDS} />
-                <BaselineRow label="인턴십 목표인원" cse={cur.internTargetCSE} ds={cur.internTargetDS} />
+          {view === 'all' ? (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 18 }}>
+                {[
+                  { label: '누적 산학협력', value: data.projectTotal, unit: '건' },
+                  { label: '누적 인턴십', value: data.internshipTotal, unit: '건' },
+                  { label: '참여 학생', value: data.studentTotal, unit: '명' },
+                  { label: '참여 기업', value: data.partnerCompanyTotal, unit: '개' },
+                ].map((t) => (
+                  <div key={t.label} style={{ padding: '14px 18px', background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--slate-100)' }}>
+                    <div className="stat-label">{t.label}</div>
+                    <div style={{ fontSize: 26, fontWeight: 800 }}>
+                      {t.value ?? '-'}<span style={{ fontSize: 13, fontWeight: 500, marginLeft: 2, color: 'var(--slate-500)' }}>{t.unit}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-            <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
-              <MetricCard title="산학협력 프로젝트" target={cur?.industryTargetRatio ?? null} achieved={cur?.industryAchievedRatio ?? null} students={cur?.industryStudents ?? null} />
-              <MetricCard title="인턴십" target={cur?.internshipTargetRatio ?? null} achieved={cur?.internshipAchievedRatio ?? null} students={cur?.internshipStudents ?? null} />
+              <TrendChart stats={yearStats} />
             </div>
-          </div>
+          ) : (
+            <div style={{ marginBottom: 8 }}>
+              {cur && (
+                <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', padding: '12px 16px', background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
+                  <BaselineRow label="SW학과 재학생" cse={cur.enrolledCSE} ds={cur.enrolledDS} />
+                  <BaselineRow label="산학 목표인원" cse={cur.industryTargetCSE} ds={cur.industryTargetDS} />
+                  <BaselineRow label="인턴십 목표인원" cse={cur.internTargetCSE} ds={cur.internTargetDS} />
+                </div>
+              )}
+              <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+                <MetricCard title="산학협력 프로젝트" target={cur?.industryTargetRatio ?? null} achieved={cur?.industryAchievedRatio ?? null} students={cur?.industryStudents ?? null} />
+                <MetricCard title="인턴십" target={cur?.internshipTargetRatio ?? null} achieved={cur?.internshipAchievedRatio ?? null} students={cur?.internshipStudents ?? null} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 기업 관계 현황 */}
+      {/* 기업 관계 현황 (클릭 시 조건 적용된 기업 리스트로 이동) */}
       <div className="stats-grid">
         {[
-          { label: '관리중인 총 기업', value: data.totalCount, icon: '🏢', tone: 'indigo' },
-          { label: '인턴십 가능 기업', value: data.internshipCount, icon: '🎓', tone: 'blue' },
-          { label: '채용연계 가능 기업', value: data.employmentCount, icon: '💼', tone: 'green' },
-          { label: 'MOU 체결 완료', value: data.mouCount, icon: '🤝', tone: 'amber' },
+          { label: '관리중인 총 기업', value: data.totalCount, icon: '🏢', tone: 'indigo', href: '/companies' },
+          { label: '인턴십 가능 기업', value: data.internshipCount, icon: '🎓', tone: 'blue', href: '/companies?internship=1' },
+          { label: '채용연계 가능 기업', value: data.employmentCount, icon: '💼', tone: 'green', href: '/companies?employment=1' },
+          { label: 'MOU 체결 완료', value: data.mouCount, icon: '🤝', tone: 'amber', href: '/companies?mou=1' },
         ].map((s) => (
-          <div className="stat-card" key={s.label}>
+          <Link className="stat-card stat-card-link" key={s.label} href={s.href}>
             <div className={`stat-icon ${s.tone}`}>{s.icon}</div>
             <div className="stat-meta">
               <div className="stat-label">{s.label}</div>
               <div className="stat-value">{s.value}</div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

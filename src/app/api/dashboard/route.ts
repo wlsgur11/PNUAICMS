@@ -31,6 +31,18 @@ export async function GET() {
       if (c.collaboration?.employment) employmentCount++;
     }
 
+    // 실적 누적 집계 (전체 추이 뷰 요약 타일)
+    const [projectTotal, internshipTotal, studentTotal, projCompanies, intCompanies] = await Promise.all([
+      prisma.project.count(),
+      prisma.internship.count(),
+      prisma.student.count(),
+      prisma.project.findMany({ where: { companyId: { not: null } }, select: { companyId: true }, distinct: ['companyId'] }),
+      prisma.internship.findMany({ where: { companyId: { not: null } }, select: { companyId: true }, distinct: ['companyId'] }),
+    ]);
+    const partnerCompanyTotal = new Set(
+      [...projCompanies, ...intCompanies].map((x) => x.companyId).filter(Boolean),
+    ).size;
+
     // 최근 컨택이력 5건
     const recent = await prisma.contactHistory.findMany({
       orderBy: { contactDate: 'desc' },
@@ -56,6 +68,10 @@ export async function GET() {
       employmentCount,
       mouCount,
       agreedCount,
+      projectTotal,
+      internshipTotal,
+      studentTotal,
+      partnerCompanyTotal,
       recentHistories,
     });
   });

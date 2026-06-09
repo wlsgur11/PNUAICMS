@@ -292,6 +292,9 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius); padding: 22px 24px;
   display: flex; align-items: center; gap: 18px; box-shadow: var(--shadow);
 }
+/* 클릭 가능한 통계 카드 (대시보드 → 필터된 기업 리스트) */
+.stat-card-link { text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s; }
+.stat-card-link:hover { transform: translateY(-2px); box-shadow: var(--shadow-md, 0 6px 16px rgba(0,0,0,0.1)); border-color: var(--indigo-300, #a5b4fc); }
 .stat-icon {
   width: 52px; height: 52px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center; font-size: 24px;

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import { ENUMS, COLLAB_FIELDS } from '@/lib/enums';
@@ -33,6 +33,22 @@ const EMPTY_FILTERS: Filters = {
   valueSpread: false, fieldTrainingOrg: false,
 };
 
+/** URL 쿼리파라미터를 초기 필터로 변환 (대시보드 카드 등에서 넘어온 조건 적용). */
+function parseFilters(sp: { get: (k: string) => string | null }): Filters {
+  const s = (k: string) => sp.get(k) ?? '';
+  const b = (k: string) => sp.get(k) === '1';
+  return {
+    q: s('q'), region: s('region'), priority: s('priority'), status: s('status'),
+    aiField: s('aiField'), business: s('business'),
+    sort: s('sort') || 'name_asc',
+    mou: b('mou'), includeInactive: b('includeInactive'),
+    internship: b('internship'), industryProject: b('industryProject'),
+    curriculumCommittee: b('curriculumCommittee'), guestLecture: b('guestLecture'),
+    employment: b('employment'), overseasEducation: b('overseasEducation'),
+    valueSpread: b('valueSpread'), fieldTrainingOrg: b('fieldTrainingOrg'),
+  };
+}
+
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'name_asc', label: '기관명 (가나다순)' },
   { value: 'name_desc', label: '기관명 (역순)' },
@@ -44,11 +60,13 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'updated_desc', label: '최근 수정순' },
 ];
 
-export default function CompaniesPage() {
+function CompaniesInner() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const sp = useSearchParams();
+  // URL 파라미터가 있으면 그 조건으로 시작 (대시보드 카드 → 필터 적용 진입)
+  const [filters, setFilters] = useState<Filters>(() => parseFilters(sp));
   // 사용자가 '검색'을 눌러 적용한 필터만 SWR 키에 반영 → 입력 중에는 재조회 안 함
-  const [applied, setApplied] = useState<Filters>(EMPTY_FILTERS);
+  const [applied, setApplied] = useState<Filters>(() => parseFilters(sp));
 
   function set<K extends keyof Filters>(k: K, v: Filters[K]) {
     setFilters((p) => ({ ...p, [k]: v }));
@@ -192,5 +210,13 @@ export default function CompaniesPage() {
         </table>
       </div>
     </>
+  );
+}
+
+export default function CompaniesPage() {
+  return (
+    <Suspense fallback={<><PageHeader title="협력 기업 리스트" /><div className="loading">불러오는 중…</div></>}>
+      <CompaniesInner />
+    </Suspense>
   );
 }
