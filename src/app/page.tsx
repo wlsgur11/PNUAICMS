@@ -83,39 +83,25 @@ function MetricCard({ title, target, achieved, students }: { title: string; targ
   );
 }
 
-/** 연도별 달성률 추이 (산학협력·인턴십) 그룹 막대그래프. 차트 라이브러리 없이 SVG. */
-function TrendChart({ stats }: { stats: YearStat[] }) {
-  const data = [...stats].sort((a, b) => a.year - b.year);
-  const series = [
-    { key: 'industryAchievedRatio', targetKey: 'industryTargetRatio', label: '산학협력', color: 'var(--indigo-600)' },
-    { key: 'internshipAchievedRatio', targetKey: 'internshipTargetRatio', label: '인턴십', color: '#0ea5e9' },
-  ] as const;
-
+/** 단일 지표(산학협력·인턴십)의 연도별 달성률 추이 막대그래프. 막대=달성률, 검정 점선=목표치. */
+function MetricTrend({ title, color, data }: { title: string; color: string; data: { year: number; actual: number | null; target: number | null }[] }) {
+  const series = [...data].sort((a, b) => a.year - b.year);
   // 달성률·목표치 모두 축 범위에 반영 (목표선이 잘리지 않도록)
-  const vals = data.flatMap((d) => series.flatMap((s) => [d[s.key] ?? 0, d[s.targetKey] ?? 0]));
-  const maxVal = Math.max(0.01, ...vals);
-  const axisMax = maxVal * 1.18; // 막대/목표선 위 여백
+  const vals = series.flatMap((d) => [d.actual ?? 0, d.target ?? 0]);
+  const axisMax = Math.max(0.01, ...vals) * 1.18;
 
-  // 가로로 넓은 viewBox → 카드 폭을 채우면서도 높이는 적당히 (약 4:1 비율).
-  const W = 1120, H = 280, padL = 48, padR = 24, padT = 22, padB = 42;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const groupW = plotW / data.length;
-  const barW = Math.min(84, (groupW - 24) / series.length - 12);
-  const gap = 14;
-  const baseY = padT + plotH;
+  const W = 520, H = 260, padL = 48, padR = 20, padT = 22, padB = 46;
+  const plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
+  const groupW = plotW / Math.max(1, series.length);
+  const barW = Math.min(96, groupW - 40);
   const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
   const ticks = [0, axisMax / 2, axisMax];
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 18, marginBottom: 8, paddingLeft: 4 }}>
-        {series.map((s) => (
-          <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color }} />
-            {s.label} 달성률
-          </span>
-        ))}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--slate-500)' }}>
+    <div className="card" style={{ height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <div className="card-title"><span className="accent-bar" />{title} 달성률</div>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--slate-500)' }}>
           <svg width={22} height={8}><line x1={0} y1={4} x2={22} y2={4} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" /></svg>
           목표치
         </span>
@@ -130,33 +116,27 @@ function TrendChart({ stats }: { stats: YearStat[] }) {
             </text>
           </g>
         ))}
-        {/* 막대 + 값 라벨 + 연도 라벨 */}
-        {data.map((d, i) => {
-          const groupX = padL + i * groupW;
-          const cluster = series.length * barW + (series.length - 1) * gap;
-          const startX = groupX + (groupW - cluster) / 2;
+        {/* 막대 + 값 라벨 + 목표선 + 연도 라벨 */}
+        {series.map((d, i) => {
+          const v = d.actual ?? 0;
+          const tv = d.target ?? 0;
+          const x = padL + i * groupW + (groupW - barW) / 2;
+          const y = yOf(v);
           return (
             <g key={d.year}>
-              {series.map((s, j) => {
-                const v = d[s.key] ?? 0;
-                const tv = d[s.targetKey] ?? 0;
-                const x = startX + j * (barW + gap);
-                const y = yOf(v);
-                return (
-                  <g key={s.key}>
-                    <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={s.color} />
-                    {tv > 0 && (
-                      <line x1={x - 5} y1={yOf(tv)} x2={x + barW + 5} y2={yOf(tv)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />
-                    )}
-                    <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={s.color}>
-                      {(v * 100).toFixed(2)}%
-                    </text>
-                  </g>
-                );
-              })}
-              <text x={groupX + groupW / 2} y={baseY + 24} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--slate-600)">
+              <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={color} />
+              {tv > 0 && (
+                <line x1={x - 6} y1={yOf(tv)} x2={x + barW + 6} y2={yOf(tv)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />
+              )}
+              <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={color}>
+                {(v * 100).toFixed(2)}%
+              </text>
+              <text x={x + barW / 2} y={baseY + 22} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--slate-600)">
                 {d.year}
               </text>
+              {tv > 0 && (
+                <text x={x + barW / 2} y={baseY + 38} textAnchor="middle" fontSize={11} fill="var(--slate-400)">목표 {(tv * 100).toFixed(1)}%</text>
+              )}
             </g>
           );
         })}
@@ -216,7 +196,18 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <TrendChart stats={yearStats} />
+              <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 14 }}>
+                <MetricTrend
+                  title="산학협력"
+                  color="var(--indigo-600)"
+                  data={yearStats.map((y) => ({ year: y.year, actual: y.industryAchievedRatio, target: y.industryTargetRatio }))}
+                />
+                <MetricTrend
+                  title="인턴십"
+                  color="#0ea5e9"
+                  data={yearStats.map((y) => ({ year: y.year, actual: y.internshipAchievedRatio, target: y.internshipTargetRatio }))}
+                />
+              </div>
             </div>
           ) : (
             <div style={{ marginBottom: 8 }}>
