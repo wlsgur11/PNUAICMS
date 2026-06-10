@@ -23,16 +23,8 @@ const fmt = (n: number | null, unit: string | null) => {
 // 낮을수록 좋은 지표 (목표 이하면 달성)
 const LOWER_BETTER = new Set<string>(['참여학과 교원 1인당 학생수']);
 
-// 핵심 차트로 띄울 지표 (title=표시명, name=파서 CANONICAL_NAMES와 정확히 일치)
-const KEY: { title: string; name: string }[] = [
-  { title: '산학협력 프로젝트 참여율', name: '산학협력 프로젝트 참여율' },
-  { title: '인턴십 이수율', name: '인턴십 이수율' },
-  { title: 'SW전공생 취업률', name: '취업률' },
-  { title: '수혜학생 만족도', name: '수혜학생 만족도' },
-];
-
-/** 지표 하나의 연도별 추이 막대 (목표선 포함) */
-function KpiTrend({ title, years, indicatorName }: { title: string; years: YearData[]; indicatorName: string }) {
+/** 지표 하나의 연도별 추이 막대 (목표선 포함). onClick 시 클릭 가능, showKmac 시 최신 검증 배지. */
+function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: string; years: YearData[]; indicatorName: string; onClick?: () => void; showKmac?: boolean }) {
   const series = years.map((y) => {
     const ind = y.indicators.find((i) => i.name === indicatorName);
     const rawT = ind?.target ?? null;
@@ -40,6 +32,10 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
     return { year: y.year, actual: ind?.actual ?? null, target, unit: ind?.unit ?? null };
   });
   const unit = series.find((s) => s.unit)?.unit ?? null;
+  // 최신 연도 KMAC 검증 결과 (있으면 배지로 표시)
+  const latestKmac = showKmac
+    ? [...years].reverse().map((y) => y.indicators.find((i) => i.name === indicatorName)).find((i) => i?.verifyResult) ?? null
+    : null;
   const vals = series.flatMap((s) => [s.actual ?? 0, s.target ?? 0]);
   const axisMax = Math.max(0.0001, ...vals) * 1.18;
   const W = 360, H = 200, padL = 40, padR = 12, padT = 16, padB = 46;
@@ -48,8 +44,21 @@ function KpiTrend({ title, years, indicatorName }: { title: string; years: YearD
   const bw = Math.min(48, gw - 24);
   const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
   return (
-    <div className="card" style={{ padding: 16, height: '100%' }}>
-      <div className="card-title" style={{ marginBottom: 8 }}><span className="accent-bar" />{title}</div>
+    <div
+      className="card"
+      style={{ padding: 16, height: '100%', cursor: onClick ? 'pointer' : undefined }}
+      onClick={onClick}
+      title={onClick ? '클릭하면 산출 근거' : undefined}
+    >
+      <div className="card-title" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span className="accent-bar" />
+        <span style={{ flex: 1 }}>{title}{unit ? <span className="muted" style={{ fontWeight: 400 }}> ({unit})</span> : ''}</span>
+        {latestKmac?.verifyResult && (
+          <span className="muted" style={{ fontSize: 11, fontWeight: 400 }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
+            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>{latestKmac.verifyResult}</span>
+          </span>
+        )}
+      </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%">
         <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="var(--slate-200)" />
         {series.map((s, i) => {
@@ -130,9 +139,41 @@ export default function SwcuDashboardPage() {
     <>
       <PageHeader title="SW중심대학 성과" />
 
-      <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14, marginBottom: 16 }}>
-        {KEY.map((k) => <KpiTrend key={k.name} title={k.title} years={years} indicatorName={k.name} />)}
-      </div>
+      {(() => {
+        // 전체 지표를 영역(area)별로 묶어 추이 그래프를 항상 펼쳐서 표시 (영역 등장 순서 유지).
+        // 영역 셀은 엑셀에서 세로 병합이라 그룹 첫 행에만 값이 있고 나머지는 숫자(미해결 병합셀 인덱스)/공백 →
+        // sortOrder(=nameOrder) 순서로 직전 유효 영역명을 승계해 보정한다.
+        const isValidArea = (a: string | null | undefined) => !!a && isNaN(Number(a));
+        const areaByName: Record<string, string> = {};
+        let curArea = '기타';
+        for (const name of nameOrder) {
+          if (isValidArea(areaOf[name])) curArea = (areaOf[name] as string).replace(/\s+/g, ' ').trim();
+          areaByName[name] = curArea;
+        }
+        const areaOrder: string[] = [];
+        const byArea: Record<string, string[]> = {};
+        for (const name of nameOrder) {
+          const area = areaByName[name];
+          if (!(area in byArea)) { areaOrder.push(area); byArea[area] = []; }
+          byArea[area].push(name);
+        }
+        return (
+          <div style={{ marginBottom: 16 }}>
+            {areaOrder.map((area) => (
+              <div key={area} style={{ marginBottom: 18 }}>
+                <div style={{ margin: '4px 2px 10px' }}>
+                  <span className="tag tag-indigo" style={{ fontSize: 13 }}>{area}</span>
+                </div>
+                <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+                  {byArea[area].map((name) => (
+                    <KpiTrend key={name} title={name} years={years} indicatorName={name} onClick={() => setExpanded(name)} showKmac />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-head"><div className="card-title"><span className="accent-bar" />성과지표 성적표 (목표 / 실적)</div></div>
