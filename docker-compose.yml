@@ -1,33 +1,49 @@
 # ─────────────────────────────────────────────────────────
-# 교내 서버 자체 호스팅용 (나중 단계).
-#   docker compose up -d
-# Supabase 에서 옮겨올 때: pg_dump 로 받은 데이터를 db 컨테이너에 복원하고
-# app 의 DATABASE_URL 을 아래 로컬 db 로 바꾸면 끝.
+# 자체 서버 단일 호스팅용 (가장 단순한 배포). 실행: docker compose up -d --build
+#
+# 비밀값은 같은 폴더의 .env 파일에서 읽는다 (.env.example 참고, .env 는 커밋 금지).
+#   POSTGRES_PASSWORD=...   AUTH_SECRET=...   AUTH_GOOGLE_ID=...   AUTH_GOOGLE_SECRET=...
+#
+# 첫 실행 시 스키마 적용(1회): docs/deployment.md 의 "스키마 적용" 참고.
+# Supabase → 자체DB 이전: pg_dump 로 받아 db 컨테이너에 복원하면 끝.
 # ─────────────────────────────────────────────────────────
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: cms
-      POSTGRES_PASSWORD: change-me-please
-      POSTGRES_DB: cms
+      POSTGRES_USER: ${POSTGRES_USER:-cms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-cms}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-cms} -d ${POSTGRES_DB:-cms}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # 외부 노출이 꼭 필요할 때만 주석 해제 (기본은 app 컨테이너에서만 접근)
+    # ports:
+    #   - '5432:5432'
 
   app:
     build: .
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      DATABASE_URL: 'postgresql://cms:change-me-please@db:5432/cms'
-      DIRECT_URL: 'postgresql://cms:change-me-please@db:5432/cms'
-      DEMO_USER_EMAIL: 'demo@pusan.ac.kr'
-      DEMO_USER_NAME: '교내 사용자'
-      # 운영 전환 시 NextAuth(Google) 환경변수를 여기에 추가
+      DATABASE_URL: 'postgresql://${POSTGRES_USER:-cms}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cms}'
+      DIRECT_URL: 'postgresql://${POSTGRES_USER:-cms}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cms}'
+      # 인증: 운영에서는 실제 Google OAuth 값을 .env 에 채우고 AUTH_BYPASS 는 false 로 둔다.
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      AUTH_BYPASS: ${AUTH_BYPASS:-false}
+      # 자동조회(선택)
+      DART_API_KEY: ${DART_API_KEY:-}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
     ports:
       - '3000:3000'
 

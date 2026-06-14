@@ -1,7 +1,14 @@
 node_modules
 .next
 .git
+.github
+.vscode
+.claude
+docs
+*.md
 .env
 .env*.local
 npm-debug.log*
-README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
