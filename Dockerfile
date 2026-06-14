@@ -9,6 +9,8 @@ WORKDIR /app
 # prisma 엔진 등이 필요로 하는 openssl
 RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json* ./
+# package.json 의 postinstall(prisma generate)이 스키마를 찾을 수 있게 prisma 먼저 복사
+COPY prisma ./prisma
 RUN npm ci
 
 # 2) 빌드 (alpine 위에서 빌드 → prisma 쿼리엔진이 런타임(alpine)과 동일 타깃)
