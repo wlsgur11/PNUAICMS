@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 개발 가이드 (CONTRIBUTING)
+    url: https://github.com/wlsgur11/PNUAICMS/blob/main/CONTRIBUTING.md
+    about: 브랜치 전략·커밋 규칙·개발 시작 방법을 먼저 확인하세요.
