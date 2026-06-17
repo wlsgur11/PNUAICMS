@@ -127,7 +127,8 @@ export default function CompanyDetailPage() {
             <div className="info-row"><span className="info-label">지역</span><span className="info-value">{c.region || '-'}</span></div>
             <div className="info-row"><span className="info-label">AI 기술분야</span><span className="info-value">{c.aiField || '-'}</span></div>
             <div className="info-row"><span className="info-label">주요산업</span><span className="info-value">{c.mainIndustry || '-'}</span></div>
-            <div className="info-row"><span className="info-label">담당 교수</span><span className="info-value">{[c.professor1, c.professor2].filter(Boolean).join(', ') || '-'}</span></div>
+            <div className="info-row"><span className="info-label">전공책임교수</span><span className="info-value">{c.professor1 || '-'}</span></div>
+            <div className="info-row"><span className="info-label">교육원 담당교수</span><span className="info-value">{c.professor2 || '-'}</span></div>
             <div className="info-row"><span className="info-label">진행상태</span><span className="info-value"><span className="tag tag-indigo">{c.status}</span></span></div>
             <div className="info-row"><span className="info-label">홈페이지</span><span className="info-value">{c.homepage ? <a href={c.homepage} target="_blank" style={{ color: 'var(--indigo-600)' }}>{c.homepage}</a> : '-'}</span></div>
             <div className="info-row"><span className="info-label">소재지</span><span className="info-value">{c.addressDetail || '-'}</span></div>
