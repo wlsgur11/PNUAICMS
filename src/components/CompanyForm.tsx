@@ -185,11 +185,11 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
           <input value={f.newcomerSalary ?? ''} onChange={(e) => set('newcomerSalary', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>교육원 담당교수 1</label>
+          <label>전공책임교수</label>
           <input value={f.professor1 ?? ''} onChange={(e) => set('professor1', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>교육원 담당교수 2</label>
+          <label>교육원 담당교수</label>
           <input value={f.professor2 ?? ''} onChange={(e) => set('professor2', e.target.value)} />
         </div>
         <div className="form-field">

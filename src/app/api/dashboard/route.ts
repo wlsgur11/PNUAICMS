@@ -13,13 +13,13 @@ export async function GET() {
 
     const companies = await prisma.company.findMany({
       where: { isActive: true },
-      include: { collaboration: { select: { internship: true, employment: true } } },
+      include: { collaboration: { select: { internship: true, employment: true, industryProject: true } } },
     });
 
     const regionCount: Record<string, number> = {};
     ENUMS.REGION.forEach((r) => (regionCount[r] = 0));
     const priorityCount = { A: 0, B: 0, C: 0 };
-    let internshipCount = 0, employmentCount = 0, mouCount = 0, agreedCount = 0;
+    let internshipCount = 0, employmentCount = 0, industryProjectCount = 0, mouCount = 0, agreedCount = 0;
 
     for (const c of companies) {
       const r = c.region || '기타';
@@ -29,6 +29,7 @@ export async function GET() {
       if (c.status === '협약완료') agreedCount++;
       if (c.collaboration?.internship) internshipCount++;
       if (c.collaboration?.employment) employmentCount++;
+      if (c.collaboration?.industryProject) industryProjectCount++;
     }
 
     // 실적 누적 집계 (전체 추이 뷰 요약 타일)
@@ -66,6 +67,7 @@ export async function GET() {
       priorityCount,
       internshipCount,
       employmentCount,
+      industryProjectCount,
       mouCount,
       agreedCount,
       projectTotal,
