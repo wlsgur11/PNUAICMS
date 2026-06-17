@@ -15,6 +15,7 @@ const DASHBOARD = { href: '/', label: '대시보드', icon: '📊' };
 type ExternalLink = { href: string; label: string; icon: string; hint?: string };
 const FAMILY: ExternalLink[] = [
   { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터', icon: '💻' },
+  { href: 'https://code.pusan.ac.kr', label: '코드플레이스', icon: '🧩' },
   { href: 'https://pnu-emp.vercel.app', label: '정컴 취업현황', icon: '💼' },
   { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU', icon: '🤖' },
   { href: 'https://pnuai.github.io/', label: '브로슈어 협업 시스템', icon: '📄' },

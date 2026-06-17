@@ -56,6 +56,12 @@ export default function LoginPage({ searchParams }: Props) {
         </form>
 
         <p className="login-note">@pusan.ac.kr 계정 전용</p>
+
+        <div className="login-hint">
+          <strong>교직원 계정 안내</strong>
+          부산대 포털(웹메일)에 먼저 로그인한 뒤 ‘Google로 로그인’을 누르면 한 번에 진행됩니다.
+          포털 로그인 창으로 넘어가는 경우, 로그인 후 이 페이지로 돌아와 버튼을 한 번 더 눌러주세요.
+        </div>
       </div>
 
       <div className="login-footer">© 2026 부산대학교 AI융합교육원</div>

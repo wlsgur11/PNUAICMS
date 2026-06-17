@@ -11,6 +11,7 @@ type Dashboard = {
   totalCount: number;
   internshipCount: number;
   employmentCount: number;
+  industryProjectCount: number;
   mouCount: number;
   projectTotal: number;
   internshipTotal: number;
@@ -232,7 +233,7 @@ export default function DashboardPage() {
         {[
           { label: '관리중인 총 기업', value: data.totalCount, icon: '🏢', tone: 'indigo', href: '/companies' },
           { label: '인턴십 가능 기업', value: data.internshipCount, icon: '🎓', tone: 'blue', href: '/companies?internship=1' },
-          { label: '채용연계 가능 기업', value: data.employmentCount, icon: '💼', tone: 'green', href: '/companies?employment=1' },
+          { label: '산학프로젝트 가능 기업', value: data.industryProjectCount, icon: '🔬', tone: 'green', href: '/companies?industryProject=1' },
           { label: 'MOU 체결 완료', value: data.mouCount, icon: '🤝', tone: 'amber', href: '/companies?mou=1' },
         ].map((s) => (
           <Link className="stat-card stat-card-link" key={s.label} href={s.href}>
