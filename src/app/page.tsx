@@ -235,6 +235,7 @@ export default function DashboardPage() {
           { label: '인턴십 가능 기업', value: data.internshipCount, icon: '🎓', tone: 'blue', href: '/companies?internship=1' },
           { label: '산학프로젝트 가능 기업', value: data.industryProjectCount, icon: '🔬', tone: 'green', href: '/companies?industryProject=1' },
           { label: 'MOU 체결 완료', value: data.mouCount, icon: '🤝', tone: 'amber', href: '/companies?mou=1' },
+          { label: '관리 학생', value: data.studentTotal, icon: '🧑‍🎓', tone: 'indigo', href: '/students' },
         ].map((s) => (
           <Link className="stat-card stat-card-link" key={s.label} href={s.href}>
             <div className={`stat-icon ${s.tone}`}>{s.icon}</div>

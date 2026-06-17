@@ -38,6 +38,7 @@ type Full = {
   isActive: boolean; version: number;
   createdAt?: string; updatedAt?: string; createdBy?: string | null; updatedBy?: string | null;
   collaboration: Collab | null; persons: Person[]; histories: History[];
+  participatingStudents?: { studentNo: string; nameMasked: string }[];
 };
 
 export default function CompanyDetailPage() {
@@ -237,6 +238,22 @@ export default function CompanyDetailPage() {
             </table>
           )}
           <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 행을 클릭하면 전체 내용을 보거나 수정·삭제할 수 있습니다.</p>
+        </div>
+
+        {/* 참여 학생 (연결 A) */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="accent-bar" />참여 학생 ({c.participatingStudents?.length ?? 0})</div>
+          </div>
+          {(c.participatingStudents?.length ?? 0) === 0 ? (
+            <div className="empty">이 기업과 연결된 산학·인턴십 참여 학생이 없습니다.</div>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {c.participatingStudents!.map((s) => (
+                <span key={s.studentNo} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -178,15 +178,65 @@ model Counter {
 
 // ── 학생 (학번 키) ───────────────────────────────────────
 model Student {
-  studentNo  String   @id // 학번 (식별키)
-  nameMasked String? // 마스킹 이름 (김*혁)
-  department String? // 정컴/DS/비SW학과
-  createdAt  DateTime @default(now())
+  studentNo         String   @id // 학번 (식별키)
+  nameMasked        String? // 마스킹 이름 (김*혁) — 목록/엑셀용
+  name              String? // 실명 — 상세 화면 전용
+  department        String? // 학과 (정컴/DS/비SW학과)
+  major             String? // 전공
+  grade             Int? // 학년 (1~4)
+  gpa               Float? // 학점
+  careerGoal        String? // 진로희망
+  phone             String? // 전화번호
+  email             String? // 이메일
+  certificates      String[] @default([]) // 자격증
+  foreignLanguages  String[] @default([]) // 외국어
+  graduationDate    String? // 졸업일자 (yyyy-MM-dd 텍스트)
+  employmentCompany String? // 취업 기업명(자유입력)
+  swPrograms        Json? // {program1..5} SW중심대학 사업참여
+  bootcampPrograms  Json? // {program1..5} 부트캠프 사업참여
 
-  projects    ProjectStudent[]
-  internships InternshipStudent[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  createdBy String? // 등록자(이메일)
+  updatedBy String? // 수정자(이메일)
+
+  projects          ProjectStudent[]
+  internships       InternshipStudent[] // 기존 관계 유지(집계 인턴십용, 미사용)
+  counselings       Counseling[]
+  manualInternships StudentInternship[] // 학생별 수동 인턴십
 
   @@map("students")
+}
+
+// ── 진로지도 상담 (학생 1:N, 최대 5건은 앱에서 검증) ──────
+model Counseling {
+  id          String   @id @default(cuid())
+  studentNo   String
+  student     Student  @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+  counselDate String? // 상담일자 (yyyy-MM-dd)
+  counselor   String? // 상담자 이름
+  content     String? // 상담내역
+  createdAt   DateTime @default(now())
+  createdBy   String?
+
+  @@index([studentNo])
+  @@map("counselings")
+}
+
+// ── 학생별 인턴십 (수동 입력. 실적 엑셀엔 학생 단위가 없어 직접 기록) ──
+model StudentInternship {
+  id             String   @id @default(cuid())
+  studentNo      String
+  student        Student  @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+  internshipType String? // 유형 (기업체험형 등)
+  companyName    String? // 기업체명 (CMS 기업명과 정확일치 시 링크)
+  durationWeeks  Int? // 기간(주)
+  activityDate   String? // 연월일 (yyyy-MM-dd)
+  createdAt      DateTime @default(now())
+  createdBy      String?
+
+  @@index([studentNo])
+  @@map("student_internships")
 }
 
 // ── 연구실 ───────────────────────────────────────────────
