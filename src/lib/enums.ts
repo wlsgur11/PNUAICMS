@@ -13,6 +13,8 @@ export const ENUMS = {
   CONTACT_PREF: ['미팅', '전화', '이메일'],
   HISTORY_STATUS: ['논의중', '진행완료'],
   BUSINESS: ['중심대학', '부트캠프'], // 사업단(관심사업분야)
+  CAREER_GOAL: ['취업(대기업)', '취업(공사)', '취업(공무원)', '취업(중소중견기업)', '창업', '대학원진학'],
+  INTERNSHIP_TYPE: ['기업체험형', '기업문제해결형', '도약수업', '표준현장실습학기제', 'ICT(국내)', 'ICT(글로벌)'],
 } as const;
 
 // 협업정보 boolean — 화면 라벨 매핑 (Prisma 필드명 ↔ 한글 라벨)

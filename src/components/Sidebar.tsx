@@ -52,6 +52,17 @@ const GROUPS: Group[] = [
       { href: '/swcu/import', label: '실적 엑셀 업로드' },
     ],
   },
+  {
+    key: 'students',
+    label: '학생 이력',
+    icon: '🎓',
+    items: [
+      { href: '/students/dashboard', label: '학생 현황' },
+      { href: '/students', label: '학생 목록' },
+      { href: '/students/new', label: '신규 학생 등록' },
+      { href: '/students/analytics', label: '통계분석' },
+    ],
+  },
 ];
 
 type Props = {

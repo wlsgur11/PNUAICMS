@@ -54,10 +54,11 @@ export async function importRecords(parsed: ParseResult): Promise<ImportSummary>
     };
     const ensureStudent = async (studentNo: string, name: string) => {
       if (seenStudents.has(studentNo)) return;
+      const masked = mask(name);
       await tx.student.upsert({
         where: { studentNo },
-        update: { nameMasked: mask(name) },
-        create: { studentNo, nameMasked: mask(name) },
+        update: { nameMasked: masked, name: name?.trim() || undefined },
+        create: { studentNo, nameMasked: masked, name: name?.trim() || null },
       });
       seenStudents.add(studentNo);
     };

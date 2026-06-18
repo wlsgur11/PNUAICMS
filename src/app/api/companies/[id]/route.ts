@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { companyUpdateSchema } from '@/lib/validation';
+import { maskName } from '@/lib/list-filters';
 
 type Ctx = { params: { id: string } };
 
@@ -22,10 +23,24 @@ export async function GET(_req: Request, { params }: Ctx) {
           orderBy: { contactDate: 'desc' },
           include: { person: { select: { name: true } } },
         },
+        projects: { include: { students: { include: { student: { select: { studentNo: true, name: true, nameMasked: true } } } } } },
+        internships: { include: { students: { include: { student: { select: { studentNo: true, name: true, nameMasked: true } } } } } },
       },
     });
     if (!company) return fail('기업을 찾을 수 없습니다.', 404);
-    return ok(company);
+
+    // 산학·인턴십 참여 학생 dedup (마스킹). 연결 A.
+    const seen = new Map<string, { studentNo: string; nameMasked: string }>();
+    const add = (st: { studentNo: string; name: string | null; nameMasked: string | null }) => {
+      if (!seen.has(st.studentNo)) seen.set(st.studentNo, { studentNo: st.studentNo, nameMasked: st.name ? maskName(st.name) : (st.nameMasked || '-') });
+    };
+    for (const p of company.projects) for (const ps of p.students) add(ps.student);
+    for (const it of company.internships) for (const is of it.students) add(is.student);
+    const participatingStudents = [...seen.values()];
+
+    // projects/internships 원시 배열은 응답 비대화를 막기 위해 제외하고 참여 학생만 추가
+    const { projects: _p, internships: _i, ...rest } = company;
+    return ok({ ...rest, participatingStudents });
   });
 }
 
