@@ -1,0 +1,15 @@
+# ─────────────────────────────────────────────────────────
+# 자체 서버 운영용 (B안: GHCR 이미지 pull 방식).
+#  - 서버는 빌드하지 않고, CI가 구워 GHCR에 올린 이미지를 태그(SHA)로 받아 교체한다.
+#  - DB는 일단 Supabase 사용(.env 의 DATABASE_URL/DIRECT_URL). 나중에 로컬 Postgres로 옮길 때 db 서비스 추가.
+#  - 배포: ./deploy.sh   (현재/대상 SHA 비교 → 확인 → 해당 태그 pull + 교체)
+#  - 외부 노출(80/443)은 추후 Nginx가 담당. 지금은 내부망에서 3000으로 확인.
+# ─────────────────────────────────────────────────────────
+services:
+  app:
+    image: ghcr.io/wlsgur11/pnuaicms:${TAG:-latest}
+    container_name: cms_app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '3000:3000'

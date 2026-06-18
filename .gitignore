@@ -37,3 +37,6 @@ yarn-error.log*
 .understand-anything/
 .superpowers/
 docs/superpowers/
+
+# 자체 서버 배포 런타임 기록 (서버에서 생성)
+.deployed-sha
