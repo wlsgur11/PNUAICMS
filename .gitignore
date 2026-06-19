@@ -40,3 +40,6 @@ docs/superpowers/
 
 # 자체 서버 배포 런타임 기록 (서버에서 생성)
 .deployed-sha
+
+# Claude Code 로컬 설정 (preview 실행 구성 등)
+.claude/
