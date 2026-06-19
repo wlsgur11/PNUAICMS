@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Stats = {
@@ -18,7 +20,7 @@ function StatCard({ label, value, icon }: { label: string; value: number; icon: 
       <div style={{ fontSize: 28 }}>{icon}</div>
       <div>
         <div className="muted" style={{ fontSize: 13 }}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 700 }}>{value}<span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>명</span></div>
+        <div style={{ fontSize: 26, fontWeight: 700 }}><CountUp end={value} /><span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>명</span></div>
       </div>
     </div>
   );
@@ -49,6 +51,7 @@ export default function StudentDashboardPage() {
   return (
     <>
       <PageHeader title="학생 현황" />
+      <FadeContent>
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
         <StatCard label="전체 학생" value={data.total} icon="🎓" />
         <StatCard label="3학년 이상(재학)" value={data.highGrade} icon="📈" />
@@ -56,7 +59,9 @@ export default function StudentDashboardPage() {
         <StatCard label="산학 참여" value={data.projectParticipants} icon="🔬" />
         <StatCard label="인턴십 참여" value={data.internParticipants} icon="💼" />
       </div>
+      </FadeContent>
 
+      <FadeContent delay={120}>
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 14, marginTop: 14 }}>
         <div className="card">
           <div className="card-title" style={{ marginBottom: 12 }}><span className="accent-bar" />학년별 현황</div>
@@ -76,7 +81,9 @@ export default function StudentDashboardPage() {
           )}
         </div>
       </div>
+      </FadeContent>
 
+      <FadeContent delay={220}>
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />최근 수정 학생</div>
         {data.recent.length === 0 ? <div className="empty">없습니다.</div> : (
@@ -94,6 +101,7 @@ export default function StudentDashboardPage() {
           </div>
         )}
       </div>
+      </FadeContent>
     </>
   );
 }

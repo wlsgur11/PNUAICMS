@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 import { ENUMS, COLLAB_FIELDS } from '@/lib/enums';
 
 type Row = {
@@ -170,9 +172,10 @@ function CompaniesInner() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length}</strong>건
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
+      <FadeContent>
       <div className="table-wrap" style={{ marginTop: 8 }}>
         <table className="data-table">
           <thead>
@@ -188,9 +191,11 @@ function CompaniesInner() {
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={7} className="empty">조건에 맞는 기업이 없습니다.</td></tr>
             ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="row-click" onClick={() => router.push(`/companies/${r.id}`)}
-                    style={r.isActive === false ? { opacity: 0.5 } : undefined}>
+              rows.map((r, i) => (
+                <tr key={r.id}
+                    className={`row-click${r.isActive === false ? '' : ' row-appear'}`}
+                    onClick={() => router.push(`/companies/${r.id}`)}
+                    style={r.isActive === false ? { opacity: 0.5 } : { animationDelay: `${Math.min(i, 15) * 0.035}s` }}>
                   <td>
                     <span className="link">{r.name}</span>
                     {r.isActive === false && <span className="muted" style={{ marginLeft: 6, fontSize: 12 }}>(비활성)</span>}
@@ -209,6 +214,7 @@ function CompaniesInner() {
           </tbody>
         </table>
       </div>
+      </FadeContent>
     </>
   );
 }

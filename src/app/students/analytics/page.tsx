@@ -2,6 +2,8 @@
 
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 
 type Stats = {
   total: number; graduated: number; internParticipants: number; projectParticipants: number; highGrade: number;
@@ -45,6 +47,7 @@ export default function StudentAnalyticsPage() {
   return (
     <>
       <PageHeader title="통계분석" />
+      <FadeContent>
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
         {[
           { label: '전체 학생', value: data.total },
@@ -54,16 +57,19 @@ export default function StudentAnalyticsPage() {
         ].map((c) => (
           <div key={c.label} className="card">
             <div className="muted" style={{ fontSize: 13 }}>{c.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 700 }}>{c.value}<span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>명</span></div>
+            <div style={{ fontSize: 26, fontWeight: 700 }}><CountUp end={c.value} /><span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>명</span></div>
           </div>
         ))}
       </div>
+      </FadeContent>
+      <FadeContent delay={120}>
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 14, marginTop: 14 }}>
         <Bars title="학년별 분포" items={data.gradeDistribution.map((g) => ({ label: `${g.grade}학년`, count: g.count }))} />
         <Bars title="학과별 분포" items={data.departmentCounts} />
         <Bars title="진로희망 분포" items={data.careerCounts} />
         <Bars title="주요 참여지표" items={engagement} />
       </div>
+      </FadeContent>
     </>
   );
 }

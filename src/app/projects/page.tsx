@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 
 type Row = {
   id: string;
@@ -50,8 +52,8 @@ export default function ProjectsPage() {
 
       {rows && (
         <div className="filter-bar" style={{ gap: 24, marginBottom: 4 }}>
-          <span className="muted">프로젝트 <strong>{rows.length}</strong>건</span>
-          <span className="muted">참여기업 연결 <strong>{rows.filter((r) => r.companyId).length}</strong>건</span>
+          <span className="muted">프로젝트 <strong><CountUp end={rows.length} /></strong>건</span>
+          <span className="muted">참여기업 연결 <strong><CountUp end={rows.filter((r) => r.companyId).length} /></strong>건</span>
         </div>
       )}
 
@@ -91,9 +93,10 @@ export default function ProjectsPage() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length}</strong>건
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
+      <FadeContent>
       <div className="table-wrap" style={{ marginTop: 8 }}>
         <table className="data-table">
           <thead>
@@ -113,8 +116,8 @@ export default function ProjectsPage() {
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={7} className="empty">조건에 맞는 프로젝트가 없습니다.</td></tr>
             ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="row-click" onClick={() => setSelected(r)}>
+              rows.map((r, i) => (
+                <tr key={r.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => setSelected(r)}>
                   <td className="center">{r.year ?? '-'}</td>
                   <td>{r.category || '-'}</td>
                   <td className="center">{r.dept || '-'}</td>
@@ -135,6 +138,7 @@ export default function ProjectsPage() {
           </tbody>
         </table>
       </div>
+      </FadeContent>
       <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 행을 클릭하면 프로젝트 상세를 볼 수 있습니다. 참여학생 이름은 마스킹 표시됩니다.</p>
 
       {selected && (
