@@ -5,6 +5,8 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 
 type RecentHistory = { id: string; companyName: string; professor: string; contactDate: string; method: string; content: string; histStatus: string };
 type Dashboard = {
@@ -165,6 +167,7 @@ export default function DashboardPage() {
 
       {/* 정량실적 현황판 (엑셀 전체현황 기반) */}
       {yearStats && yearStats.length > 0 && (
+        <FadeContent>
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-head">
             <div className="card-title"><span className="accent-bar" />정량실적 현황판</div>
@@ -192,7 +195,7 @@ export default function DashboardPage() {
                   <div key={t.label} style={{ padding: '14px 18px', background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--slate-100)' }}>
                     <div className="stat-label">{t.label}</div>
                     <div style={{ fontSize: 26, fontWeight: 800 }}>
-                      {t.value ?? '-'}<span style={{ fontSize: 13, fontWeight: 500, marginLeft: 2, color: 'var(--slate-500)' }}>{t.unit}</span>
+                      {t.value == null ? '-' : <CountUp end={t.value} />}<span style={{ fontSize: 13, fontWeight: 500, marginLeft: 2, color: 'var(--slate-500)' }}>{t.unit}</span>
                     </div>
                   </div>
                 ))}
@@ -226,9 +229,11 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        </FadeContent>
       )}
 
       {/* 기업 관계 현황 (클릭 시 조건 적용된 기업 리스트로 이동) */}
+      <FadeContent delay={120}>
       <div className="stats-grid">
         {[
           { label: '관리중인 총 기업', value: data.totalCount, icon: '🏢', tone: 'indigo', href: '/companies' },
@@ -241,12 +246,14 @@ export default function DashboardPage() {
             <div className={`stat-icon ${s.tone}`}>{s.icon}</div>
             <div className="stat-meta">
               <div className="stat-label">{s.label}</div>
-              <div className="stat-value">{s.value}</div>
+              <div className="stat-value"><CountUp end={s.value} /></div>
             </div>
           </Link>
         ))}
       </div>
+      </FadeContent>
 
+      <FadeContent delay={220}>
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-head"><div className="card-title"><span className="accent-bar" />최근 컨택 이력</div></div>
         {data.recentHistories.length === 0 ? (
@@ -256,8 +263,8 @@ export default function DashboardPage() {
             <table className="data-table">
               <thead><tr><th>기업명</th><th>일자</th><th>상태</th><th>내용</th></tr></thead>
               <tbody>
-                {data.recentHistories.map((h) => (
-                  <tr key={h.id} className="row-click" onClick={() => setSelected({ ...h, personName: null })}>
+                {data.recentHistories.map((h, i) => (
+                  <tr key={h.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => setSelected({ ...h, personName: null })}>
                     <td style={{ fontWeight: 700 }}>{h.companyName}</td>
                     <td>{h.contactDate}</td>
                     <td><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus}</span></td>
@@ -269,6 +276,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </FadeContent>
 
       <HistoryDetailModal history={selected} onClose={() => setSelected(null)} />
     </>

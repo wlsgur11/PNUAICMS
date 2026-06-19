@@ -172,7 +172,7 @@ a { color: inherit; text-decoration: none; }
 }
 .nav-group-header:hover { background: rgba(120, 140, 170, 0.12); color: var(--text-1); }
 .nav-group-header.open { color: var(--text-1); }
-.nav-caret { margin-left: auto; font-size: 12px; line-height: 1; color: var(--text-3); }
+.nav-caret { margin-left: auto; font-size: 16px; line-height: 1; color: var(--text-3); }
 .nav-sub { padding-left: 41px; font-size: 13px; }
 
 /* 패밀리 사이트 (외부 서비스 바로가기) */
@@ -458,6 +458,11 @@ table.data-table { width: 100%; border-collapse: collapse; }
 .data-table tbody tr:hover { background: var(--slate-50); }
 .data-table .link { color: var(--slate-900); font-weight: 700; cursor: pointer; }
 .data-table .link:hover { color: var(--indigo-600); }
+
+/* Animated List: 표 행이 아래에서 떠오르며 순차 등장 (행별 animation-delay는 인라인으로) */
+@keyframes rowAppear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.data-table tbody tr.row-appear { animation: rowAppear 0.32s ease both; }
+@media (prefers-reduced-motion: reduce) { .data-table tbody tr.row-appear { animation: none; } }
 
 /* ── 버튼 ── */
 .btn {
