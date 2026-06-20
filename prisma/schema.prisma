@@ -433,3 +433,25 @@ model SwcuRaw {
   @@index([year])
   @@map("swcu_raws")
 }
+
+// ── 앱 사용자 / 역할 (RBAC) ────────────────────────────────
+enum Role {
+  GENERAL // 일반(신규): 대시보드 요약만
+  ADMIN // 관리자: 데이터 전권
+  SUPER // 슈퍼관리자: + 사용자 관리
+}
+
+model AppUser {
+  id            String    @id @default(cuid())
+  email         String    @unique // @pusan.ac.kr
+  name          String?
+  role          Role      @default(GENERAL)
+  active        Boolean   @default(true) // false = 접근 차단
+  lastLoginAt   DateTime?
+  roleUpdatedBy String? // 역할을 바꾼 슈퍼관리자 email (Phase 4)
+  roleUpdatedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("app_users")
+}

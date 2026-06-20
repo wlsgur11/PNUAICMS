@@ -7,6 +7,8 @@
  *
  * auth 모듈을 import 하지 않아 순환참조가 없다(src/auth.ts·lib/auth.ts 양쪽에서 사용).
  */
+import type { Role } from '@prisma/client';
+
 const ALLOWED_DOMAINS = ['pusan.ac.kr'];
 
 const ALLOWLIST = (process.env.ALLOWED_EMAILS ?? '')
@@ -21,4 +23,21 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
   if (!domain || !ALLOWED_DOMAINS.includes(domain)) return false;
   if (ALLOWLIST.length > 0 && !ALLOWLIST.includes(e)) return false;
   return true;
+}
+
+/** 부트스트랩 슈퍼관리자 이메일(쉼표 구분). 로그인 시 항상 SUPER 로 보정된다. */
+const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isBootstrapSuperAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+/** 역할 위계: GENERAL(0) < ADMIN(1) < SUPER(2). role 이 min 이상이면 true. */
+const ROLE_RANK: Record<Role, number> = { GENERAL: 0, ADMIN: 1, SUPER: 2 };
+export function roleAtLeast(role: Role, min: Role): boolean {
+  return ROLE_RANK[role] >= ROLE_RANK[min];
 }
