@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type IconName = 'dashboard' | 'building' | 'chart' | 'award' | 'school' | 'external' | 'chevron';
+export type IconName = 'dashboard' | 'building' | 'chart' | 'award' | 'school' | 'external' | 'chevron' | 'users';
 
 const PATHS: Record<IconName, ReactNode> = {
   dashboard: (
@@ -45,6 +45,14 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   chevron: <path d="M15 6l-6 6 6 6" />,
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3 2.7-5 6-5s6 2 6 5" />
+      <path d="M16 6a3 3 0 0 1 0 6" />
+      <path d="M21 20c0-2.3-1.3-4-3.5-4.7" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {

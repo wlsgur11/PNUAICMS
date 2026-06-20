@@ -17,7 +17,12 @@ export default function RoleGuard() {
   const router = useRouter();
 
   useEffect(() => {
-    if (me?.role === 'GENERAL' && !GENERAL_ALLOWED.has(pathname)) {
+    const role = me?.role;
+    if (!role) return;
+    if (role === 'GENERAL' && !GENERAL_ALLOWED.has(pathname)) {
+      router.replace('/');
+    } else if (pathname.startsWith('/admin') && role !== 'SUPER') {
+      // 관리자 페이지는 슈퍼관리자 전용
       router.replace('/');
     }
   }, [me?.role, pathname, router]);
