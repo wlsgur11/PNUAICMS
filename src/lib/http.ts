@@ -31,6 +31,14 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/** 권한 부족(403). 로그인은 됐지만 역할이 모자랄 때. */
+export class ForbiddenError extends Error {
+  constructor(message = '접근 권한이 없습니다.') {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
+
 /** 낙관적 락 등 충돌(409). */
 export class ConflictError extends Error {}
 
@@ -47,6 +55,7 @@ export function handle(fn: () => Promise<Response>): Promise<Response> {
   return fn().catch((e: unknown) => {
     // 사용자에게 보여도 되는 에러 → 의도한 메시지·상태 그대로
     if (e instanceof UnauthorizedError) return fail(e.message, 401);
+    if (e instanceof ForbiddenError) return fail(e.message, 403);
     if (e instanceof AppError) return fail(e.message, e.status);
     if (e instanceof ConflictError) return fail(e.message || '충돌이 발생했습니다.', 409);
 
