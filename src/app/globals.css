@@ -271,13 +271,6 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid rgba(99, 102, 241, 0.12);
   overflow: hidden;
 }
-.login-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--indigo-500) 0%, var(--indigo-700) 50%, var(--indigo-500) 100%);
-}
 .login-logo {
   display: block;
   height: 48px;
