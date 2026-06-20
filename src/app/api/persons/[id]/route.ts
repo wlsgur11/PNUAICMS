@@ -3,7 +3,7 @@
  * DELETE /api/persons/:id — soft delete
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { personUpdateSchema } from '@/lib/validation';
 
@@ -11,7 +11,7 @@ type Ctx = { params: { id: string } };
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const parsed = personUpdateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const { version, ...data } = parsed.data;
@@ -28,7 +28,7 @@ export async function PUT(req: Request, { params }: Ctx) {
 
 export async function DELETE(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     await prisma.contactPerson.update({ where: { id: params.id }, data: { isActive: false, version: { increment: 1 } } });
     return ok({ deactivated: true });
   });

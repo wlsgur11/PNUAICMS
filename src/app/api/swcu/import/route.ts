@@ -6,7 +6,7 @@
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle, MAX_UPLOAD_BYTES } from '@/lib/http';
 import { readSheets } from '@/lib/records-xlsx';
 import { parseSwcu } from '@/lib/swcu-parse';
@@ -14,7 +14,7 @@ import { importSwcu } from '@/lib/swcu-import';
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const len = Number(req.headers.get('content-length') ?? 0);
     if (len > MAX_UPLOAD_BYTES) return fail('파일이 너무 큽니다. 최대 10MB까지 업로드할 수 있습니다.', 413);
     const dryRun = new URL(req.url).searchParams.get('dryRun') === '1';
