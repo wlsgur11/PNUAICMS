@@ -167,6 +167,13 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
             ))}
           </div>
         ))}
+
+        {role === 'SUPER' && (
+          <Link href="/admin/users" className={`nav-item${pathname.startsWith('/admin') ? ' active' : ''}`} title="사용자 관리">
+            <span className="nav-icon"><Icon name="users" /></span>
+            <span>사용자 관리</span>
+          </Link>
+        )}
       </nav>
 
       <div className="nav-group nav-family">
