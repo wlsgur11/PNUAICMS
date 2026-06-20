@@ -1,5 +1,5 @@
 import { signIn } from '@/auth';
-import Squares from '@/components/Squares';
+import Threads from '@/components/Threads';
 
 type Props = {
   searchParams: { callbackUrl?: string; error?: string };
@@ -28,7 +28,7 @@ export default function LoginPage({ searchParams }: Props) {
   return (
     <div className="login-wrap">
       <div className="login-bg">
-        <Squares />
+        <Threads />
       </div>
       <div className="login-card">
         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -255,11 +255,12 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   z-index: 100;
 }
-/* 움직이는 격자(react bits Squares) 캔버스 배경 — 카드 뒤에 깔림 */
+/* 움직이는 배경(react bits Threads, WebGL) — 카드 뒤에 옅게 깔림 */
 .login-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
+  opacity: 0.6;
 }
 /* 다크 테마가 켜진 상태로 로그아웃해도 자연스럽게: 어두운 슬레이트 */
 :root[data-theme="dark"] .login-wrap {
