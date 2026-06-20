@@ -10,6 +10,7 @@
  */
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
+import { isAllowedEmail } from '@/lib/access';
 
 const ALLOWED_DOMAIN = 'pusan.ac.kr';
 
@@ -34,12 +35,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/login',
   },
   callbacks: {
-    // 도메인 검증. hd 파라미터는 힌트일 뿐이라 서버에서도 한 번 더 확인.
+    // 도메인 + allowlist 검증. hd 파라미터는 힌트일 뿐이라 서버에서도 한 번 더 확인.
+    // (ALLOWED_EMAILS 가 설정돼 있으면 그 목록의 계정만 로그인 가능)
     async signIn({ profile }) {
-      const email = profile?.email?.toLowerCase();
-      if (!email) return false;
-      const domain = email.split('@')[1];
-      return domain === ALLOWED_DOMAIN;
+      return isAllowedEmail(profile?.email);
     },
     async jwt({ token, profile }) {
       if (profile?.email) token.email = profile.email;
