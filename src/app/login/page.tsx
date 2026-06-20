@@ -1,4 +1,5 @@
 import { signIn } from '@/auth';
+import Squares from '@/components/Squares';
 
 type Props = {
   searchParams: { callbackUrl?: string; error?: string };
@@ -26,6 +27,9 @@ export default function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="login-wrap">
+      <div className="login-bg">
+        <Squares />
+      </div>
       <div className="login-card">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-pnu.png" alt="부산대학교 AI융합교육원" className="login-logo" />
