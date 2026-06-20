@@ -10,6 +10,7 @@
  * 부여하고(아래 CANONICAL_NAMES), 파일에 텍스트가 있으면 그것을 우선 사용한다.
  */
 import type { SheetRows } from '@/lib/records-xlsx';
+import { AppError } from '@/lib/http';
 
 export type SwcuIndicatorRow = {
   area: string | null;
@@ -242,7 +243,7 @@ function parseIndicators(sheet: SheetRows): SwcuIndicatorRow[] {
     // 위치 매핑이 어긋난 것이므로 즉시 중단한다.
     // (단, 이름 없는 영역 내부 행끼리의 순서만 바뀐 경우는 이 검사로 잡을 수 없다.)
     if (fileName && CANONICAL_NAMES[order] && normalize(fileName) !== normalize(CANONICAL_NAMES[order])) {
-      throw new Error(
+      throw new AppError(
         `성과지표 정렬 불일치: 위치 ${order}에 '${CANONICAL_NAMES[order]}' 기대, 파일은 '${fileName}'. ` +
           `엑셀 양식에서 지표가 추가/삭제/재정렬된 것으로 보입니다. CANONICAL_NAMES 갱신이 필요합니다.`,
       );
@@ -325,7 +326,7 @@ function applyKmac(sheets: SheetRows[], indicators: SwcuIndicatorRow[]): void {
   // 가드: KMAC 데이터 행 수(order)는 성과지표 수와 일치해야 한다.
   // 다르면 KMAC 양식이 바뀌어 위치 기반 매칭이 어긋난 것이므로 즉시 중단한다.
   if (order !== indicators.length) {
-    throw new Error(
+    throw new AppError(
       `KMAC 시트 행 수(${order})가 성과지표 수(${indicators.length})와 다릅니다. ` +
         `KMAC 양식 변경으로 위치 기반 검증 매칭이 어긋났을 수 있습니다.`,
     );
@@ -388,12 +389,12 @@ function parseRaw(sheet: SheetRows, scope: '공통' | 'AI'): SwcuRawRow[] {
 
 export function parseSwcu(sheets: SheetRows[], fileName?: string): ParsedSwcu {
   const year = detectYear(sheets, fileName);
-  if (year == null) throw new Error('연도를 인식하지 못했습니다. (시트 제목/파일명에 YYYY년 없음)');
+  if (year == null) throw new AppError('연도를 인식하지 못했습니다. (시트 제목/파일명에 YYYY년 없음)');
 
   const indSheet = findIndicatorSheet(sheets);
-  if (!indSheet) throw new Error('성과지표 시트를 찾지 못했습니다.');
+  if (!indSheet) throw new AppError('성과지표 시트를 찾지 못했습니다.');
   const indicators = parseIndicators(indSheet);
-  if (indicators.length === 0) throw new Error('성과지표를 한 건도 읽지 못했습니다. (헤더/열 구조 확인)');
+  if (indicators.length === 0) throw new AppError('성과지표를 한 건도 읽지 못했습니다. (헤더/열 구조 확인)');
   applyKmac(sheets, indicators);
 
   const raws: SwcuRawRow[] = [];
