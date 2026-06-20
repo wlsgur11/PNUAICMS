@@ -5,7 +5,10 @@ import Sidebar from '@/components/Sidebar';
 import Toaster from '@/components/Toaster';
 import SWRProvider from '@/components/SWRProvider';
 import LogoutForm from '@/components/LogoutForm';
+import { MeProvider } from '@/components/MeProvider';
+import RoleGuard from '@/components/RoleGuard';
 import { auth } from '@/auth';
+import { getCurrentUser } from '@/lib/auth';
 import pkg from '../../package.json';
 
 export const metadata: Metadata = {
@@ -17,6 +20,7 @@ const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localSt
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
+  const me = await getCurrentUser();
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
@@ -24,16 +28,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <SWRProvider>
-          <div className="app-shell">
-            <Sidebar
-              userEmail={session?.user?.email}
-              userName={session?.user?.name}
-              logoutSlot={<LogoutForm />}
-              version={pkg.version}
-            />
-            <main className="main">{children}</main>
-          </div>
-          <Toaster />
+          <MeProvider value={me}>
+            <div className="app-shell">
+              <Sidebar
+                userEmail={session?.user?.email}
+                userName={session?.user?.name}
+                role={me?.role ?? null}
+                logoutSlot={<LogoutForm />}
+                version={pkg.version}
+              />
+              <main className="main">{children}</main>
+            </div>
+            <RoleGuard />
+            <Toaster />
+          </MeProvider>
         </SWRProvider>
       </body>
     </html>

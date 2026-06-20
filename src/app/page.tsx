@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
+import { useMe } from '@/components/MeProvider';
 
 type RecentHistory = { id: string; companyName: string; professor: string; contactDate: string; method: string; content: string; histStatus: string };
 type Dashboard = {
@@ -152,6 +153,8 @@ function MetricTrend({ title, color, data }: { title: string; color: string; dat
 }
 
 export default function DashboardPage() {
+  const me = useMe();
+  const isGeneral = me?.role === 'GENERAL';
   const { data, error } = useSWR<Dashboard>('/api/dashboard');
   const { data: yearStats } = useSWR<YearStat[]>('/api/year-stats');
   const [selected, setSelected] = useState<HistoryDetail | null>(null);
@@ -167,6 +170,15 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="시스템 대시보드" />
+
+      {isGeneral && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-title"><span className="accent-bar" />접근 권한 대기 중</div>
+          <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, marginTop: 6 }}>
+            현재 일반 계정입니다. 관리자(슈퍼관리자)가 권한을 부여하면 기업·학생·실적 데이터에 접근할 수 있습니다.
+          </div>
+        </div>
+      )}
 
       {/* 정량실적 현황판 (엑셀 전체현황 기반) */}
       {yearStats && yearStats.length > 0 && (
@@ -235,7 +247,9 @@ export default function DashboardPage() {
         </FadeContent>
       )}
 
-      {/* 기업 관계 현황 (클릭 시 조건 적용된 기업 리스트로 이동) */}
+      {/* 기업 관계 현황 + 최근 컨택 (일반 사용자에겐 숨김) */}
+      {!isGeneral && (
+      <>
       <FadeContent delay={120}>
       <div className="stats-grid">
         {[
@@ -280,6 +294,8 @@ export default function DashboardPage() {
         )}
       </div>
       </FadeContent>
+      </>
+      )}
 
       <HistoryDetailModal history={selected} onClose={() => setSelected(null)} />
     </>

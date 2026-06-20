@@ -49,15 +49,20 @@ export async function getCurrentUser(): Promise<AppUserCtx | null> {
 
   let user = await prisma.appUser.findUnique({ where: { email } });
   if (!user) {
-    user = await prisma.appUser.create({
-      data: { email, name, role: wantSuper ? 'SUPER' : 'GENERAL', lastLoginAt: new Date() },
-    });
+    try {
+      user = await prisma.appUser.create({
+        data: { email, name, role: wantSuper ? 'SUPER' : 'GENERAL', lastLoginAt: new Date() },
+      });
+    } catch {
+      // 동시 첫 로그인 레이스(unique 충돌) 대비 — 이미 생성됐으면 다시 읽는다
+      user = await prisma.appUser.findUnique({ where: { email } });
+    }
   } else if (wantSuper && (user.role !== 'SUPER' || !user.active)) {
     // 부트스트랩 계정이 강등/비활성돼 있으면 SUPER·활성으로 복구
     user = await prisma.appUser.update({ where: { email }, data: { role: 'SUPER', active: true } });
   }
 
-  if (!user.active) return null;
+  if (!user || !user.active) return null;
   return { email: user.email, name: user.name || email, role: user.role };
 }
 
