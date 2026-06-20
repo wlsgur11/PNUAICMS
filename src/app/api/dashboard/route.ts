@@ -9,7 +9,7 @@ import { ENUMS } from '@/lib/enums';
 
 export async function GET() {
   return handle(async () => {
-    await requireUser();
+    const user = await requireUser();
 
     const companies = await prisma.company.findMany({
       where: { isActive: true },
@@ -44,8 +44,8 @@ export async function GET() {
       [...projCompanies, ...intCompanies].map((x) => x.companyId).filter(Boolean),
     ).size;
 
-    // 최근 컨택이력 5건
-    const recent = await prisma.contactHistory.findMany({
+    // 최근 컨택이력 5건 (일반 사용자에겐 민감정보라 노출하지 않음)
+    const recent = user.role === 'GENERAL' ? [] : await prisma.contactHistory.findMany({
       orderBy: { contactDate: 'desc' },
       take: 5,
       include: { company: { select: { name: true } } },

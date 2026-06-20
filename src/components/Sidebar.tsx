@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { Role } from '@prisma/client';
 import ThemeToggle from './ThemeToggle';
 import { Icon, type IconName } from './icons';
 
@@ -69,12 +70,15 @@ const GROUPS: Group[] = [
 type Props = {
   userEmail?: string | null;
   userName?: string | null;
+  role?: Role | null;
   logoutSlot?: React.ReactNode;
   version?: string;
 };
 
-export default function Sidebar({ userEmail, userName, logoutSlot, version }: Props) {
+export default function Sidebar({ userEmail, userName, role, logoutSlot, version }: Props) {
   const pathname = usePathname();
+  // 일반(GENERAL) 사용자는 대시보드만. 데이터 그룹 메뉴는 숨긴다.
+  const isGeneral = role === 'GENERAL';
 
   const allHrefs = [DASHBOARD.href, ...GROUPS.flatMap((g) => g.items.map((i) => i.href))];
   const activeHref = (() => {
@@ -145,7 +149,7 @@ export default function Sidebar({ userEmail, userName, logoutSlot, version }: Pr
           <span>{DASHBOARD.label}</span>
         </Link>
 
-        {GROUPS.map((g) => (
+        {!isGeneral && GROUPS.map((g) => (
           <div key={g.key} className="nav-group">
             <button type="button" className={`nav-group-header${openKeys.has(g.key) ? ' open' : ''}`} onClick={() => onGroup(g.key)} title={g.label}>
               <span className="nav-icon"><Icon name={g.icon} /></span>
