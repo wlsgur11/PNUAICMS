@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { lookupCompany } from '@/lib/lookup';
 
@@ -26,7 +26,7 @@ function isEmpty(v: unknown): boolean {
 
 export async function POST() {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
 
     const companies = await prisma.company.findMany({
       where: { isActive: true },

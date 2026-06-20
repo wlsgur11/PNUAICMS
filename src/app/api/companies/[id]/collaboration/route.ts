@@ -2,7 +2,7 @@
  * PUT /api/companies/:id/collaboration — 협업정보(1:1) upsert (낙관적 락)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { collaborationSchema } from '@/lib/validation';
 
@@ -10,7 +10,7 @@ type Ctx = { params: { id: string } };
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const parsed = collaborationSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const { version, mou, ...data } = parsed.data;

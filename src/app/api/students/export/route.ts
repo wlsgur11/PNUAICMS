@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 import ExcelJS from 'exceljs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { maskName } from '@/lib/list-filters';
 
 function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
@@ -20,7 +20,7 @@ function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
 }
 
 export async function GET(req: Request) {
-  await requireUser();
+  await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
   const items = await prisma.student.findMany({
     where: buildWhere(sp),

@@ -3,13 +3,13 @@ export const runtime = 'nodejs';
 
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { toProgramMap } from '@/lib/student-shape';
 
 type Ctx = { params: { studentNo: string } };
 
 export async function GET(_req: Request, { params }: Ctx) {
-  await requireUser();
+  await requireRole('ADMIN');
   const s = await prisma.student.findUnique({
     where: { studentNo: params.studentNo },
     include: {

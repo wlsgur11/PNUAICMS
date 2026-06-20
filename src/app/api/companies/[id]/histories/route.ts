@@ -3,7 +3,7 @@
  * POST /api/companies/:id/histories — 컨택이력 추가 (+실무자 최근컨택일 동기화)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { historyCreateSchema } from '@/lib/validation';
@@ -12,7 +12,7 @@ type Ctx = { params: { id: string } };
 
 export async function GET(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const histories = await prisma.contactHistory.findMany({
       where: { companyId: params.id },
       orderBy: { contactDate: 'desc' },
@@ -24,7 +24,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function POST(req: Request, { params }: Ctx) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const parsed = historyCreateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const { personId, ...rest } = parsed.data;

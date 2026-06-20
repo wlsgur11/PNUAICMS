@@ -4,7 +4,7 @@
  */
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { maskName } from '@/lib/list-filters';
 import { studentCreateSchema } from '@/lib/validation';
@@ -31,7 +31,7 @@ function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
 
 export async function GET(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
     const items = await prisma.student.findMany({
       where: buildWhere(sp),
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const parsed = studentCreateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const d = parsed.data;

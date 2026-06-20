@@ -6,11 +6,11 @@ export const runtime = 'nodejs';
 
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { internshipWhere } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
-  await requireUser();
+  await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
   const items = await prisma.internship.findMany({
     where: internshipWhere(sp),

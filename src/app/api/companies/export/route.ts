@@ -7,7 +7,7 @@ export const runtime = 'nodejs'; // exceljs 는 Node 런타임 필요(Buffer 등
 
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { COLLAB_FIELDS } from '@/lib/enums';
 
 const COLLAB_KEYS = [
@@ -17,7 +17,7 @@ const COLLAB_KEYS = [
 ] as const;
 
 export async function GET(req: Request) {
-  await requireUser();
+  await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
 
   // ── 필터(목록 GET 과 동일 규칙) ──

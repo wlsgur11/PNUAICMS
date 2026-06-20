@@ -3,7 +3,7 @@
  * POST /api/companies   — 신규 등록 (+협업정보 1:1 생성, +선택적 자동조회)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { companyCreateSchema } from '@/lib/validation';
@@ -12,7 +12,7 @@ import { autoLinkRecords } from '@/lib/company-autolink';
 
 export async function GET(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
     const q = sp.get('q')?.trim();
     const region = sp.get('region')?.trim();
@@ -93,7 +93,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const body = await req.json();
     const parsed = companyCreateSchema.safeParse(body);
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);

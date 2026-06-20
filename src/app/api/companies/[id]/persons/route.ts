@@ -3,7 +3,7 @@
  * POST /api/companies/:id/persons — 실무자 추가
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { personCreateSchema } from '@/lib/validation';
@@ -12,7 +12,7 @@ type Ctx = { params: { id: string } };
 
 export async function GET(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const persons = await prisma.contactPerson.findMany({
       where: { companyId: params.id, isActive: true },
       orderBy: { createdAt: 'asc' },
@@ -23,7 +23,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function POST(req: Request, { params }: Ctx) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const parsed = personCreateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
 

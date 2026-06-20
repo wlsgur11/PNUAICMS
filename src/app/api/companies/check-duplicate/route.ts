@@ -4,12 +4,12 @@
  * 신규 등록 폼에서 기관명 입력 즉시 호출 (v1의 중복체크 이식)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 
 export async function GET(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const name = new URL(req.url).searchParams.get('name')?.trim();
     if (!name) return ok({ duplicate: false });
     const match = await prisma.company.findUnique({
