@@ -123,15 +123,18 @@ function MetricTrend({ title, color, data }: { title: string; color: string; dat
         {series.map((d, i) => {
           const v = d.actual ?? 0;
           const tv = d.target ?? 0;
+          // 목표치(>0)를 달성·초과하면 막대·값을 초록으로 강조
+          const met = d.target != null && d.target > 0 && d.actual != null && d.actual >= d.target;
+          const barColor = met ? '#16a34a' : color;
           const x = padL + i * groupW + (groupW - barW) / 2;
           const y = yOf(v);
           return (
             <g key={d.year}>
-              <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={color} />
+              <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={barColor} />
               {tv > 0 && (
                 <line x1={x - 6} y1={yOf(tv)} x2={x + barW + 6} y2={yOf(tv)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />
               )}
-              <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={color}>
+              <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={barColor}>
                 {(v * 100).toFixed(2)}%
               </text>
               <text x={x + barW / 2} y={baseY + 22} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--slate-600)">
