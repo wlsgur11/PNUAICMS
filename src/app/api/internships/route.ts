@@ -32,6 +32,10 @@ export async function GET(req: Request) {
       companyName: it.company?.name ?? it.companyNameRaw ?? '-',
     }));
     const [hostType, method, domestic] = await Promise.all([facet('hostType'), facet('method'), facet('domestic')]);
-    return ok({ rows, facets: { hostType, method, domestic } });
+    const yearRows = await prisma.internship.findMany({
+      where: { year: { not: null } }, distinct: ['year'], select: { year: true }, orderBy: { year: 'desc' },
+    });
+    const years = yearRows.map((r) => r.year).filter((y): y is number => y != null);
+    return ok({ rows, facets: { hostType, method, domestic, years } });
   });
 }
