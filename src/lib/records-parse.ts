@@ -149,9 +149,12 @@ function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
   const industryTargetCSE = dsRows[1]?.cse ?? null, industryTargetDS = dsRows[1]?.ds ?? null;
   const internTargetCSE = dsRows[2]?.cse ?? null, internTargetDS = dsRows[2]?.ds ?? null;
 
+  // 산학/인턴 비율 행: '달성치' 헤더 바로 다음 행이 값 행이다.
+  // (연도에 따라 값 행의 '인턴십' 라벨 칸이 비어 있는 시트가 있어 — 23년 등 — 모든 연도에 존재하는
+  //  '달성치' 헤더로 앵커한다. 안 그러면 라벨 없는 연도는 비율이 통째로 null 이 된다.)
   let row: string[] | null = null;
   for (let i = 0; i < Math.min(rows.length, 18); i++) {
-    if (rows[i].some((c) => (c || '').includes('인턴십'))) { row = rows[i]; break; }
+    if (rows[i].some((c) => (c || '').includes('달성치'))) { row = rows[i + 1] ?? null; break; }
   }
   const at = (r: string[] | null, i: number) => (r ? num(r[i] || '') : null);
   return {
