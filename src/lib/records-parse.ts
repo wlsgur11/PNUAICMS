@@ -21,6 +21,7 @@ export type ParsedInternship = {
   hoursPerWeek: number | null; credits: number | null;
   cntCSE: number | null; cntDS: number | null; cntNonSW: number | null;
   empSW: number | null; empNonSW: number | null;
+  students: { studentNo: string; name: string }[];
 };
 export type ParsedYearStat = {
   year: number;
@@ -220,20 +221,35 @@ function parseInternshipSheet(rows: string[][], year: number, out: ParsedInterns
     hours: col('실습시간'), credits: col('인정학점'),
     cse: col('교육인원(정컴'), ds: col('교육인원(DS'), nonsw: col('교육인원(비SW'),
     empsw: col('연계취업자(SW'), empnonsw: col('연계취업자(비SW'),
+    name: col('이름'),
   };
+  // 기업 칸은 학생 여러 명에 걸쳐 병합돼 있다(첫 행에만 값). 기업 행이면 새 인턴십 시작,
+  // 이어지는 학생 행(기업 칸 비어 있음)은 직전 인턴십에 학생으로 붙인다.
+  // 학번은 시트마다 칸이 들쭉날쭉해(병합·오입력) 행 안 어디든 9~10자리 숫자를 학번으로 본다.
+  const findSno = (row: string[]): string | null => {
+    for (const c of row) { const t = (c || '').trim(); if (/^\d{9,10}$/.test(t)) return t; }
+    return null;
+  };
+  let cur: ParsedInternship | null = null;
   for (let r = h + 1; r < rows.length; r++) {
     const row = rows[r];
     const get = (i: number) => (i >= 0 ? (row[i] || '').trim() : '');
     const company = cleanCompany(get(ci.company));
-    if (!company) continue;
-    out.push({
-      year, programName: blank(get(ci.program)), companyNameRaw: company,
-      hostType: blank(get(ci.host)), method: blank(get(ci.method)),
-      domestic: normDomestic(blank(get(ci.dom))), country: blank(get(ci.country)),
-      startDate: blank(get(ci.start)), endDate: blank(get(ci.end)),
-      weeks: num(get(ci.weeks)), hoursPerWeek: num(get(ci.hours)), credits: num(get(ci.credits)),
-      cntCSE: count(get(ci.cse)), cntDS: count(get(ci.ds)), cntNonSW: count(get(ci.nonsw)),
-      empSW: count(get(ci.empsw)), empNonSW: count(get(ci.empnonsw)),
-    });
+    if (company) {
+      cur = {
+        year, programName: blank(get(ci.program)), companyNameRaw: company,
+        hostType: blank(get(ci.host)), method: blank(get(ci.method)),
+        domestic: normDomestic(blank(get(ci.dom))), country: blank(get(ci.country)),
+        startDate: blank(get(ci.start)), endDate: blank(get(ci.end)),
+        weeks: num(get(ci.weeks)), hoursPerWeek: num(get(ci.hours)), credits: num(get(ci.credits)),
+        cntCSE: count(get(ci.cse)), cntDS: count(get(ci.ds)), cntNonSW: count(get(ci.nonsw)),
+        empSW: count(get(ci.empsw)), empNonSW: count(get(ci.empnonsw)),
+        students: [],
+      };
+      out.push(cur);
+    }
+    if (!cur) continue;
+    const sno = findSno(row);
+    if (sno) cur.students.push({ studentNo: sno, name: get(ci.name) });
   }
 }
