@@ -38,6 +38,15 @@ const num = (s: string): number | null => {
   const n = Number(t.replace(/[^0-9.-]/g, ''));
   return Number.isFinite(n) ? n : null;
 };
+/** 교육인원·연계취업자 수 전용. 정상 인원은 작은 정수다.
+ *  원본 일부 시트는 인원 칸에 학번이 잘못 입력돼 있어(거대 정수), 그런 값은 인원이 아니므로 null 처리한다.
+ *  정수가 아니거나(깨진 소수) 음수/1000 이상이면 인원으로 보지 않는다. */
+const count = (s: string): number | null => {
+  const n = num(s);
+  if (n == null) return null;
+  if (!Number.isInteger(n) || n < 0 || n >= 1000) return null;
+  return n;
+};
 const blank = (s: string): string | null => {
   const t = (s || '').trim();
   return t ? t : null;
@@ -106,6 +115,8 @@ export function parseSheets(sheets: SheetRows[]): ParseResult {
     else if (/CSE/.test(name)) parseProjectSheet(sh.rows, year, '정컴', '학과졸업과제', projects);
     else if (/DS/.test(name)) parseProjectSheet(sh.rows, year, 'DS', '학과졸업과제', projects);
     else if (/SW중심대학/.test(name)) parseProjectSheet(sh.rows, year, null, '교육원연계', projects);
+    // 초기 연도(예: '23년 산학협력프로젝트')는 학과 분리 없이 한 시트에 모여 있다. 학과는 null.
+    else if (/산학협력프로젝트/.test(name)) parseProjectSheet(sh.rows, year, null, '학과졸업과제', projects);
   }
   // 내용 없는 템플릿 행(연번만 있고 실제 데이터 없음) 제거
   const valid = projects.filter(
@@ -221,8 +232,8 @@ function parseInternshipSheet(rows: string[][], year: number, out: ParsedInterns
       domestic: normDomestic(blank(get(ci.dom))), country: blank(get(ci.country)),
       startDate: blank(get(ci.start)), endDate: blank(get(ci.end)),
       weeks: num(get(ci.weeks)), hoursPerWeek: num(get(ci.hours)), credits: num(get(ci.credits)),
-      cntCSE: num(get(ci.cse)), cntDS: num(get(ci.ds)), cntNonSW: num(get(ci.nonsw)),
-      empSW: num(get(ci.empsw)), empNonSW: num(get(ci.empnonsw)),
+      cntCSE: count(get(ci.cse)), cntDS: count(get(ci.ds)), cntNonSW: count(get(ci.nonsw)),
+      empSW: count(get(ci.empsw)), empNonSW: count(get(ci.empnonsw)),
     });
   }
 }
