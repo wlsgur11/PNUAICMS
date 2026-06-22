@@ -39,6 +39,10 @@ type Full = {
   createdAt?: string; updatedAt?: string; createdBy?: string | null; updatedBy?: string | null;
   collaboration: Collab | null; persons: Person[]; histories: History[];
   participatingStudents?: { studentNo: string; nameMasked: string }[];
+  participation?: {
+    projects: { year: number; students: { studentNo: string; nameMasked: string }[] }[];
+    internships: { year: number; students: { studentNo: string; nameMasked: string }[] }[];
+  };
 };
 
 export default function CompanyDetailPage() {
@@ -248,10 +252,33 @@ export default function CompanyDetailPage() {
           {(c.participatingStudents?.length ?? 0) === 0 ? (
             <div className="empty">이 기업과 연결된 산학·인턴십 참여 학생이 없습니다.</div>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {c.participatingStudents!.map((s) => (
-                <span key={s.studentNo} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {([
+                { key: 'projects', label: '산학협력' },
+                { key: 'internships', label: '인턴십' },
+              ] as const).map((cat) => {
+                const groups = c.participation?.[cat.key] ?? [];
+                if (!groups.length) return null;
+                return (
+                  <div key={cat.key}>
+                    <div className="stat-label" style={{ marginBottom: 8 }}>{cat.label}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {groups.map((g) => (
+                        <div key={g.year} style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                          <span style={{ minWidth: 52, fontWeight: 600, color: 'var(--slate-600)', fontSize: 13 }}>
+                            {g.year > 0 ? `${g.year}년` : '연도미상'}
+                          </span>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {g.students.map((s) => (
+                              <span key={s.studentNo} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
