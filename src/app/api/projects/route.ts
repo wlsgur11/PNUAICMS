@@ -41,6 +41,10 @@ export async function GET(req: Request) {
       };
     });
     const [type, track] = await Promise.all([facet('type'), facet('track')]);
-    return ok({ rows, facets: { type, track } });
+    const yearRows = await prisma.project.findMany({
+      where: { year: { not: null } }, distinct: ['year'], select: { year: true }, orderBy: { year: 'desc' },
+    });
+    const years = yearRows.map((r) => r.year).filter((y): y is number => y != null);
+    return ok({ rows, facets: { type, track, years } });
   });
 }

@@ -38,9 +38,29 @@ export async function GET(_req: Request, { params }: Ctx) {
     for (const it of company.internships) for (const is of it.students) add(is.student);
     const participatingStudents = [...seen.values()];
 
-    // projects/internships 원시 배열은 응답 비대화를 막기 위해 제외하고 참여 학생만 추가
+    // 산학/인턴십 × 연도별 그룹 (연도 내림차순, 그룹 내 학번 중복 제거)
+    type StRef = { student: { studentNo: string; name: string | null; nameMasked: string | null } };
+    const groupByYear = (items: { year: number | null; students: StRef[] }[]) => {
+      const byYear = new Map<number, Map<string, { studentNo: string; nameMasked: string }>>();
+      for (const it of items) {
+        const y = it.year ?? 0;
+        if (!byYear.has(y)) byYear.set(y, new Map());
+        const m = byYear.get(y)!;
+        for (const s of it.students) {
+          const st = s.student;
+          if (!m.has(st.studentNo)) m.set(st.studentNo, { studentNo: st.studentNo, nameMasked: st.name ? maskName(st.name) : (st.nameMasked || '-') });
+        }
+      }
+      return [...byYear.entries()].sort((a, b) => b[0] - a[0]).map(([year, m]) => ({ year, students: [...m.values()] }));
+    };
+    const participation = {
+      projects: groupByYear(company.projects),
+      internships: groupByYear(company.internships),
+    };
+
+    // projects/internships 원시 배열은 응답 비대화를 막기 위해 제외
     const { projects: _p, internships: _i, ...rest } = company;
-    return ok({ ...rest, participatingStudents });
+    return ok({ ...rest, participatingStudents, participation });
   });
 }
 

@@ -60,7 +60,6 @@ export async function POST() {
           if (isEmpty(c.addressDetail) && r.addressDetail) patch.addressDetail = r.addressDetail;
           if (isEmpty(c.homepage) && r.homepage) patch.homepage = r.homepage;
           if (isEmpty(c.mainIndustry) && r.industry) patch.mainIndustry = r.industry;
-          if (isEmpty(c.summary) && r.summary) patch.summary = r.summary;
           if (isEmpty(c.region) && r.region) patch.region = r.region;
           if (isEmpty(c.revenueScale) && r.revenueScale) patch.revenueScale = r.revenueScale;
           if (isEmpty(c.avgSalary) && r.avgSalary) patch.avgSalary = r.avgSalary;
