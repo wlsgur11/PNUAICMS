@@ -55,6 +55,17 @@ function colToIndex(ref: string): number {
   return n - 1; // 0-based
 }
 
+/** 큰 정수(학번 등)는 <v> 에 "2.02213511E8" 같은 과학적 표기로 저장된다.
+ *  과학적 표기면 평문 숫자 문자열(예: 202213511)로 복원한다. 그 외 값은 그대로 둔다.
+ *  복원하지 않으면 'E' 가 떨어져나가 학번/숫자가 깨진다(2.02213511E8 → 02213511). */
+function expandSci(v: string): string {
+  if (/^[+-]?\d+(\.\d+)?[Ee][+-]?\d+$/.test(v)) {
+    const n = Number(v);
+    if (Number.isFinite(n)) return String(n);
+  }
+  return v;
+}
+
 /** sheetN.xml → 행 배열 (열 위치 맞춰 빈칸 채움) */
 function parseSheet(xml: string, shared: string[]): string[][] {
   const rows: string[][] = [];
@@ -83,7 +94,7 @@ function parseSheet(xml: string, shared: string[]): string[][] {
         while ((t = tRe.exec(body))) val += decodeEntities(t[1]);
       } else {
         const vM = body.match(/<v>([\s\S]*?)<\/v>/);
-        if (vM) val = decodeEntities(vM[1]);
+        if (vM) val = expandSci(decodeEntities(vM[1]));
       }
       cells[idx] = val;
     }
