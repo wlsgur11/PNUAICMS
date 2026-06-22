@@ -141,7 +141,7 @@ export default function CompanyDetailPage() {
           {c.summary ? (
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--slate-100)' }}>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowSummary((v) => !v)}>
-                {showSummary ? '▴ 기업 소개 숨기기' : '▾ 기업 소개 보기 (위키피디아)'}
+                {showSummary ? '▴ 특이사항 숨기기' : '▾ 특이사항 보기'}
               </button>
               {showSummary && <p className="muted" style={{ marginTop: 10, lineHeight: 1.7 }}>{c.summary}</p>}
             </div>

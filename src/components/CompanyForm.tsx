@@ -77,7 +77,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
     if (!f.name.trim()) { toast('기관명을 먼저 입력하세요.', 'error'); return; }
     setLooking(true);
     try {
-      const a = await api<{ enabled: boolean; sources: string[]; addressDetail: string; homepage: string; industry: string; region: string; revenueScale: string; avgSalary: string; newcomerSalary: string; summary: string }>(
+      const a = await api<{ enabled: boolean; sources: string[]; addressDetail: string; homepage: string; industry: string; region: string; revenueScale: string; avgSalary: string; newcomerSalary: string }>(
         `/api/lookup?name=${encodeURIComponent(f.name.trim())}`
       );
       if (!a.enabled) { toast('자동조회가 비활성 상태입니다 (.env 에 API 키 설정 필요).', 'error'); return; }
@@ -90,7 +90,6 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
         revenueScale: p.revenueScale || a.revenueScale || p.revenueScale,
         avgSalary: p.avgSalary || a.avgSalary || p.avgSalary,
         newcomerSalary: p.newcomerSalary || a.newcomerSalary || p.newcomerSalary,
-        summary: p.summary || a.summary || p.summary,
       }));
       toast(a.sources.length ? `자동 채움 완료 (출처: ${a.sources.join(',')})` : '외부 DB에서 정보를 찾지 못했습니다.', a.sources.length ? 'success' : 'default');
     } catch (e) {
@@ -132,6 +131,10 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
           {looking ? '조회 중…' : '이름으로 자동 채움'}
         </button>
       </div>
+
+      <p className="muted" style={{ fontSize: 12, margin: '0 0 14px', lineHeight: 1.6 }}>
+        ※ <strong>이름으로 자동 채움</strong>: 기업명으로 네이버(소재지·홈페이지), DART(대표자·업종·설립일·매출규모), 공개 임금데이터(연봉)를 조회해 <strong>비어 있는 칸만</strong> 채웁니다. (서버에 API 키가 설정된 항목만 동작)
+      </p>
 
       <div className="form-grid">
         <div className="form-field">
@@ -206,8 +209,8 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
           </select>
         </div>
         <div className="form-field full">
-          <label>기업 소개 <span className="hint">(자동 채움: 위키피디아)</span></label>
-          <textarea value={f.summary ?? ''} onChange={(e) => set('summary', e.target.value)} placeholder="‘이름으로 자동 채움’ 시 위키피디아 요약이 들어옵니다." />
+          <label>특이사항</label>
+          <textarea value={f.summary ?? ''} onChange={(e) => set('summary', e.target.value)} placeholder="컨택 시 참고할 특이사항을 적어두세요. 예: 접촉 시 주의할 점, 다른 교수님과 연관된 기업, 과거 협력 이력 등" />
         </div>
       </div>
 

@@ -135,7 +135,7 @@ export async function POST(req: Request) {
         mou: input.mou,
         priority: input.priority,
         status: input.status,
-        summary: input.summary ?? auto?.summary,
+        summary: input.summary, // 특이사항: 수동 입력만 (자동조회 대상 아님)
       };
       for (const [k, v] of Object.entries(overlay)) {
         if (v == null) continue;
@@ -177,7 +177,7 @@ export async function POST(req: Request) {
           mou: input.mou ?? false,
           priority: input.priority ?? null,
           status: input.status ?? '미접촉',
-          summary: input.summary ?? auto?.summary ?? null,
+          summary: input.summary ?? null, // 특이사항: 수동 입력만 (자동조회 대상 아님)
           note,
           createdBy: user.email,
           collaboration: { create: {} }, // 1:1 빈 협업정보 생성
