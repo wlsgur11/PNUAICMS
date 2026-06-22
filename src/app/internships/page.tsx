@@ -22,7 +22,7 @@ type Row = {
   companyId: string | null;
   companyName: string;
 };
-type Facets = { hostType: string[]; method: string[]; domestic: string[] };
+type Facets = { hostType: string[]; method: string[]; domestic: string[]; years: number[] };
 type Resp = { rows: Row[]; facets: Facets };
 
 type Filters = { year: string; host: string; method: string; domestic: string; q: string };
@@ -59,7 +59,7 @@ export default function InternshipsPage() {
         <div className="filter-bar">
           <select value={filters.year} onChange={(e) => set('year', e.target.value)}>
             <option value="">연도 전체</option>
-            <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+            {(facets?.years ?? []).map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
           <select value={filters.host} onChange={(e) => set('host', e.target.value)}>
             <option value="">주관 전체</option>

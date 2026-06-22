@@ -4,16 +4,16 @@
  * 기업명만으로 외부 공개데이터에서 정보를 자동 수집한다.
  * (v1 LookupService.gs 의 Node/서버 버전 — HANDOFF.md 6장 이식)
  *
- * 빈 칸만 채우며 4개 소스를 모두 시도한다(부분 실패해도 나머지는 유지):
+ * 빈 칸만 채우며 3개 소스를 모두 시도한다(부분 실패해도 나머지는 유지):
  *  1) 공개 임금데이터(salary.ts)  : 평균연봉·신입사원연봉  [키 불필요]
  *       └ v1 의 ALIO(공공기관)+클린아이(지방공기업) 통합을 번들 salary.json 으로 대체
- *  2) 위키피디아(요약)            : 기업 소개문            [키 불필요]
- *  3) 네이버 지역검색             : 소재지·홈페이지        [NAVER 키]
- *  4) DART OpenAPI               : 대표자·업종·설립일·매출 [DART 키 + corp_code 캐시]
+ *  2) 네이버 지역검색             : 소재지·홈페이지        [NAVER 키]
+ *  3) DART OpenAPI               : 대표자·업종·설립일·매출 [DART 키 + corp_code 캐시]
  *       └ DartCorpCode 테이블(scripts/sync-dart.ts 로 동기화)에서 회사명→corp_code 매칭
  *
  * 서버 전용 모듈 (API 키는 절대 클라이언트로 안 나감).
- * 키가 없는 소스는 조용히 건너뛴다(위키·임금은 키 없이 항상 동작 → Vercel 데모 OK).
+ * 키가 없는 소스는 조용히 건너뛴다(임금은 키 없이 항상 동작).
+ * ('특이사항' 칸은 수동 입력이므로 자동조회 대상이 아니다 — 위키피디아 요약 수집은 제거됨.)
  *
  * v1 한계(HANDOFF 8장) 그대로 유효: 부산 AI 스타트업 대부분은 어떤 무료 데이터셋에도
  * 없어 소재지·홈페이지 정도만 채워지고 직원수/연봉 등은 수동 입력이 필요하다.
@@ -41,7 +41,6 @@ export type LookupResult = {
   region: string;
   avgSalary: string; // 평균연봉 (공개 임금데이터)
   newcomerSalary: string; // 신입사원연봉 (공개 임금데이터)
-  summary: string; // 위키피디아 요약 (소개문)
   sources: string[];
 };
 
@@ -152,20 +151,10 @@ async function dartRevenue(corpCode: string): Promise<number> {
   return 0;
 }
 
-/** 위키피디아(한국어) 요약 조회. API 키 불필요 → Vercel 데모에서도 동작. */
-async function wikipediaSummary(name: string): Promise<{ extract: string; url: string } | null> {
-  const url = `https://ko.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'buulgyeong-ai-cms/2.0' }, cache: 'no-store' });
-  if (!res.ok) return null;
-  const data = await res.json();
-  if (data?.type === 'disambiguation' || !data?.extract) return null;
-  return { extract: data.extract as string, url: data?.content_urls?.desktop?.page || '' };
-}
-
 /**
  * 기업명 → 통합 자동조회 결과.
  * 외부 API 가 느리거나 실패해도 부분 결과를 돌려준다.
- * 출처: 네이버(주소/홈페이지) + DART(재무·개황) + 위키피디아(소개문).
+ * 출처: 네이버(주소/홈페이지) + DART(재무·개황).
  */
 export async function lookupCompany(name: string): Promise<LookupResult> {
   const result: LookupResult = {
@@ -180,7 +169,6 @@ export async function lookupCompany(name: string): Promise<LookupResult> {
     region: '',
     avgSalary: '',
     newcomerSalary: '',
-    summary: '',
     sources: [],
   };
   if (!name) return result;
@@ -192,17 +180,6 @@ export async function lookupCompany(name: string): Promise<LookupResult> {
       if (sal.avgSalary) result.avgSalary = sal.avgSalary;
       if (sal.newcomerSalary) result.newcomerSalary = sal.newcomerSalary;
       result.sources.push('SALARY');
-    }
-  } catch {
-    /* 무시 */
-  }
-
-  // 위키피디아 (키 불필요)
-  try {
-    const wiki = await wikipediaSummary(name);
-    if (wiki) {
-      result.summary = wiki.extract;
-      result.sources.push('WIKI');
     }
   } catch {
     /* 무시 */

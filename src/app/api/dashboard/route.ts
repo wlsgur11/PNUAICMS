@@ -7,6 +7,10 @@ import { requireUser } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { ENUMS } from '@/lib/enums';
 
+// 항상 라이브 DB로 조회. AUTH_BYPASS=true 면 인증이 쿠키를 안 읽어 Next 가 이 라우트를
+// 정적 캐시(빌드 시점 값 고정)해버린다 → 재업로드해도 옛 값이 굳음. 이를 막는다.
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   return handle(async () => {
     const user = await requireUser();

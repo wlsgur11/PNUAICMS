@@ -13,6 +13,9 @@ import { ok, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { z } from 'zod';
 
+// 항상 라이브 DB로 조회 (AUTH_BYPASS=true 시 정적 캐시되어 옛 값이 굳는 것 방지)
+export const dynamic = 'force-dynamic';
+
 // 한 행(원본 엑셀 컬럼 순서)
 const rowSchema = z.object({
   id: z.string().optional().nullable(),

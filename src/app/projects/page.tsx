@@ -23,7 +23,7 @@ type Row = {
   students: string[];
 };
 
-type Facets = { type: string[]; track: string[] };
+type Facets = { type: string[]; track: string[]; years: number[] };
 type Resp = { rows: Row[]; facets: Facets };
 
 type Filters = { year: string; dept: string; category: string; type: string; track: string; q: string };
@@ -61,9 +61,7 @@ export default function ProjectsPage() {
         <div className="filter-bar">
           <select value={filters.year} onChange={(e) => set('year', e.target.value)}>
             <option value="">연도 전체</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
+            {(facets?.years ?? []).map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
           <select value={filters.dept} onChange={(e) => set('dept', e.target.value)}>
             <option value="">학과 전체</option>
