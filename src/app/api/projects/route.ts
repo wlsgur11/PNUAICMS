@@ -3,7 +3,7 @@
  *   응답: { rows, facets }. 참여학생은 마스킹 이름. 매칭 기업은 company.id·name.
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { projectWhere, maskName } from '@/lib/list-filters';
 
@@ -18,7 +18,7 @@ async function facet(field: 'type' | 'track'): Promise<string[]> {
 
 export async function GET(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
     const items = await prisma.project.findMany({
       where: projectWhere(sp),

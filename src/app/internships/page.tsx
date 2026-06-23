@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 
 type Row = {
   id: string;
@@ -48,8 +50,8 @@ export default function InternshipsPage() {
 
       {rows && (
         <div className="filter-bar" style={{ gap: 24, marginBottom: 4 }}>
-          <span className="muted">인턴십 <strong>{rows.length}</strong>건</span>
-          <span className="muted">교육인원 정컴 <strong>{sum('cntCSE')}</strong> · DS <strong>{sum('cntDS')}</strong> · 비SW <strong>{sum('cntNonSW')}</strong></span>
+          <span className="muted">인턴십 <strong><CountUp end={rows.length} /></strong>건</span>
+          <span className="muted">교육인원 정컴 <strong><CountUp end={sum('cntCSE')} /></strong> · DS <strong><CountUp end={sum('cntDS')} /></strong> · 비SW <strong><CountUp end={sum('cntNonSW')} /></strong></span>
         </div>
       )}
 
@@ -81,9 +83,10 @@ export default function InternshipsPage() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length}</strong>건
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
+      <FadeContent>
       <div className="table-wrap" style={{ marginTop: 8 }}>
         <table className="data-table">
           <thead>
@@ -105,8 +108,8 @@ export default function InternshipsPage() {
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={9} className="empty">조건에 맞는 인턴십이 없습니다.</td></tr>
             ) : (
-              rows.map((r) => (
-                <tr key={r.id} className={r.companyId ? 'row-click' : undefined}
+              rows.map((r, i) => (
+                <tr key={r.id} className={`${r.companyId ? 'row-click ' : ''}row-appear`} style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }}
                     onClick={r.companyId ? () => router.push(`/companies/${r.companyId}`) : undefined}>
                   <td className="center">{r.year ?? '-'}</td>
                   <td>{r.companyId ? <span className="link">{r.companyName}</span> : <span className="muted">{r.companyName}</span>}</td>
@@ -123,6 +126,7 @@ export default function InternshipsPage() {
           </tbody>
         </table>
       </div>
+      </FadeContent>
       <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ CMS에 등록된 기업은 행을 클릭하면 기업 상세로 이동합니다. 회색 기업명은 아직 미등록(이름만 보존)입니다.</p>
     </>
   );

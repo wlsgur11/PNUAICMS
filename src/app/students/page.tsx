@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[] } };
@@ -59,9 +61,10 @@ export default function StudentsPage() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length}</strong>명
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>명
         </div>
       )}
+      <FadeContent>
       <div className="table-wrap" style={{ marginTop: 8 }}>
         <table className="data-table">
           <thead>
@@ -82,8 +85,8 @@ export default function StudentsPage() {
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={8} className="empty">조건에 맞는 학생이 없습니다.</td></tr>
             ) : (
-              rows.map((r) => (
-                <tr key={r.studentNo} className="row-click" onClick={() => router.push(`/students/${r.studentNo}`)}>
+              rows.map((r, i) => (
+                <tr key={r.studentNo} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => router.push(`/students/${r.studentNo}`)}>
                   <td>{r.studentNo}</td>
                   <td>{r.nameMasked}</td>
                   <td>{r.department || '-'}</td>
@@ -98,6 +101,7 @@ export default function StudentsPage() {
           </tbody>
         </table>
       </div>
+      </FadeContent>
       <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 이름은 마스킹 표시되며, 행을 클릭하면 학생 상세에서 실명과 전체 정보를 볼 수 있습니다.</p>
     </>
   );

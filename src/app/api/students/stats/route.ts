@@ -2,7 +2,7 @@
  * GET /api/students/stats — 학생 대시보드/통계분석 집계 + 관리필요 학생(연결 C)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { maskName } from '@/lib/list-filters';
 import { ENUMS } from '@/lib/enums';
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const students = await prisma.student.findMany({
       include: {
         _count: { select: { counselings: true, projects: true, manualInternships: true } },

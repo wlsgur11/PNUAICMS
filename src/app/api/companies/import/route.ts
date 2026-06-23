@@ -8,8 +8,8 @@ export const maxDuration = 60;
 
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
-import { ok, fail, handle } from '@/lib/http';
+import { requireRole } from '@/lib/auth';
+import { ok, fail, handle, MAX_UPLOAD_BYTES } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { classifyHeader, toBool, cellText, type HeaderCat } from '@/lib/excel-import';
 
@@ -22,11 +22,14 @@ type Parsed = {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
+    const len = Number(req.headers.get('content-length') ?? 0);
+    if (len > MAX_UPLOAD_BYTES) return fail('파일이 너무 큽니다. 최대 10MB까지 업로드할 수 있습니다.', 413);
 
     const form = await req.formData();
     const file = form.get('file');
     if (!(file instanceof Blob)) return fail('파일이 첨부되지 않았습니다.', 400);
+    if (file.size > MAX_UPLOAD_BYTES) return fail('파일이 너무 큽니다. 최대 10MB까지 업로드할 수 있습니다.', 413);
 
     const buf = await file.arrayBuffer();
     const wb = new ExcelJS.Workbook();

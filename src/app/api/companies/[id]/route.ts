@@ -4,7 +4,7 @@
  * DELETE /api/companies/:id  — soft delete (isActive=false). ?hard=1 이면 실제 삭제
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { companyUpdateSchema } from '@/lib/validation';
 import { maskName } from '@/lib/list-filters';
@@ -13,7 +13,7 @@ type Ctx = { params: { id: string } };
 
 export async function GET(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const company = await prisma.company.findUnique({
       where: { id: params.id },
       include: {
@@ -66,7 +66,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const body = await req.json();
     const parsed = companyUpdateSchema.safeParse(body);
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
@@ -90,7 +90,7 @@ export async function PUT(req: Request, { params }: Ctx) {
 
 export async function DELETE(req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const hard = new URL(req.url).searchParams.get('hard') === '1';
     if (hard) {
       await prisma.company.delete({ where: { id: params.id } });

@@ -5,6 +5,9 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
+import CountUp from '@/components/CountUp';
+import FadeContent from '@/components/FadeContent';
+import { useMe } from '@/components/MeProvider';
 
 type RecentHistory = { id: string; companyName: string; professor: string; contactDate: string; method: string; content: string; histStatus: string };
 type Dashboard = {
@@ -121,15 +124,18 @@ function MetricTrend({ title, color, data }: { title: string; color: string; dat
         {series.map((d, i) => {
           const v = d.actual ?? 0;
           const tv = d.target ?? 0;
+          // 목표치(>0)를 달성·초과하면 막대·값을 초록으로 강조
+          const met = d.target != null && d.target > 0 && d.actual != null && d.actual >= d.target;
+          const barColor = met ? '#16a34a' : color;
           const x = padL + i * groupW + (groupW - barW) / 2;
           const y = yOf(v);
           return (
             <g key={d.year}>
-              <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={color} />
+              <rect x={x} y={y} width={barW} height={baseY - y} rx={4} fill={barColor} />
               {tv > 0 && (
                 <line x1={x - 6} y1={yOf(tv)} x2={x + barW + 6} y2={yOf(tv)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />
               )}
-              <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={color}>
+              <text x={x + barW / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={700} fill={barColor}>
                 {(v * 100).toFixed(2)}%
               </text>
               <text x={x + barW / 2} y={baseY + 22} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--slate-600)">
@@ -147,6 +153,8 @@ function MetricTrend({ title, color, data }: { title: string; color: string; dat
 }
 
 export default function DashboardPage() {
+  const me = useMe();
+  const isGeneral = me?.role === 'GENERAL';
   const { data, error } = useSWR<Dashboard>('/api/dashboard');
   const { data: yearStats } = useSWR<YearStat[]>('/api/year-stats');
   const [selected, setSelected] = useState<HistoryDetail | null>(null);
@@ -163,8 +171,18 @@ export default function DashboardPage() {
     <>
       <PageHeader title="시스템 대시보드" />
 
+      {isGeneral && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-title"><span className="accent-bar" />접근 권한 대기 중</div>
+          <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, marginTop: 6 }}>
+            현재 일반 계정입니다. 관리자(슈퍼관리자)가 권한을 부여하면 기업·학생·실적 데이터에 접근할 수 있습니다.
+          </div>
+        </div>
+      )}
+
       {/* 정량실적 현황판 (엑셀 전체현황 기반) */}
       {yearStats && yearStats.length > 0 && (
+        <FadeContent>
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-head">
             <div className="card-title"><span className="accent-bar" />정량실적 현황판</div>
@@ -192,7 +210,7 @@ export default function DashboardPage() {
                   <div key={t.label} style={{ padding: '14px 18px', background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--slate-100)' }}>
                     <div className="stat-label">{t.label}</div>
                     <div style={{ fontSize: 26, fontWeight: 800 }}>
-                      {t.value ?? '-'}<span style={{ fontSize: 13, fontWeight: 500, marginLeft: 2, color: 'var(--slate-500)' }}>{t.unit}</span>
+                      {t.value == null ? '-' : <CountUp end={t.value} />}<span style={{ fontSize: 13, fontWeight: 500, marginLeft: 2, color: 'var(--slate-500)' }}>{t.unit}</span>
                     </div>
                   </div>
                 ))}
@@ -226,9 +244,13 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        </FadeContent>
       )}
 
-      {/* 기업 관계 현황 (클릭 시 조건 적용된 기업 리스트로 이동) */}
+      {/* 기업 관계 현황 + 최근 컨택 (일반 사용자에겐 숨김) */}
+      {!isGeneral && (
+      <>
+      <FadeContent delay={120}>
       <div className="stats-grid">
         {[
           { label: '관리중인 총 기업', value: data.totalCount, icon: '🏢', tone: 'indigo', href: '/companies' },
@@ -241,12 +263,14 @@ export default function DashboardPage() {
             <div className={`stat-icon ${s.tone}`}>{s.icon}</div>
             <div className="stat-meta">
               <div className="stat-label">{s.label}</div>
-              <div className="stat-value">{s.value}</div>
+              <div className="stat-value"><CountUp end={s.value} /></div>
             </div>
           </Link>
         ))}
       </div>
+      </FadeContent>
 
+      <FadeContent delay={220}>
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-head"><div className="card-title"><span className="accent-bar" />최근 컨택 이력</div></div>
         {data.recentHistories.length === 0 ? (
@@ -256,8 +280,8 @@ export default function DashboardPage() {
             <table className="data-table">
               <thead><tr><th>기업명</th><th>일자</th><th>상태</th><th>내용</th></tr></thead>
               <tbody>
-                {data.recentHistories.map((h) => (
-                  <tr key={h.id} className="row-click" onClick={() => setSelected({ ...h, personName: null })}>
+                {data.recentHistories.map((h, i) => (
+                  <tr key={h.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => setSelected({ ...h, personName: null })}>
                     <td style={{ fontWeight: 700 }}>{h.companyName}</td>
                     <td>{h.contactDate}</td>
                     <td><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus}</span></td>
@@ -269,6 +293,9 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </FadeContent>
+      </>
+      )}
 
       <HistoryDetailModal history={selected} onClose={() => setSelected(null)} />
     </>

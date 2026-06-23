@@ -8,7 +8,7 @@
  *    v1 시트의 동시추가 충돌/무결성 문제가 없다.
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { z } from 'zod';
@@ -58,7 +58,7 @@ const COLLAB_BOOLS = [
 
 export async function GET() {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const companies = await prisma.company.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
@@ -105,7 +105,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const body = await req.json();
     const rawRows: unknown[] = Array.isArray(body?.rows) ? body.rows : [];
     const results: { ok: boolean; id?: string; name: string; error?: string }[] = [];

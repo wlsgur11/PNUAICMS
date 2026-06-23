@@ -4,7 +4,7 @@
  */
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { studentUpdateSchema } from '@/lib/validation';
 import { maskName } from '@/lib/list-filters';
@@ -14,7 +14,7 @@ type Ctx = { params: { studentNo: string } };
 
 export async function GET(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const s = await prisma.student.findUnique({
       where: { studentNo: params.studentNo },
       include: {
@@ -81,7 +81,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await requireRole('ADMIN');
     const parsed = studentUpdateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const d = parsed.data;

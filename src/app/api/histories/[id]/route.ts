@@ -3,7 +3,7 @@
  * DELETE /api/histories/:id — 컨택이력 삭제 (hard delete; 이력은 soft delete 대상 아님)
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { historyUpdateSchema } from '@/lib/validation';
 
@@ -11,7 +11,7 @@ type Ctx = { params: { id: string } };
 
 export async function PUT(req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const parsed = historyUpdateSchema.safeParse(await req.json());
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const { version, personId, ...rest } = parsed.data;
@@ -32,7 +32,7 @@ export async function PUT(req: Request, { params }: Ctx) {
 
 export async function DELETE(_req: Request, { params }: Ctx) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     await prisma.contactHistory.delete({ where: { id: params.id } });
     return ok({ deleted: true });
   });

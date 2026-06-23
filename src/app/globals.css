@@ -172,7 +172,7 @@ a { color: inherit; text-decoration: none; }
 }
 .nav-group-header:hover { background: rgba(120, 140, 170, 0.12); color: var(--text-1); }
 .nav-group-header.open { color: var(--text-1); }
-.nav-caret { margin-left: auto; font-size: 12px; line-height: 1; color: var(--text-3); }
+.nav-caret { margin-left: auto; font-size: 16px; line-height: 1; color: var(--text-3); }
 .nav-sub { padding-left: 41px; font-size: 13px; }
 
 /* 패밀리 사이트 (외부 서비스 바로가기) */
@@ -250,33 +250,64 @@ a { color: inherit; text-decoration: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 12% 8%, rgba(99, 102, 241, 0.25) 0%, transparent 45%),
-    radial-gradient(circle at 88% 92%, rgba(67, 56, 202, 0.22) 0%, transparent 45%),
-    linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+  background-color: #eef1f6;
+  background-image:
+    linear-gradient(rgba(71, 85, 105, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(71, 85, 105, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
   padding: 40px 20px;
   z-index: 100;
 }
+/* 다크 테마가 켜진 상태로 로그아웃해도 자연스럽게: 어두운 슬레이트 격자 */
+:root[data-theme="dark"] .login-wrap {
+  background-color: #1b222c;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+}
+/* 로그인 배경: 칸에 커서를 올리면 켜지듯 강조되는 격자 (순수 CSS :hover, 애니메이션 없음) */
+.login-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.login-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+.login-grid-cell {
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.login-grid-cell:hover { cursor: pointer; }
+/* 커서와의 거리별 강조: lvl0(커서 칸) 진하게 → lvl2 연하게 */
+.login-grid-cell.lvl2 { background-color: rgba(47, 107, 209, 0.05); }
+.login-grid-cell.lvl1 { background-color: rgba(47, 107, 209, 0.12); }
+.login-grid-cell.lvl0 {
+  background-color: rgba(47, 107, 209, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(47, 107, 209, 0.40);
+}
+:root[data-theme="dark"] .login-grid-cell.lvl2 { background-color: rgba(111, 161, 243, 0.07); }
+:root[data-theme="dark"] .login-grid-cell.lvl1 { background-color: rgba(111, 161, 243, 0.16); }
+:root[data-theme="dark"] .login-grid-cell.lvl0 {
+  background-color: rgba(111, 161, 243, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(111, 161, 243, 0.5);
+}
 .login-card {
   position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 420px;
   background: #fff;
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 48px 40px 36px;
   text-align: center;
   box-shadow:
-    0 24px 70px rgba(67, 56, 202, 0.22),
-    0 6px 18px rgba(15, 23, 42, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.12);
+    0 12px 32px rgba(15, 23, 42, 0.12),
+    0 2px 6px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   overflow: hidden;
-}
-.login-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--indigo-500) 0%, var(--indigo-700) 50%, var(--indigo-500) 100%);
 }
 .login-logo {
   display: block;
@@ -362,6 +393,7 @@ a { color: inherit; text-decoration: none; }
 }
 .login-footer {
   position: absolute;
+  z-index: 1;
   bottom: 24px;
   font-size: 12px;
   color: var(--slate-400);
@@ -458,6 +490,11 @@ table.data-table { width: 100%; border-collapse: collapse; }
 .data-table tbody tr:hover { background: var(--slate-50); }
 .data-table .link { color: var(--slate-900); font-weight: 700; cursor: pointer; }
 .data-table .link:hover { color: var(--indigo-600); }
+
+/* Animated List: 표 행이 아래에서 떠오르며 순차 등장 (행별 animation-delay는 인라인으로) */
+@keyframes rowAppear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.data-table tbody tr.row-appear { animation: rowAppear 0.32s ease both; }
+@media (prefers-reduced-motion: reduce) { .data-table tbody tr.row-appear { animation: none; } }
 
 /* ── 버튼 ── */
 .btn {

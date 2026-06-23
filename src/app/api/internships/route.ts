@@ -3,7 +3,7 @@
  *   응답: { rows, facets } — facets 는 실제 데이터에 존재하는 값만(드롭다운용).
  */
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import { internshipWhere } from '@/lib/list-filters';
 
@@ -17,7 +17,7 @@ async function facet(field: 'hostType' | 'method' | 'domestic'): Promise<string[
 
 export async function GET(req: Request) {
   return handle(async () => {
-    await requireUser();
+    await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
     const items = await prisma.internship.findMany({
       where: internshipWhere(sp),

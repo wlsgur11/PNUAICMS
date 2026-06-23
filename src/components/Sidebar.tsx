@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { Role } from '@prisma/client';
 import ThemeToggle from './ThemeToggle';
 import { Icon, type IconName } from './icons';
 
@@ -69,12 +70,15 @@ const GROUPS: Group[] = [
 type Props = {
   userEmail?: string | null;
   userName?: string | null;
+  role?: Role | null;
   logoutSlot?: React.ReactNode;
   version?: string;
 };
 
-export default function Sidebar({ userEmail, userName, logoutSlot, version }: Props) {
+export default function Sidebar({ userEmail, userName, role, logoutSlot, version }: Props) {
   const pathname = usePathname();
+  // 일반(GENERAL) 사용자는 대시보드만. 데이터 그룹 메뉴는 숨긴다.
+  const isGeneral = role === 'GENERAL';
 
   const allHrefs = [DASHBOARD.href, ...GROUPS.flatMap((g) => g.items.map((i) => i.href))];
   const activeHref = (() => {
@@ -86,9 +90,9 @@ export default function Sidebar({ userEmail, userName, logoutSlot, version }: Pr
     return best;
   })();
 
-  // 아코디언: 한 번에 한 그룹만. 현재 페이지가 속한 그룹으로 시작.
+  // 아코디언: 여러 그룹을 동시에 열어둘 수 있음(직접 닫을 때까지 유지). 현재 페이지가 속한 그룹으로 시작.
   const activeGroup = GROUPS.find((g) => g.items.some((i) => i.href === activeHref))?.key ?? null;
-  const [openKey, setOpenKey] = useState<string | null>(activeGroup);
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
   const [familyOpen, setFamilyOpen] = useState(false);
 
   // 사이드바 접힘(아이콘 레일). data-sidebar 속성/localStorage 와 동기화.
@@ -103,10 +107,14 @@ export default function Sidebar({ userEmail, userName, logoutSlot, version }: Pr
   };
   const toggleCollapsed = () => applyCollapsed(!collapsed);
 
-  // 접힌 상태에서 그룹 아이콘 클릭 → 펼치면서 그 그룹 열기. 펼친 상태에서는 토글.
+  // 접힌 상태에서 그룹 아이콘 클릭 → 펼치면서 그 그룹 열기. 펼친 상태에서는 해당 그룹만 토글(나머지는 그대로 유지).
   const onGroup = (k: string) => {
-    if (collapsed) { applyCollapsed(false); setOpenKey(k); }
-    else setOpenKey((cur) => (cur === k ? null : k));
+    if (collapsed) { applyCollapsed(false); setOpenKeys((cur) => new Set(cur).add(k)); }
+    else setOpenKeys((cur) => {
+      const next = new Set(cur);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
   };
   const onFamily = () => {
     if (collapsed) { applyCollapsed(false); setFamilyOpen(true); }
@@ -141,14 +149,14 @@ export default function Sidebar({ userEmail, userName, logoutSlot, version }: Pr
           <span>{DASHBOARD.label}</span>
         </Link>
 
-        {GROUPS.map((g) => (
+        {!isGeneral && GROUPS.map((g) => (
           <div key={g.key} className="nav-group">
-            <button type="button" className={`nav-group-header${openKey === g.key ? ' open' : ''}`} onClick={() => onGroup(g.key)} title={g.label}>
+            <button type="button" className={`nav-group-header${openKeys.has(g.key) ? ' open' : ''}`} onClick={() => onGroup(g.key)} title={g.label}>
               <span className="nav-icon"><Icon name={g.icon} /></span>
               <span>{g.label}</span>
-              <span className="nav-caret">{openKey === g.key ? '▾' : '▸'}</span>
+              <span className="nav-caret">{openKeys.has(g.key) ? '▾' : '▸'}</span>
             </button>
-            {openKey === g.key && g.items.map((it) => (
+            {openKeys.has(g.key) && g.items.map((it) => (
               <Link
                 key={it.href}
                 href={it.href}
@@ -159,6 +167,13 @@ export default function Sidebar({ userEmail, userName, logoutSlot, version }: Pr
             ))}
           </div>
         ))}
+
+        {role === 'SUPER' && (
+          <Link href="/admin/users" className={`nav-item${pathname.startsWith('/admin') ? ' active' : ''}`} title="사용자 관리">
+            <span className="nav-icon"><Icon name="users" /></span>
+            <span>사용자 관리</span>
+          </Link>
+        )}
       </nav>
 
       <div className="nav-group nav-family">
