@@ -590,6 +590,33 @@ table.data-table { width: 100%; border-collapse: collapse; }
 .hidden { display: none !important; }
 .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--indigo-600); font-weight: 600; cursor: pointer; margin-bottom: 20px; }
 
+/* ── 사용자 관리: 접근 토글 스위치 + 저장 표시 ── */
+.switch {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: none; border: none; padding: 2px; cursor: pointer; font: inherit; vertical-align: middle;
+}
+.switch:disabled { cursor: not-allowed; opacity: 0.55; }
+.switch-track {
+  position: relative; width: 38px; height: 21px; border-radius: 999px;
+  background: var(--border); transition: background 0.18s ease; flex-shrink: 0;
+}
+.switch.on .switch-track { background: var(--green-600); }
+.switch-knob {
+  position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28); transition: transform 0.18s ease;
+}
+.switch.on .switch-knob { transform: translateX(17px); }
+.switch-label { font-size: 12px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+.switch.on .switch-label { color: var(--success-soft-text); }
+
+.save-tag { margin-left: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; animation: fadeIn 0.15s ease both; }
+.save-tag.saving { color: var(--text-3); }
+.save-tag.saved { color: var(--success-soft-text); }
+.save-tag.error { color: var(--danger-soft-text); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.data-table tbody tr.row-inactive td { opacity: 0.5; }
+
 /* ─────────────────────────────────────────────────────────
    모바일 대응 (태블릿/폰)
    ───────────────────────────────────────────────────────── */
