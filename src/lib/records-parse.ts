@@ -137,7 +137,7 @@ export function parseSheets(sheets: SheetRows[]): ParseResult {
 /** '전체현황' 시트에서 재학생 수·목표/달성 비율·참여수 추출.
  *  라벨이 깔끔히 안 읽혀 위치 기준으로 뽑는다(3개 연도 동일 구조 확인).
  *  - 재학생: 'DS' 셀이 있는 첫 행에서 정컴=DS앞칸, DS=DS뒷칸.
- *  - 참여율: '인턴십' 텍스트가 있는 행에서 산학[4,6,7] / 인턴[10,12,13]. */
+ *  - 참여율: '달성치' 헤더 다음 값 행에서 산학[목표5·달성6·참여7] / 인턴[목표11·달성12·참여13]. */
 function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
   // 'DS' 셀이 있는 행들 = 재학생(0) / 산학목표인원(1) / 인턴목표인원(2). 정컴=DS앞칸, DS=DS뒷칸.
   const dsRows: { cse: number | null; ds: number | null }[] = [];
@@ -160,8 +160,8 @@ function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
   return {
     year, enrolledCSE, enrolledDS,
     industryTargetCSE, industryTargetDS, internTargetCSE, internTargetDS,
-    industryTargetRatio: at(row, 4), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
-    internshipTargetRatio: at(row, 10), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
+    industryTargetRatio: at(row, 5), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
+    internshipTargetRatio: at(row, 11), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
   };
 }
 
