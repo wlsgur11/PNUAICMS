@@ -455,3 +455,21 @@ model AppUser {
 
   @@map("app_users")
 }
+
+// ── 업로드 원본 파일 보관 (실적 엑셀 재다운로드용) ─────────
+// 파싱만 하고 버리던 업로드 원본을 DB에 보관해 다시 내려받게 한다.
+// kind 별 최신 1건만 유지(업로드 시 이전 것 삭제). 파일은 작아 bytea 저장이 무난하고
+// 매일 pg_dump 백업에도 함께 들어간다.
+model UploadedFile {
+  id         String   @id @default(cuid())
+  kind       String // 'records' = 산학·인턴 정량실적 엑셀
+  filename   String
+  mimeType   String?
+  size       Int
+  data       Bytes
+  uploadedBy String? // 업로더 email
+  createdAt  DateTime @default(now())
+
+  @@index([kind, createdAt])
+  @@map("uploaded_files")
+}
