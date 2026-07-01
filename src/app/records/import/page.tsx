@@ -1,17 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import { toast } from '@/components/Toaster';
 
 type Summary = {
   projects: number; internships: number; students: number; unmatchedCompanies: string[];
 };
+type OriginalMeta = { filename: string; size: number; createdAt: string; uploadedBy: string | null } | null;
 
 export default function RecordsImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Summary | null>(null);
+  const { data: original, mutate: mutateOriginal } = useSWR<OriginalMeta>('/api/records/original?meta=1');
 
   async function upload() {
     if (!file) { toast('파일을 선택하세요.', 'error'); return; }
@@ -23,6 +26,7 @@ export default function RecordsImportPage() {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json?.error || '업로드 실패');
       setResult(json.data as Summary);
+      mutateOriginal();
       toast('적재 완료', 'success');
     } catch (e) { toast((e as Error).message, 'error'); } finally { setBusy(false); }
   }
@@ -41,6 +45,18 @@ export default function RecordsImportPage() {
             {busy ? '적재 중…' : '업로드'}
           </button>
         </div>
+
+        {original && (
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--slate-100)' }}>
+            <div className="info-label" style={{ marginBottom: 6 }}>최근 업로드 원본</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span className="muted" style={{ fontSize: 13 }}>
+                {original.filename} · {Math.max(1, Math.round(original.size / 1024)).toLocaleString()}KB · {new Date(original.createdAt).toLocaleString('ko-KR')}
+              </span>
+              <a className="btn btn-sm" href="/api/records/original" download>원본 내려받기</a>
+            </div>
+          </div>
+        )}
       </div>
 
       {result && (
