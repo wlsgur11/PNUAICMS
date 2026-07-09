@@ -50,7 +50,8 @@ export async function GET(req: Request) {
       persons: {
         where: { isActive: true },
         orderBy: { code: 'asc' },
-        select: { name: true, dept: true, position: true, phone: true, email: true },
+        take: 1, // 항상 첫 번째(가장 먼저 등록된) 실무자만
+        select: { name: true, position: true, phone: true, email: true },
       },
     },
   });
@@ -86,7 +87,10 @@ export async function GET(req: Request) {
     { header: '수용가능인원', key: 'capacity', width: 12 },
     { header: '협력메모', key: 'collabMemo', width: 24 },
     { header: '최근컨택일', key: 'lastContactDate', width: 12 },
-    { header: '실무자(이름·직책·번호)', key: 'contacts', width: 42 },
+    { header: '실무자이름', key: 'contactName', width: 12 },
+    { header: '실무자직책', key: 'contactPosition', width: 16 },
+    { header: '실무자전화번호', key: 'contactPhone', width: 16 },
+    { header: '실무자이메일', key: 'contactEmail', width: 26 },
   ];
 
   for (const c of companies) {
@@ -114,10 +118,11 @@ export async function GET(req: Request) {
       capacity: co?.capacity ?? '',
       collabMemo: co?.memo ?? '',
       lastContactDate: c.histories[0]?.contactDate ?? '',
-      // 실무자: '이름 직책 번호' 를 한 명씩 줄바꿈으로 (한 셀에 여러 명)
-      contacts: c.persons
-        .map((p) => [p.name, p.position, p.phone].filter(Boolean).join(' '))
-        .join('\n'),
+      // 실무자: 여러 명이어도 항상 첫 번째 실무자 1명 정보만
+      contactName: c.persons[0]?.name ?? '',
+      contactPosition: c.persons[0]?.position ?? '',
+      contactPhone: c.persons[0]?.phone ?? '',
+      contactEmail: c.persons[0]?.email ?? '',
     };
     for (const k of COLLAB_KEYS) {
       row[k] = (co as Record<string, unknown> | null)?.[k] ? 'O' : '';
@@ -131,33 +136,6 @@ export async function GET(req: Request) {
   header.alignment = { horizontal: 'center', vertical: 'middle' };
   header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
   ws.views = [{ state: 'frozen', ySplit: 1 }];
-  // 실무자 요약 열은 여러 줄이라 줄바꿈 표시
-  ws.getColumn('contacts').alignment = { wrapText: true, vertical: 'top' };
-
-  // ── 실무자 상세 시트 (기업 1:N, 실무자 1명당 한 줄) ──
-  const ws2 = wb.addWorksheet('실무자');
-  ws2.columns = [
-    { header: '기업코드', key: 'code', width: 9 },
-    { header: '기관명', key: 'company', width: 28 },
-    { header: '이름', key: 'name', width: 12 },
-    { header: '부서', key: 'dept', width: 16 },
-    { header: '직책', key: 'position', width: 14 },
-    { header: '연락처', key: 'phone', width: 16 },
-    { header: '이메일', key: 'email', width: 26 },
-  ];
-  for (const c of companies) {
-    for (const p of c.persons) {
-      ws2.addRow({
-        code: c.code, company: c.name, name: p.name,
-        dept: p.dept ?? '', position: p.position ?? '', phone: p.phone ?? '', email: p.email ?? '',
-      });
-    }
-  }
-  const header2 = ws2.getRow(1);
-  header2.font = { bold: true };
-  header2.alignment = { horizontal: 'center', vertical: 'middle' };
-  header2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
-  ws2.views = [{ state: 'frozen', ySplit: 1 }];
 
   const arrayBuf = await wb.xlsx.writeBuffer();
   const today = new Date().toISOString().slice(0, 10);
