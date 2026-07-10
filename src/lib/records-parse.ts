@@ -137,7 +137,7 @@ export function parseSheets(sheets: SheetRows[]): ParseResult {
 /** '전체현황' 시트에서 재학생 수·목표/달성 비율·참여수 추출.
  *  라벨이 깔끔히 안 읽혀 위치 기준으로 뽑는다(3개 연도 동일 구조 확인).
  *  - 재학생: 'DS' 셀이 있는 첫 행에서 정컴=DS앞칸, DS=DS뒷칸.
- *  - 참여율: '달성치' 헤더 다음 값 행에서 산학[목표5·달성6·참여7] / 인턴[목표11·달성12·참여13]. */
+ *  - 참여율: '달성치' 헤더 다음 값 행에서 산학[목표4·달성6·참여7] / 인턴[목표10·달성12·참여13]. */
 function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
   // 'DS' 셀이 있는 행들 = 재학생(0) / 산학목표인원(1) / 인턴목표인원(2). 정컴=DS앞칸, DS=DS뒷칸.
   const dsRows: { cse: number | null; ds: number | null }[] = [];
@@ -157,11 +157,16 @@ function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
     if (rows[i].some((c) => (c || '').includes('달성치'))) { row = rows[i + 1] ?? null; break; }
   }
   const at = (r: string[] | null, i: number) => (r ? num(r[i] || '') : null);
+  // ⚠️ 목표치는 col 4/10 에서 읽는다 (5/11 아님). 이유: 목표치 셀(F/L열) 바로 앞 빈 셀이
+  //    self-closing(<c r="E.."/>)로 들어 있고, records-xlsx 의 <c>…</c> 정규식이 이 빈 셀을
+  //    여는 태그로 오인해 다음 칸(F/L)의 <v> 값을 앞칸(E/K = index 4/10)으로 흡수한다.
+  //    그래서 "앱 파서 기준" 목표치는 4/10 에 잡힌다. openpyxl 등 정식 파서로는 5/11 로 보이지만
+  //    실제 적재값과 다르므로 5/11 로 바꾸지 말 것. (달성 6/12·참여 7/13 은 정상 칸)
   return {
     year, enrolledCSE, enrolledDS,
     industryTargetCSE, industryTargetDS, internTargetCSE, internTargetDS,
-    industryTargetRatio: at(row, 5), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
-    internshipTargetRatio: at(row, 11), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
+    industryTargetRatio: at(row, 4), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
+    internshipTargetRatio: at(row, 10), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
   };
 }
 
