@@ -101,7 +101,7 @@ export default function ProjectsPage() {
             <tr>
               <th className="center" style={{ width: 56 }}>연도</th>
               <th style={{ width: 96 }}>구분</th>
-              <th className="center" style={{ width: 60 }}>학과</th>
+              <th className="center" style={{ width: 85 }}>학과</th>
               <th>지도교수 · 연구실</th>
               <th>연구주제</th>
               <th>참여기업</th>
@@ -118,7 +118,7 @@ export default function ProjectsPage() {
                 <tr key={r.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => setSelected(r)}>
                   <td className="center">{r.year ?? '-'}</td>
                   <td>{r.category || '-'}</td>
-                  <td className="center">{r.dept || '-'}</td>
+                  <td className="center" style={{ whiteSpace: 'nowrap' }}>{r.dept || '-'}</td>
                   <td>
                     {r.professorName || '-'}
                     {r.labName ? <><br /><span className="muted" style={{ fontSize: 12 }}>{r.labName}</span></> : null}
