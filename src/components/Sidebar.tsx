@@ -103,7 +103,7 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
   const applyCollapsed = (next: boolean) => {
     setCollapsed(next);
     document.documentElement.setAttribute('data-sidebar', next ? 'collapsed' : 'expanded');
-    try { localStorage.setItem('sidebarCollapsed', next ? '1' : '0'); } catch {}
+    try { localStorage.setItem('sidebarCollapsed', next ? '1' : '0'); } catch { }
   };
   const toggleCollapsed = () => applyCollapsed(!collapsed);
 
@@ -211,7 +211,7 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
             {logoutSlot}
           </div>
         )}
-        <div className="sidebar-footer">v{version ?? '0.0.0'} · 2026</div>
+        <div className="sidebar-footer">v{version ?? '0.0.0'} @2026</div>
       </div>
     </aside>
   );
