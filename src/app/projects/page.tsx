@@ -20,7 +20,7 @@ type Row = {
   labName: string | null;
   companyId: string | null;
   companyName: string;
-  students: string[];
+  students: { studentNo: string | null; nameMasked: string }[];
 };
 
 type Facets = { type: string[]; track: string[]; years: number[] };
@@ -129,7 +129,7 @@ export default function ProjectsPage() {
                       ? <span className="link" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); router.push(`/companies/${r.companyId}`); }}>{r.companyName}</span>
                       : <span className="muted">{r.companyName}</span>}
                   </td>
-                  <td><span className="ellipsis" style={{ maxWidth: 180 }}>{r.students.length ? r.students.join(', ') : '-'}</span></td>
+                  <td><span className="ellipsis" style={{ maxWidth: 180 }}>{r.students.length ? r.students.map((s) => s.nameMasked).join(', ') : '-'}</span></td>
                 </tr>
               ))
             )}
@@ -162,7 +162,11 @@ export default function ProjectsPage() {
               <div className="info-label" style={{ marginBottom: 6 }}>참여학생 ({selected.students.length}명)</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {selected.students.length
-                  ? selected.students.map((s, i) => <span key={i} className="tag tag-indigo">{s}</span>)
+                  ? selected.students.map((s, i) => (
+                      s.studentNo
+                        ? <span key={i} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
+                        : <span key={i} className="tag tag-indigo">{s.nameMasked}</span>
+                    ))
                   : <span className="muted">기록 없음</span>}
               </div>
             </div>

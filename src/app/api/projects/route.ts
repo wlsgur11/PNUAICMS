@@ -1,6 +1,6 @@
 /**
  * GET /api/projects — 산학협력 프로젝트 현황 목록 (필터: year, dept, category, type, track, q)
- *   응답: { rows, facets }. 참여학생은 마스킹 이름. 매칭 기업은 company.id·name.
+ *   응답: { rows, facets }. 참여학생은 { studentNo, nameMasked }(연결된 학생만 studentNo 존재). 매칭 기업은 company.id·name.
  */
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
@@ -26,12 +26,16 @@ export async function GET(req: Request) {
       include: {
         company: { select: { id: true, name: true } },
         lab: { select: { professorName: true, labName: true } },
-        students: { include: { student: { select: { nameMasked: true } } } },
+        students: { include: { student: { select: { studentNo: true, nameMasked: true } } } },
       },
     });
     const rows = items.map((it) => {
-      const named = it.students.map((s) => s.student.nameMasked).filter((x): x is string => !!x);
-      const raws = it.studentNamesRaw ? it.studentNamesRaw.split(',').filter(Boolean).map(maskName) : [];
+      const named = it.students
+        .filter((s) => !!s.student.nameMasked)
+        .map((s) => ({ studentNo: s.student.studentNo, nameMasked: s.student.nameMasked as string }));
+      const raws = it.studentNamesRaw
+        ? it.studentNamesRaw.split(',').filter(Boolean).map((n) => ({ studentNo: null, nameMasked: maskName(n) }))
+        : [];
       return {
         id: it.id, year: it.year, dept: it.dept, category: it.category, type: it.type,
         title: it.title, period: it.period, track: it.track,
