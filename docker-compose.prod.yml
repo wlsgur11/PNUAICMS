@@ -28,7 +28,9 @@ services:
       POSTGRES_DB: cms
     volumes:
       - cms_pgdata:/var/lib/postgresql/data
-    # 호스트 포트 노출 안 함(보안). 디버깅 필요시만 ['127.0.0.1:5432:5432'] 추가.
+    # DataGrip 등 외부 DB 툴에서 SSH 터널로 접속용. 127.0.0.1 바인딩이라 네트워크 직접 노출 안 됨(SSH 통해서만).
+    ports:
+      - '127.0.0.1:5432:5432'
 
 volumes:
   cms_pgdata:

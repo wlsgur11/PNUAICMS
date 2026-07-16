@@ -43,3 +43,7 @@ docs/superpowers/
 
 # Claude Code 로컬 설정 (preview 실행 구성 등)
 .claude/
+
+# Agent skill config (per-machine, not shared)
+CLAUDE.md
+docs/agents/
