@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import type { ColDef, ColGroupDef, CellValueChangedEvent } from 'ag-grid-community';
+import type { ColDef, ColGroupDef, CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import useSWR, { mutate as globalMutate } from 'swr';
@@ -41,69 +41,103 @@ export default function GridPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<GridRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // SWR로 서버 데이터 캐싱. 로컬 dirty 편집은 별도의 rows state로 관리.
   const { data: serverRows, mutate: refresh } = useSWR<GridRow[]>('/api/grid');
   useEffect(() => { if (serverRows) setRows(serverRows.map((r) => ({ ...r }))); }, [serverRows]);
   const load = async () => { await refresh(); revalidateAll(); };
 
-  // 협력여부 체크박스 공통 정의
-  const boolCol = (field: ColDef<GridRow>['field'], header: string): ColDef<GridRow> => ({
-    headerName: header, field, editable: true, width: 96,
-    cellEditor: 'agCheckboxCellEditor', cellRenderer: 'agCheckboxCellRenderer',
-  });
+  const cancelEdit = () => {
+    const hasChanges = rows.some((r) => r._dirty);
+    if (hasChanges && !confirm('변경한 내용을 취소하고 원래 상태로 되돌리시겠습니까?')) {
+      return;
+    }
+    if (serverRows) {
+      setRows(serverRows.map((r) => ({ ...r })));
+    } else {
+      setRows([]);
+    }
+    setIsEditing(false);
+  };
 
-  const columnDefs = useMemo<(ColDef<GridRow> | ColGroupDef<GridRow>)[]>(() => [
-    { headerName: '연번', field: 'code', editable: false, width: 84, pinned: 'left' },
-    {
-      headerName: '구분',
-      children: [
-        { headerName: '국내외', field: 'domestic', editable: true, width: 90 },
-        { headerName: '국가', field: 'country', editable: true, width: 90 },
-        { headerName: '유형', field: 'orgType', editable: true, width: 110, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['', ...ENUMS.ORG_TYPE] } },
-      ],
-    },
-    {
-      headerName: '기업 정보',
-      children: [
-        { headerName: '기관명', field: 'name', editable: true, pinned: 'left', width: 200, cellStyle: { fontWeight: 600 } },
-        { headerName: '사업참여연도', field: 'joinYear', editable: true, width: 110, valueParser: (p) => (p.newValue ? Number(p.newValue) : null) },
-        { headerName: '소재지', field: 'addressDetail', editable: true, width: 220 },
-      ],
-    },
-    {
-      headerName: '협력 사항 (체크)',
-      children: [
-        boolCol('internship', '인턴십'),
-        boolCol('overseasEducation', '해외교육'),
-        boolCol('industryProject', '산학프로젝트'),
-        boolCol('curriculumCommittee', '교과혁신위'),
-        boolCol('guestLecture', '특강'),
-        boolCol('valueSpread', '가치확산'),
-        boolCol('startup', '창업'),
-        boolCol('etc', '기타'),
-      ],
-    },
-    {
-      headerName: '담당자',
-      children: [
-        { headerName: '담당자명', field: 'contactName', editable: true, width: 110 },
-        { headerName: '직위', field: 'contactPosition', editable: true, width: 100 },
-        { headerName: '연락처', field: 'contactPhone', editable: true, width: 140 },
-        { headerName: '이메일', field: 'contactEmail', editable: true, width: 200 },
-      ],
-    },
-    {
-      headerName: '대표자',
-      children: [
-        { headerName: '대표자명', field: 'ceoName', editable: true, width: 110 },
-        { headerName: '연락처', field: 'ceoPhone', editable: true, width: 140 },
-        { headerName: '이메일', field: 'ceoEmail', editable: true, width: 200 },
-      ],
-    },
-  ], []);
+  const columnDefs = useMemo<(ColDef<GridRow> | ColGroupDef<GridRow>)[]>(() => {
+    const boolCol = (field: ColDef<GridRow>['field'], header: string): ColDef<GridRow> => ({
+      headerName: header, field, editable: isEditing, width: 96,
+      cellEditor: 'agCheckboxCellEditor', cellRenderer: 'agCheckboxCellRenderer',
+    });
+
+    return [
+      { headerName: '연번', field: 'code', editable: false, width: 84, pinned: 'left' },
+      {
+        headerName: '구분',
+        children: [
+          { headerName: '국내외', field: 'domestic', editable: isEditing, width: 90 },
+          { headerName: '국가', field: 'country', editable: isEditing, width: 90 },
+          { headerName: '유형', field: 'orgType', editable: isEditing, width: 110, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['', ...ENUMS.ORG_TYPE] } },
+        ],
+      },
+      {
+        headerName: '기업 정보',
+        children: [
+          { headerName: '기관명', field: 'name', editable: isEditing, pinned: 'left', width: 200, cellStyle: { fontWeight: 600 } },
+          { headerName: '사업참여연도', field: 'joinYear', editable: isEditing, width: 110, valueParser: (p) => (p.newValue ? Number(p.newValue) : null) },
+          { headerName: '소재지', field: 'addressDetail', editable: isEditing, width: 220 },
+        ],
+      },
+      {
+        headerName: '협력 사항 (체크)',
+        children: [
+          boolCol('internship', '인턴십'),
+          boolCol('overseasEducation', '해외교육'),
+          boolCol('industryProject', '산학프로젝트'),
+          boolCol('curriculumCommittee', '교과혁신위'),
+          boolCol('guestLecture', '특강'),
+          boolCol('valueSpread', '가치확산'),
+          boolCol('startup', '창업'),
+          boolCol('etc', '기타'),
+        ],
+      },
+      {
+        headerName: '담당자',
+        children: [
+          { headerName: '담당자명', field: 'contactName', editable: isEditing, width: 110 },
+          { headerName: '직위', field: 'contactPosition', editable: isEditing, width: 100 },
+          { headerName: '연락처', field: 'contactPhone', editable: isEditing, width: 140 },
+          { headerName: '이메일', field: 'contactEmail', editable: isEditing, width: 200 },
+        ],
+      },
+      {
+        headerName: '대표자',
+        children: [
+          { headerName: '대표자명', field: 'ceoName', editable: isEditing, width: 110 },
+          { headerName: '연락처', field: 'ceoPhone', editable: isEditing, width: 140 },
+          { headerName: '이메일', field: 'ceoEmail', editable: isEditing, width: 200 },
+        ],
+      },
+      {
+        headerName: '삭제', editable: false, width: 90, pinned: 'right', sortable: false, hide: !isEditing,
+        cellRenderer: (p: ICellRendererParams<GridRow>) => {
+          const row = p.data;
+          if (!row) return null;
+          const busy = !!row.id && deletingId === row.id;
+          return (
+            <button
+              className="btn btn-danger"
+              style={{ padding: '2px 10px', fontSize: 12 }}
+              disabled={busy}
+              onClick={() => deleteRow(row)}
+            >
+              {busy ? '삭제 중…' : '삭제'}
+            </button>
+          );
+        },
+      },
+    ];
+  }, [isEditing, deletingId]);
 
   const onCellChanged = (e: CellValueChangedEvent<GridRow>) => {
     e.data._dirty = true;
@@ -111,7 +145,28 @@ export default function GridPage() {
   };
 
   function addRow() {
+    setIsEditing(true);
     setRows((prev) => [...prev, { name: '', country: '한국', domestic: '국내', _dirty: true }]);
+  }
+
+  async function deleteRow(row: GridRow) {
+    if (!row.id) {
+      // 아직 저장되지 않은 행 — 로컬에서 바로 제거
+      setRows((prev) => prev.filter((r) => r !== row));
+      return;
+    }
+    if (!confirm(`'${row.name}' 기업을 삭제하시겠습니까?\n(목록에서 비활성화되며, 관련 이력은 보존됩니다)`)) return;
+    setDeletingId(row.id);
+    try {
+      await api(`/api/companies/${row.id}`, { method: 'DELETE' });
+      setRows((prev) => prev.filter((r) => r.id !== row.id));
+      toast('삭제되었습니다.', 'success');
+      revalidateAll();
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function uploadExcel() {
@@ -189,8 +244,12 @@ export default function GridPage() {
         '/api/grid', { method: 'POST', body: JSON.stringify({ rows: dirty }) }
       );
       const failed = res.results.filter((r) => !r.ok);
-      if (failed.length === 0) toast(`${res.success}건 저장 완료`, 'success');
-      else toast(`${res.success}건 저장, ${failed.length}건 실패: ${failed.map((f) => `${f.name}(${f.error})`).join(', ')}`, 'error');
+      if (failed.length === 0) {
+        toast(`${res.success}건 저장 완료`, 'success');
+        setIsEditing(false);
+      } else {
+        toast(`${res.success}건 저장, ${failed.length}건 실패: ${failed.map((f) => `${f.name}(${f.error})`).join(', ')}`, 'error');
+      }
       await load();
     } catch (e) {
       toast((e as Error).message, 'error');
@@ -209,16 +268,21 @@ export default function GridPage() {
           <div className="card-title"><span className="accent-bar" />엑셀 가져오기 / 자동 채움</div>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="file" ref={fileRef} accept=".xlsx,.xls" />
-          <button className="btn btn-primary" onClick={uploadExcel} disabled={uploading}>
+          <input type="file" ref={fileRef} accept=".xlsx,.xls" disabled={uploading || isEditing} />
+          <button className="btn btn-primary" onClick={uploadExcel} disabled={uploading || isEditing}>
             {uploading ? '업로드 중…' : '엑셀 업로드'}
           </button>
           <div className="spacer" />
-          <button className="btn" onClick={bulkAutofill} disabled={autofilling}>
+          <button className="btn" onClick={bulkAutofill} disabled={autofilling || isEditing}>
             {autofilling ? '자동 채움 중…' : '등록된 모든 기업에 자동 채움'}
           </button>
         </div>
         <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
+          {isEditing && (
+            <span style={{ color: 'var(--red-600)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+              ※ 편집 모드 중에는 엑셀 업로드와 자동 채움을 사용할 수 없습니다. 먼저 저장을 완료하거나 편집을 취소해 주세요.
+            </span>
+          )}
           ※ <b>업로드</b>: 헤더에 ‘기관명/기업명’이 있는 엑셀을 인식합니다. 같은 기관명은 기존 행을 갱신하며 <b>비어있는 칸만</b> 채웁니다(기존 값 보존).
           담당자/대표자 컬럼은 자동으로 실무자 정보로 분리 저장됩니다.<br />
           ※ <b>자동 채움</b>: 등록된 모든 기업의 빈 칸을 위키/네이버/DART/공개 임금데이터로 채웁니다.
@@ -228,15 +292,39 @@ export default function GridPage() {
 
       <div className="filter-bar">
         <span className="muted">
-          기존 업체정보 <strong>엑셀 양식 그대로</strong> 입력하는 화면입니다. 셀을 더블클릭해 입력하고,
-          한 행에 [기업 · 협력사항 · 담당자 · 대표자]를 채운 뒤 저장하면 자동으로 정리되어 저장됩니다.
+          {isEditing ? (
+            <>지금은 <strong>편집 모드</strong>입니다. 셀을 더블클릭하여 정보를 수정한 뒤 [저장]을 누르거나 [취소]를 누르세요.</>
+          ) : (
+            <>기존 업체정보 <strong>엑셀 양식 그대로</strong> 조회하는 화면입니다. 수정을 원하시면 [수정 시작]을 누르세요.</>
+          )}
         </span>
         <div className="spacer" />
-        <button className="btn" onClick={addRow}>＋ 행 추가</button>
-        <button className="btn btn-primary" onClick={saveAll} disabled={saving}>{saving ? '저장 중…' : '저장'}</button>
+        {isEditing ? (
+          <>
+            <button className="btn" onClick={addRow} disabled={saving}>＋ 행 추가</button>
+            <button className="btn btn-primary" onClick={saveAll} disabled={saving}>
+              {saving ? '저장 중…' : '저장'}
+            </button>
+            <button className="btn btn-danger" onClick={cancelEdit} disabled={saving}>
+              취소
+            </button>
+          </>
+        ) : (
+          <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
+            수정 시작
+          </button>
+        )}
       </div>
 
-      <div className="ag-theme-quartz" style={{ width: '100%', height: 600, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--slate-200)' }}>
+      <div className="ag-theme-quartz" style={{
+        width: '100%',
+        height: 600,
+        borderRadius: 16,
+        overflow: 'hidden',
+        border: isEditing ? '1px solid var(--accent)' : '1px solid var(--slate-200)',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        boxShadow: isEditing ? '0 0 0 3px var(--accent-soft)' : 'none'
+      }}>
         <AgGridReact<GridRow>
           ref={gridRef}
           rowData={rows}
