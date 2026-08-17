@@ -13,8 +13,9 @@ services:
     container_name: cms_app
     restart: unless-stopped
     env_file: .env
+    # 127.0.0.1 만 바인딩: 외부 평문 접근(http://IP:3000) 차단, Caddy(호스트, localhost:3000)만 도달.
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3000:3000'
     depends_on:
       - db
 

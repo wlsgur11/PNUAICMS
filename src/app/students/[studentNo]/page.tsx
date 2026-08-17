@@ -1,9 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import type { StudentDetail, ProgramMap } from '@/lib/student-shape';
+
+type ProjectDetail = {
+  id: string;
+  year: number | null;
+  dept: string | null;
+  category: string | null;
+  type: string | null;
+  title: string | null;
+  period: string | null;
+  track: string | null;
+  professorName: string | null;
+  labName: string | null;
+  companyId: string | null;
+  companyName: string;
+  students: { studentNo: string | null; nameMasked: string }[];
+};
 
 function ProgramGrid({ title, data }: { title: string; data: ProgramMap }) {
   const entries = ['program1', 'program2', 'program3', 'program4', 'program5'] as (keyof ProgramMap)[];
@@ -24,7 +41,11 @@ function ProgramGrid({ title, data }: { title: string; data: ProgramMap }) {
 
 export default function StudentDetailPage({ params }: { params: { studentNo: string } }) {
   const router = useRouter();
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const { data: s, isLoading } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
+  const { data: projectDetail } = useSWR<ProjectDetail>(
+    selectedProjectId ? `/api/projects/${selectedProjectId}` : null
+  );
 
   if (isLoading && !s) return <div className="loading">불러오는 중…</div>;
   if (!s) return <div className="empty">학생을 찾을 수 없습니다.</div>;
@@ -94,12 +115,12 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
               <thead><tr><th className="center" style={{ width: 56 }}>연도</th><th>과제명</th><th>기간</th><th>지도교수</th><th>기업</th></tr></thead>
               <tbody>
                 {s.projects.map((p) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} className="row-click" onClick={() => setSelectedProjectId(p.id)}>
                     <td className="center">{p.year ?? '-'}</td>
                     <td>{p.title || '-'}</td>
                     <td>{p.period || '-'}</td>
                     <td>{p.professorName || '-'}</td>
-                    <td>{p.companyId ? <span className="link" onClick={() => router.push(`/companies/${p.companyId}`)}>{p.companyName}</span> : <span className="muted">{p.companyName}</span>}</td>
+                    <td>{p.companyId ? <span className="link" onClick={(e) => { e.stopPropagation(); router.push(`/companies/${p.companyId}`); }}>{p.companyName}</span> : <span className="muted">{p.companyName}</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -128,6 +149,50 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
           </div>
         )}
       </div>
+
+      {selectedProjectId && (
+        <div className="modal-root">
+          <div className="modal-backdrop" onClick={() => setSelectedProjectId(null)} />
+          <div className="modal-card">
+            {projectDetail ? (
+              <>
+                <h3 className="modal-title">{projectDetail.title || '프로젝트 상세'}</h3>
+                <div className="info-list">
+                  <div className="info-row"><span className="info-label">연도</span><span className="info-value">{projectDetail.year ?? '-'}</span></div>
+                  <div className="info-row"><span className="info-label">구분</span><span className="info-value">{projectDetail.category || '-'}{projectDetail.dept ? ` · ${projectDetail.dept}` : ''}</span></div>
+                  <div className="info-row"><span className="info-label">유형</span><span className="info-value">{projectDetail.type || '-'}</span></div>
+                  <div className="info-row"><span className="info-label">연구기간</span><span className="info-value">{projectDetail.period || '-'}</span></div>
+                  <div className="info-row"><span className="info-label">특성화트랙</span><span className="info-value">{projectDetail.track || '-'}</span></div>
+                  <div className="info-row"><span className="info-label">지도교수</span><span className="info-value">{projectDetail.professorName || '-'}</span></div>
+                  <div className="info-row"><span className="info-label">연구실</span><span className="info-value">{projectDetail.labName || '-'}</span></div>
+                  <div className="info-row"><span className="info-label">참여기업</span><span className="info-value">
+                    {projectDetail.companyId
+                      ? <span className="link" style={{ cursor: 'pointer' }} onClick={() => router.push(`/companies/${projectDetail.companyId}`)}>{projectDetail.companyName}</span>
+                      : projectDetail.companyName}
+                  </span></div>
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <div className="info-label" style={{ marginBottom: 6 }}>참여학생 ({projectDetail.students.length}명)</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {projectDetail.students.length
+                      ? projectDetail.students.map((st, i) => (
+                          st.studentNo
+                            ? <span key={i} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => { setSelectedProjectId(null); router.push(`/students/${st.studentNo}`); }}>{st.nameMasked}</span>
+                            : <span key={i} className="tag tag-indigo">{st.nameMasked}</span>
+                        ))
+                      : <span className="muted">기록 없음</span>}
+                  </div>
+                </div>
+                <div className="form-actions">
+                  <button className="btn btn-primary" onClick={() => setSelectedProjectId(null)}>닫기</button>
+                </div>
+              </>
+            ) : (
+              <div className="loading" style={{ padding: '40px 0' }}>불러오는 중…</div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
