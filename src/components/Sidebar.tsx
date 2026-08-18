@@ -21,6 +21,9 @@ const FAMILY: ExternalLink[] = [
   { href: 'https://pnu-bootcamp-student-management.vercel.app/', label: '부트캠프 훈련생 관리' },
   { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU' },
   { href: 'https://pnuai.github.io/', label: '브로슈어 협업 시스템' },
+  { href: 'https://yunju.work/search-26', label: '국립대육성사업 시스템' },
+  { href: 'https://aipms.pusan.ac.kr', label: 'AIPMS' },
+  { href: 'https://pickle.pusan.ac.kr/', label: '서버관리시스템' },
   { href: 'http://10.126.34.165:15980/aiedu-kb', label: 'AI 지식검색 (KB)', hint: '교내 접속용' },
 ];
 
