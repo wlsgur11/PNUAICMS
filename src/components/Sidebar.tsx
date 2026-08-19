@@ -24,7 +24,8 @@ const FAMILY: ExternalLink[] = [
   { href: 'https://yunju.work/search-26', label: '국립대육성사업 시스템' },
   { href: 'https://aipms.pusan.ac.kr', label: 'AIPMS' },
   { href: 'https://pickle.pusan.ac.kr/', label: '서버관리시스템' },
-  { href: 'http://10.126.34.165:15980/aiedu-kb', label: 'AI 지식검색 (KB)', hint: '교내 접속용' },
+  { href: 'https://yunju.work/aiedu-kb', label: 'AI융합교육원 지식검색(KB)' },
+  { href: 'https://yunju.work/grant-rules/', label: '산학협력단 규정 · 국가연구개발 기준 · Codex 종합답변' },
 ];
 
 const GROUPS: Group[] = [
