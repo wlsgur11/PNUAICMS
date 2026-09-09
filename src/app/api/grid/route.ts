@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     await requireRole('ADMIN');
     const body = await req.json();
     const rawRows: unknown[] = Array.isArray(body?.rows) ? body.rows : [];
-    const results: { ok: boolean; id?: string; name: string; error?: string }[] = [];
+    const results: { ok: boolean; id?: string; name: string; error?: string; reactivated?: boolean }[] = [];
 
     for (const raw of rawRows) {
       const parsed = rowSchema.safeParse(raw);
@@ -137,13 +137,34 @@ export async function POST(req: Request) {
           let companyId = r.id || null;
 
           if (!companyId) {
-            // 신규 행
-            const code = await nextCode(tx, 'company');
-            const created = await tx.company.create({
-              data: { code, name: r.name, ...companyData, collaboration: { create: collabData } },
+            // 신규 행. 같은 이름의 비활성 기업이 있으면 새로 만들지 않고 되살린다.
+            // (기관명이 unique 라 그냥 create 하면 "기관명 중복" 으로 막히는데, 그 기업은
+            //  isActive=true 만 보여주는 그리드에 안 떠서 사용자가 손쓸 방법이 없었다.
+            //  신규 등록 화면 /companies/new 은 이미 같은 방식으로 재활성한다.)
+            const dup = await tx.company.findUnique({
+              where: { name: r.name },
+              select: { id: true, isActive: true },
             });
-            companyId = created.id;
-            results.push({ ok: true, id: companyId, name: r.name });
+            if (dup && !dup.isActive) {
+              await tx.company.update({
+                where: { id: dup.id },
+                data: { isActive: true, ...companyData, version: { increment: 1 } },
+              });
+              await tx.collaboration.upsert({
+                where: { companyId: dup.id },
+                update: collabData,
+                create: { companyId: dup.id, ...collabData },
+              });
+              companyId = dup.id;
+              results.push({ ok: true, id: companyId, name: r.name, reactivated: true });
+            } else {
+              const code = await nextCode(tx, 'company');
+              const created = await tx.company.create({
+                data: { code, name: r.name, ...companyData, collaboration: { create: collabData } },
+              });
+              companyId = created.id;
+              results.push({ ok: true, id: companyId, name: r.name });
+            }
           } else {
             // 기존 행 — 낙관적 락
             const upd = await tx.company.updateMany({
@@ -176,7 +197,11 @@ export async function POST(req: Request) {
   });
 }
 
-/** 회사 내 같은 이름 실무자가 있으면 갱신, 없으면 생성. (그리드 재저장 시 중복 방지) */
+/**
+ * 회사 내 같은 이름 실무자가 있으면 갱신, 없으면 생성. (그리드 재저장 시 중복 방지)
+ * 빈 칸은 null 로 저장한다. undefined 로 넘기면 Prisma 가 "변경 안 함" 으로 처리해서
+ * 그리드에서 전화번호나 이메일을 지우고 저장해도 옛 값이 그대로 남아 있었다.
+ */
 async function upsertPerson(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   companyId: string,
@@ -188,7 +213,11 @@ async function upsertPerson(
   const nm = (name || '').trim();
   if (!nm) return;
   const existing = await tx.contactPerson.findFirst({ where: { companyId, name: nm } });
-  const data = { position: position || undefined, phone: phone || undefined, email: email || undefined };
+  const data = {
+    position: position?.trim() || null,
+    phone: phone?.trim() || null,
+    email: email?.trim() || null,
+  };
   if (existing) {
     await tx.contactPerson.update({ where: { id: existing.id }, data });
   } else {
