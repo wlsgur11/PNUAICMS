@@ -142,8 +142,11 @@ export const studentCreateSchema = z.object({
   internships: z.array(studentInternshipItemSchema).optional().default([]),
 });
 
-// 수정은 학번 변경 불가 → studentNo 제외
+// 수정은 학번 변경 불가 → studentNo 제외. version 은 낙관적 락이라 필수.
 export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true }).partial().extend({
+  version: z.coerce
+    .number({ invalid_type_error: '수정 요청에 버전 정보가 없습니다. 새로고침 후 다시 시도하세요.' })
+    .int(),
   name: z.string().trim().min(1, '이름은 필수입니다.').optional(),
   counselings: z.array(counselingItemSchema).max(5, '진로지도 상담은 최대 5건입니다.').optional(),
   internships: z.array(studentInternshipItemSchema).optional(),
