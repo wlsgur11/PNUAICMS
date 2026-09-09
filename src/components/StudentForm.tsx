@@ -11,6 +11,7 @@ export type FormInternship = { internshipType: string; companyName: string; dura
 
 export type StudentFormData = {
   studentNo: string;
+  version?: number; // 수정 모드에서만. 낙관적 락 값을 그대로 되돌려 보낸다.
   name: string;
   department: string;
   major: string;
@@ -62,7 +63,7 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
     if (bad) { toast('상담은 일자·상담자·내용을 모두 입력해야 합니다.', 'error'); return; }
 
     const payload = {
-      ...(mode === 'create' ? { studentNo: f.studentNo.trim() } : {}),
+      ...(mode === 'create' ? { studentNo: f.studentNo.trim() } : { version: f.version }),
       name: f.name.trim(),
       department: f.department.trim() || null,
       major: f.major.trim() || null,

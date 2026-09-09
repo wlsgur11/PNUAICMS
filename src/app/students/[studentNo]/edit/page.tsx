@@ -12,6 +12,7 @@ export default function EditStudentPage({ params }: { params: { studentNo: strin
   const toMap = (m: ProgramMap): ProgramMap => ({ ...m });
   const initial: StudentFormData = {
     studentNo: s.studentNo,
+    version: s.version,
     name: s.name ?? '',
     department: s.department ?? '',
     major: s.major ?? '',

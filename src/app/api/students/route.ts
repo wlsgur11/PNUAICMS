@@ -29,6 +29,30 @@ function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
   return where;
 }
 
+/**
+ * 드롭다운 값은 전체 학생에서 뽑는다. 검색 결과에서 뽑으면 학과를 한 번 고른 순간
+ * 그 학과만 목록에 남아 다른 학과로 못 바꾸게 된다(초기화해야만 풀림).
+ * 산학협력, 인턴십 목록도 같은 방식으로 전체에서 뽑는다.
+ */
+async function facets() {
+  const [depRows, majorRows] = await Promise.all([
+    prisma.student.findMany({
+      where: { department: { not: null } },
+      distinct: ['department'], select: { department: true }, orderBy: { department: 'asc' },
+    }),
+    prisma.student.findMany({
+      where: { major: { not: null } },
+      distinct: ['major'], select: { major: true }, orderBy: { major: 'asc' },
+    }),
+  ]);
+  const clean = (vals: (string | null)[]) =>
+    [...new Set(vals.filter((v): v is string => !!v && v.trim().length > 0))];
+  return {
+    departments: clean(depRows.map((r) => r.department)),
+    majors: clean(majorRows.map((r) => r.major)),
+  };
+}
+
 export async function GET(req: Request) {
   return handle(async () => {
     await requireRole('ADMIN');
@@ -49,9 +73,7 @@ export async function GET(req: Request) {
       counselCount: s._count.counselings,
       updatedAt: s.updatedAt.toISOString(),
     }));
-    const departments = [...new Set(items.map((s) => s.department).filter(Boolean))].sort() as string[];
-    const majors = [...new Set(items.map((s) => s.major).filter(Boolean))].sort() as string[];
-    return ok({ rows, facets: { departments, majors } });
+    return ok({ rows, facets: await facets() });
   });
 }
 

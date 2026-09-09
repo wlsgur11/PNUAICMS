@@ -61,7 +61,7 @@ export async function importRecords(parsed: ParseResult): Promise<ImportSummary>
     await tx.project.deleteMany({});
     await tx.internship.deleteMany({});
 
-    // 1) 학생 일괄 생성(신규만; 기존 학생은 보존 — 수동 입력값 유지)
+    // 1) 학생 일괄 생성(신규만; 기존 학생은 보존 - 수동 입력값 유지)
     const studentNos = [...studentName.keys()];
     if (studentNos.length) {
       await tx.student.createMany({
@@ -71,6 +71,25 @@ export async function importRecords(parsed: ParseResult): Promise<ImportSummary>
         }),
         skipDuplicates: true,
       });
+    }
+
+    // 1-1) 이름이 비어 있던 기존 학생 채우기.
+    // createMany 는 skipDuplicates 라 이미 있는 학생 행을 건드리지 않는다. 그래서 예전에
+    // 이름 없이 만들어진 학생은 엑셀에 이름이 생겨도 계속 비어 있었다(재업로드해도 그대로).
+    // 이미 이름이 있는 학생은 덮지 않는다. 화면에서 고친 실명을 엑셀 값이 되돌리면 안 되므로.
+    const withName = studentNos.filter((sno) => (studentName.get(sno) || '').trim());
+    if (withName.length) {
+      const blanks = await tx.student.findMany({
+        where: { studentNo: { in: withName }, OR: [{ name: null }, { name: '' }] },
+        select: { studentNo: true },
+      });
+      for (const b of blanks) {
+        const nm = (studentName.get(b.studentNo) || '').trim();
+        await tx.student.update({
+          where: { studentNo: b.studentNo },
+          data: { name: nm, nameMasked: mask(nm) },
+        });
+      }
     }
 
     // 2) 연구실 일괄: 기존 조회 → 누락분만 생성 → 키→id 맵

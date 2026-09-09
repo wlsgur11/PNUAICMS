@@ -5,7 +5,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { ok, fail, handle } from '@/lib/http';
+import { ok, fail, handle, ConflictError } from '@/lib/http';
 import { studentUpdateSchema } from '@/lib/validation';
 import { maskName } from '@/lib/list-filters';
 import { toProgramMap, type StudentDetail } from '@/lib/student-shape';
@@ -38,6 +38,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
     const detail: StudentDetail = {
       studentNo: s.studentNo,
+      version: s.version,
       name: s.name,
       nameMasked: s.name ? maskName(s.name) : s.nameMasked,
       department: s.department,
@@ -86,7 +87,7 @@ export async function PUT(req: Request, { params }: Ctx) {
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const d = parsed.data;
 
-    const exists = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { studentNo: true } });
+    const exists = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { version: true } });
     if (!exists) return fail('학생을 찾을 수 없습니다.', 404);
 
     const counselings = d.counselings === undefined ? undefined
@@ -95,8 +96,10 @@ export async function PUT(req: Request, { params }: Ctx) {
       : d.internships.filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks != null);
 
     await prisma.$transaction(async (tx) => {
-      await tx.student.update({
-        where: { studentNo: params.studentNo },
+      // 낙관적 락. 상담·인턴십이 replace-all 이라 락 없이는 동시 수정 시 통째로 덮인다.
+      // updateMany 로 version 이 맞을 때만 갱신하고, 안 맞으면 트랜잭션을 되돌린다.
+      const upd = await tx.student.updateMany({
+        where: { studentNo: params.studentNo, version: d.version },
         data: {
           ...(d.name !== undefined ? { name: d.name, nameMasked: maskName(d.name) } : {}),
           ...(d.department !== undefined ? { department: d.department } : {}),
@@ -113,8 +116,10 @@ export async function PUT(req: Request, { params }: Ctx) {
           ...(d.swPrograms !== undefined ? { swPrograms: d.swPrograms ? (d.swPrograms as Prisma.InputJsonValue) : Prisma.JsonNull } : {}),
           ...(d.bootcampPrograms !== undefined ? { bootcampPrograms: d.bootcampPrograms ? (d.bootcampPrograms as Prisma.InputJsonValue) : Prisma.JsonNull } : {}),
           updatedBy: user.email,
+          version: { increment: 1 },
         },
       });
+      if (upd.count === 0) throw new ConflictError('다른 사용자가 먼저 수정했습니다. 새로고침 후 다시 시도하세요.');
       if (counselings !== undefined) {
         await tx.counseling.deleteMany({ where: { studentNo: params.studentNo } });
         if (counselings.length) {
@@ -128,6 +133,7 @@ export async function PUT(req: Request, { params }: Ctx) {
         }
       }
     });
-    return ok({ studentNo: params.studentNo });
+    const after = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { version: true } });
+    return ok({ studentNo: params.studentNo, version: after?.version });
   });
 }
