@@ -15,7 +15,7 @@ AI 산학협력 관리 시스템 협업 규칙입니다. 새로 합류했다면 
 
 ## 개발 시작하기
 
-사전 준비: Node.js 18.18 이상, PostgreSQL 접속 정보(또는 Supabase URL).
+사전 준비: Node.js 18.18 이상(CI 는 20), 로컬 PostgreSQL. 운영 DB 는 교내망 전용이라 밖에서 직접 못 붙으니 로컬 DB 를 띄워 쓰세요. 자세한 값은 `.env.example` 참고.
 
 ```bash
 git clone https://github.com/wlsgur11/PNUAICMS.git
@@ -154,7 +154,8 @@ hotfix/21-login-redirect
 
 - **`main` 직접 push 금지.** 항상 PR로. 머지 즉시 운영에 배포됩니다.
 - **`AUTH_BYPASS`는 운영에서 항상 `false`(또는 미설정).** `true`면 로그인 전체가 무력화됩니다. 로컬 테스트 후 `true`로 커밋/배포하지 않도록 주의.
-- **DB 작업 주의.** 현재 `DATABASE_URL`은 운영 Supabase를 가리킵니다. `prisma db push` / `migrate`는 **운영 DB에 즉시 반영**됩니다. 로컬 전용 DB가 없으면 스키마 작업 전 반드시 공유하세요.
+- **DB 작업 주의.** 운영 DB 는 교내 서버 안에 있습니다. 로컬 `.env` 가 실수로 운영 DB(SSH 터널 포함)를 가리키고 있으면 `prisma db push` / `migrate` 가 **운영에 즉시 반영**됩니다. 스키마 작업 전에 `DATABASE_URL` 이 로컬을 가리키는지 확인하세요.
+- **실적 엑셀 업로드는 전체 교체입니다.** 운영 DB 를 보는 상태에서 테스트로 올리지 마세요. 해당 연도 산학·인턴십·현황판이 통째로 바뀝니다.
 - **비밀값 커밋 금지.** `.env`, API 키, DB 비밀번호는 절대 올리지 않습니다(`.gitignore`로 막혀 있지만 재확인).
 - **데이터 삭제성 작업은 두 번 확인.** 운영 데이터는 복구가 어렵습니다.
 
@@ -162,5 +163,5 @@ hotfix/21-login-redirect
 
 ## 향후 계획 (참고)
 
-- 배포: 현재 Vercel → 자체 서버 PC로 이전 예정. 단일 서버 단계에서는 Docker Compose, 규모가 커지면 Swarm을 검토합니다.
+- 배포: 교내 자체 서버 PC 에 Docker Compose 로 운영 중입니다(이전 완료). 규모가 커지면 Swarm 을 검토합니다.
 - 코드 가독성 리팩토링: 후임이 이해하기 쉽도록 점진적으로 진행합니다.
