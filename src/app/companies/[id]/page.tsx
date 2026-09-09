@@ -107,7 +107,18 @@ export default function CompanyDetailPage() {
     <>
       <PageHeader title="기업 상세 정보" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-        <Link className="back-link" href="/companies" style={{ marginBottom: 0 }}>← 목록으로 돌아가기</Link>
+        {/* 목록의 검색 조건을 유지하려면 새로 /companies 로 가는 대신 뒤로 가야 한다.
+            (직접 URL 로 들어온 경우엔 히스토리가 없으므로 href 로 그냥 이동) */}
+        <Link
+          className="back-link"
+          href="/companies"
+          style={{ marginBottom: 0 }}
+          onClick={(e) => {
+            if (window.history.length > 1) { e.preventDefault(); router.back(); }
+          }}
+        >
+          ← 목록으로 돌아가기
+        </Link>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn" onClick={() => router.push(`/companies/${id}/edit`)}>✎ 기본정보 수정</button>
           {c.isActive
