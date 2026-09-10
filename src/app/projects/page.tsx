@@ -1,12 +1,13 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
+import { clickKeys } from '@/lib/a11y';
 
 type Row = {
   id: string;
@@ -27,11 +28,11 @@ type Row = {
 type Facets = { type: string[]; track: string[]; years: number[] };
 type Resp = { rows: Row[]; facets: Facets };
 
-type Filters = { year: string; dept: string; category: string; type: string; track: string; q: string };
-const EMPTY: Filters = { year: '', dept: '', category: '', type: '', track: '', q: '' };
+// 분과(division)와 분과 버전(divisionVersion)은 UI 컨트롤이 없고 대시보드에서 링크로만 전달된다.
+type Filters = { year: string; dept: string; category: string; type: string; track: string; division: string; divisionVersion: string; q: string };
+const EMPTY: Filters = { year: '', dept: '', category: '', type: '', track: '', division: '', divisionVersion: '', q: '' };
 
 function ProjectsPageInner() {
-  const router = useRouter();
   // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도 조건이 유지된다.
   const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY);
 
@@ -111,7 +112,10 @@ function ProjectsPageInner() {
               <tr><td colSpan={7} className="empty">조건에 맞는 프로젝트가 없습니다.</td></tr>
             ) : (
               rows.map((r, i) => (
-                <tr key={r.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => setSelected(r)}>
+                <tr key={r.id} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }}
+                    role="button" tabIndex={0}
+                    onClick={() => setSelected(r)}
+                    onKeyDown={clickKeys(() => setSelected(r))}>
                   <td className="center">{r.year ?? '-'}</td>
                   <td>{r.category || '-'}</td>
                   <td className="center" style={{ whiteSpace: 'nowrap' }}>{r.dept || '-'}</td>
@@ -122,7 +126,7 @@ function ProjectsPageInner() {
                   <td><span className="ellipsis" style={{ maxWidth: 280 }}>{r.title || '-'}</span></td>
                   <td>
                     {r.companyId
-                      ? <span className="link" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); router.push(`/companies/${r.companyId}`); }}>{r.companyName}</span>
+                      ? <Link className="link" href={`/companies/${r.companyId}`} onClick={(e) => e.stopPropagation()}>{r.companyName}</Link>
                       : <span className="muted">{r.companyName}</span>}
                   </td>
                   <td><span className="ellipsis" style={{ maxWidth: 180 }}>{r.students.length ? r.students.join(', ') : '-'}</span></td>
@@ -150,7 +154,7 @@ function ProjectsPageInner() {
               <div className="info-row"><span className="info-label">연구실</span><span className="info-value">{selected.labName || '-'}</span></div>
               <div className="info-row"><span className="info-label">참여기업</span><span className="info-value">
                 {selected.companyId
-                  ? <span className="link" style={{ cursor: 'pointer' }} onClick={() => router.push(`/companies/${selected.companyId}`)}>{selected.companyName}</span>
+                  ? <Link className="link" href={`/companies/${selected.companyId}`}>{selected.companyName}</Link>
                   : selected.companyName}
               </span></div>
             </div>

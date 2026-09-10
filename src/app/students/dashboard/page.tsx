@@ -1,10 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
+import { clickKeys } from '@/lib/a11y';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Stats = {
@@ -73,9 +75,9 @@ export default function StudentDashboardPage() {
           {data.needsAttention.length === 0 ? <div className="empty">없습니다.</div> : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {data.needsAttention.map((s) => (
-                <span key={s.studentNo} className="tag tag-amber" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>
+                <Link key={s.studentNo} className="tag tag-amber" href={`/students/${s.studentNo}`}>
                   {s.nameMasked} · {s.grade ?? '-'}학년 · 상담 {s.counselCount}회
-                </span>
+                </Link>
               ))}
             </div>
           )}
@@ -92,7 +94,10 @@ export default function StudentDashboardPage() {
               <thead><tr><th>학번</th><th>이름</th><th>학과</th><th className="center">학년</th><th>최근수정</th></tr></thead>
               <tbody>
                 {data.recent.map((s) => (
-                  <tr key={s.studentNo} className="row-click" onClick={() => router.push(`/students/${s.studentNo}`)}>
+                  <tr key={s.studentNo} className="row-click"
+                      role="button" tabIndex={0}
+                      onClick={() => router.push(`/students/${s.studentNo}`)}
+                      onKeyDown={clickKeys(() => router.push(`/students/${s.studentNo}`))}>
                     <td>{s.studentNo}</td><td>{s.nameMasked}</td><td>{s.department || '-'}</td><td className="center">{s.grade ?? '-'}</td><td>{s.updatedAt.slice(0, 10)}</td>
                   </tr>
                 ))}

@@ -9,6 +9,7 @@ import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { ENUMS, COLLAB_FIELDS } from '@/lib/enums';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
+import { clickKeys } from '@/lib/a11y';
 
 type Row = {
   id: string; code: string; name: string; professor: string; region: string;
@@ -161,7 +162,9 @@ function CompaniesInner() {
               rows.map((r, i) => (
                 <tr key={r.id}
                     className={`row-click${r.isActive === false ? '' : ' row-appear'}`}
+                    role="button" tabIndex={0}
                     onClick={() => router.push(`/companies/${r.id}`)}
+                    onKeyDown={clickKeys(() => router.push(`/companies/${r.id}`))}
                     style={r.isActive === false ? { opacity: 0.5 } : { animationDelay: `${Math.min(i, 15) * 0.035}s` }}>
                   <td>
                     <span className="link">{r.name}</span>

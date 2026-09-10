@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
+import { clickKeys } from '@/lib/a11y';
 
 type Row = {
   id: string;
@@ -106,7 +107,9 @@ function InternshipsPageInner() {
             ) : (
               rows.map((r, i) => (
                 <tr key={r.id} className={`${r.companyId ? 'row-click ' : ''}row-appear`} style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }}
-                    onClick={r.companyId ? () => router.push(`/companies/${r.companyId}`) : undefined}>
+                    role={r.companyId ? 'button' : undefined} tabIndex={r.companyId ? 0 : undefined}
+                    onClick={r.companyId ? () => router.push(`/companies/${r.companyId}`) : undefined}
+                    onKeyDown={r.companyId ? clickKeys(() => router.push(`/companies/${r.companyId}`)) : undefined}>
                   <td className="center">{r.year ?? '-'}</td>
                   <td>{r.companyId ? <span className="link">{r.companyName}</span> : <span className="muted">{r.companyName}</span>}</td>
                   <td>{r.programName || '-'}</td>

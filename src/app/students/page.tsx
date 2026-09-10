@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
+import { clickKeys } from '@/lib/a11y';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[] } };
@@ -82,7 +83,10 @@ function StudentsPageInner() {
               <tr><td colSpan={8} className="empty">조건에 맞는 학생이 없습니다.</td></tr>
             ) : (
               rows.map((r, i) => (
-                <tr key={r.studentNo} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }} onClick={() => router.push(`/students/${r.studentNo}`)}>
+                <tr key={r.studentNo} className="row-click row-appear" style={{ animationDelay: `${Math.min(i, 15) * 0.035}s` }}
+                    role="button" tabIndex={0}
+                    onClick={() => router.push(`/students/${r.studentNo}`)}
+                    onKeyDown={clickKeys(() => router.push(`/students/${r.studentNo}`))}>
                   <td>{r.studentNo}</td>
                   <td>{r.nameMasked}</td>
                   <td>{r.department || '-'}</td>
