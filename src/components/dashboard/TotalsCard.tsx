@@ -14,11 +14,19 @@ function Tile({ label, tile }: { label: string; tile: TotalTile }) {
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 5 }}>{label}</div>
       {d != null && d !== 0 && (
-        <div className="dash-num" style={{ fontSize: 10, fontWeight: 700, marginTop: 3, color: d > 0 ? 'var(--green-600)' : 'var(--red-600)' }}>
-          {d > 0 ? '▲' : '▼'} {Math.abs(d)} <span style={{ fontWeight: 400, color: 'var(--text-3)' }}>전년 대비</span>
+        <div
+          className="dash-num"
+          title="누적 수치가 아니라, 선택한 연도의 실적을 전년과 비교한 값입니다"
+          style={{ fontSize: 10, fontWeight: 700, marginTop: 3, color: d > 0 ? 'var(--green-600)' : 'var(--red-600)' }}
+        >
+          {d > 0 ? '▲' : '▼'} {Math.abs(d)} <span style={{ fontWeight: 400, color: 'var(--text-3)' }}>연간 실적, 전년 대비</span>
         </div>
       )}
-      {d === 0 && <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>전년과 동일</div>}
+      {d === 0 && (
+        <div title="누적 수치가 아니라, 선택한 연도의 실적을 전년과 비교한 값입니다" style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
+          연간 실적 전년과 동일
+        </div>
+      )}
     </div>
   );
 }

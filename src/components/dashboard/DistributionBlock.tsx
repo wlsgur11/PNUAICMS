@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { DashboardData, DistributionItem } from '@/lib/dashboard-shape';
 
 type Distribution = NonNullable<DashboardData['distribution']>;
@@ -43,7 +43,6 @@ function verdict(axis: Axis, items: DistributionItem[], baseline: Distribution['
 }
 
 export default function DistributionBlock({ distribution, year }: { distribution: Distribution; year: number }) {
-  const router = useRouter();
   const [axis, setAxis] = useState<Axis>('dept');
   const items = collapse(distribution[axis]);
   const total = items.reduce((a, x) => a + x.count, 0);
@@ -51,17 +50,18 @@ export default function DistributionBlock({ distribution, year }: { distribution
 
   // 분과는 코드(A~F)가 old5/new6 두 버전에 다른 이름으로 있어, 버전까지 넘겨야
   // 링크 결과 건수가 화면에 보이는 건수와 일치한다.
-  const go = (item: DistributionItem) => {
+  const hrefFor = (item: DistributionItem): string | null => {
     const { key, code, version } = item;
-    if (key === '기타' || key === '미분류' || key === '미지정') return;
+    if (key === '기타' || key === '미분류' || key === '미지정') return null;
     const q = encodeURIComponent(key);
-    if (axis === 'region') router.push(`/companies?region=${q}`);
-    else if (axis === 'dept') router.push(`/projects?year=${year}&dept=${q}`);
-    else if (axis === 'type') router.push(`/projects?year=${year}&type=${q}`);
-    else if (code) {
+    if (axis === 'region') return `/companies?region=${q}`;
+    if (axis === 'dept') return `/projects?year=${year}&dept=${q}`;
+    if (axis === 'type') return `/projects?year=${year}&type=${q}`;
+    if (code) {
       const v = version ? `&divisionVersion=${encodeURIComponent(version)}` : '';
-      router.push(`/projects?year=${year}&division=${encodeURIComponent(code)}${v}`);
+      return `/projects?year=${year}&division=${encodeURIComponent(code)}${v}`;
     }
+    return null;
   };
 
   return (
@@ -87,27 +87,52 @@ export default function DistributionBlock({ distribution, year }: { distribution
       ) : (
         <>
           <div style={{ display: 'flex', height: 26, borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
-            {items.map((x, i) => (
-              <div
-                key={x.key}
-                title={`${x.key} ${x.count}건`}
-                onClick={() => go(x)}
-                style={{ width: `${(x.count / total) * 100}%`, background: COLORS[i] ?? 'var(--slate-200)', cursor: 'pointer' }}
-              />
-            ))}
+            {items.map((x, i) => {
+              const href = hrefFor(x);
+              return href ? (
+                <Link
+                  key={x.key}
+                  href={href}
+                  title={`${x.key} ${x.count}건`}
+                  style={{ width: `${(x.count / total) * 100}%`, background: COLORS[i] ?? 'var(--slate-200)', display: 'block', height: '100%' }}
+                />
+              ) : (
+                <div
+                  key={x.key}
+                  title={`${x.key} ${x.count}건`}
+                  style={{ width: `${(x.count / total) * 100}%`, background: COLORS[i] ?? 'var(--slate-200)', cursor: 'default' }}
+                />
+              );
+            })}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 11 }}>
-            {items.map((x, i) => (
-              <div key={x.key} onClick={() => go(x)} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, cursor: 'pointer' }}>
-                <span style={{ color: 'var(--text-2)' }}>
-                  <span style={{ color: COLORS[i] ?? 'var(--slate-200)' }}>■</span> {x.key}
-                </span>
-                <span className="dash-num" style={{ fontWeight: 700 }}>
-                  {x.count}건 · {((x.count / total) * 100).toFixed(0)}%
-                </span>
-              </div>
-            ))}
+            {items.map((x, i) => {
+              const href = hrefFor(x);
+              const content = (
+                <>
+                  <span style={{ color: 'var(--text-2)' }}>
+                    <span style={{ color: COLORS[i] ?? 'var(--slate-200)' }}>■</span> {x.key}
+                  </span>
+                  <span className="dash-num" style={{ fontWeight: 700 }}>
+                    {x.count}건 · {((x.count / total) * 100).toFixed(0)}%
+                  </span>
+                </>
+              );
+              return href ? (
+                <Link
+                  key={x.key}
+                  href={href}
+                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, textDecoration: 'none', color: 'inherit' }}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div key={x.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, cursor: 'default' }}>
+                  {content}
+                </div>
+              );
+            })}
           </div>
 
           {note && (
