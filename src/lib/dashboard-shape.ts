@@ -5,7 +5,7 @@
  * 컴포넌트는 이 타입의 자기 몫만 props 로 받고 직접 fetch 하지 않는다.
  */
 
-/** 목표 대비 한 항목 (산학협력 / 인턴십). 비율은 0~1 소수. */
+/** 목표 대비 한 항목 (산학협력 / 인턴십). target·achieved 는 0~1 소수 비율, students 는 참여 학부생 명수. */
 export type GoalMetric = {
   target: number | null;
   achieved: number | null;
