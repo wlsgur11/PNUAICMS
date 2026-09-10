@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import { clickKeys } from '@/lib/a11y';
 import type { StudentDetail, ProgramMap } from '@/lib/student-shape';
 
 type ProjectDetail = {
@@ -79,7 +81,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
           <div className="info-row"><span className="info-label">취업기업</span><span className="info-value">
             {s.employmentCompany
               ? (s.employmentCompanyId
-                  ? <span className="link" onClick={() => router.push(`/companies/${s.employmentCompanyId}`)}>{s.employmentCompany}</span>
+                  ? <Link className="link" href={`/companies/${s.employmentCompanyId}`}>{s.employmentCompany}</Link>
                   : s.employmentCompany)
               : '-'}
           </span></div>
@@ -115,12 +117,15 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
               <thead><tr><th className="center" style={{ width: 56 }}>연도</th><th>과제명</th><th>기간</th><th>지도교수</th><th>기업</th></tr></thead>
               <tbody>
                 {s.projects.map((p) => (
-                  <tr key={p.id} className="row-click" onClick={() => setSelectedProjectId(p.id)}>
+                  <tr key={p.id} className="row-click"
+                      role="button" tabIndex={0}
+                      onClick={() => setSelectedProjectId(p.id)}
+                      onKeyDown={clickKeys(() => setSelectedProjectId(p.id))}>
                     <td className="center">{p.year ?? '-'}</td>
                     <td>{p.title || '-'}</td>
                     <td>{p.period || '-'}</td>
                     <td>{p.professorName || '-'}</td>
-                    <td>{p.companyId ? <span className="link" onClick={(e) => { e.stopPropagation(); router.push(`/companies/${p.companyId}`); }}>{p.companyName}</span> : <span className="muted">{p.companyName}</span>}</td>
+                    <td>{p.companyId ? <Link className="link" href={`/companies/${p.companyId}`} onClick={(e) => e.stopPropagation()}>{p.companyName}</Link> : <span className="muted">{p.companyName}</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -139,7 +144,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
                 {s.internships.map((it) => (
                   <tr key={it.id}>
                     <td>{it.internshipType || '-'}</td>
-                    <td>{it.companyId ? <span className="link" onClick={() => router.push(`/companies/${it.companyId}`)}>{it.companyName || '-'}</span> : <span className="muted">{it.companyName || '-'}</span>}</td>
+                    <td>{it.companyId ? <Link className="link" href={`/companies/${it.companyId}`}>{it.companyName || '-'}</Link> : <span className="muted">{it.companyName || '-'}</span>}</td>
                     <td className="center">{it.durationWeeks ?? '-'}</td>
                     <td>{it.activityDate || '-'}</td>
                   </tr>
@@ -167,7 +172,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
                   <div className="info-row"><span className="info-label">연구실</span><span className="info-value">{projectDetail.labName || '-'}</span></div>
                   <div className="info-row"><span className="info-label">참여기업</span><span className="info-value">
                     {projectDetail.companyId
-                      ? <span className="link" style={{ cursor: 'pointer' }} onClick={() => router.push(`/companies/${projectDetail.companyId}`)}>{projectDetail.companyName}</span>
+                      ? <Link className="link" href={`/companies/${projectDetail.companyId}`}>{projectDetail.companyName}</Link>
                       : projectDetail.companyName}
                   </span></div>
                 </div>
@@ -177,7 +182,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
                     {projectDetail.students.length
                       ? projectDetail.students.map((st, i) => (
                           st.studentNo
-                            ? <span key={i} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => { setSelectedProjectId(null); router.push(`/students/${st.studentNo}`); }}>{st.nameMasked}</span>
+                            ? <Link key={i} className="tag tag-indigo" href={`/students/${st.studentNo}`} onClick={() => setSelectedProjectId(null)}>{st.nameMasked}</Link>
                             : <span key={i} className="tag tag-indigo">{st.nameMasked}</span>
                         ))
                       : <span className="muted">기록 없음</span>}

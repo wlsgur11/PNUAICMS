@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import { clickKeys } from '@/lib/a11y';
 
 type Indicator = {
   area: string | null; name: string; unit: string | null;
@@ -47,7 +48,9 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
     <div
       className="card"
       style={{ padding: 16, height: '100%', cursor: onClick ? 'pointer' : undefined }}
+      role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={onClick ? clickKeys(onClick) : undefined}
       title={onClick ? '클릭하면 산출 근거' : undefined}
     >
       <div className="card-title" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -189,7 +192,9 @@ export default function SwcuDashboardPage() {
               {nameOrder.map((name) => (
                 <tr key={name}>
                   <td
+                    role="button" tabIndex={0}
                     onClick={() => setExpanded(name)}
+                    onKeyDown={clickKeys(() => setExpanded(name))}
                     title="클릭하면 연도별 추이·산출 근거"
                     style={{ position: 'sticky', left: 0, background: '#fff', fontWeight: 600, cursor: 'pointer' }}
                   >
@@ -270,7 +275,10 @@ export default function SwcuDashboardPage() {
                             {blk.map((r, ri) => {
                               const sum = isSum(r.label);
                               return (
-                                <div key={ri} onClick={() => setRawSel(r)} title="클릭하면 연도별 추이" style={{
+                                <div key={ri} role="button" tabIndex={0}
+                                  onClick={() => setRawSel(r)}
+                                  onKeyDown={clickKeys(() => setRawSel(r))}
+                                  title="클릭하면 연도별 추이" style={{
                                   display: 'flex', justifyContent: 'space-between', gap: 8,
                                   padding: '5px 10px', fontSize: 13, cursor: 'pointer',
                                   background: sum ? 'var(--slate-50)' : '#fff',
