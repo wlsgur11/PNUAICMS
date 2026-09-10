@@ -29,6 +29,7 @@ export function projectWhere(sp: URLSearchParams): Prisma.ProjectWhereInput {
   const type = sp.get('type'); if (type) where.type = type;
   const track = sp.get('track'); if (track) where.track = track;
   const division = sp.get('division'); if (division) where.divisionCode = division;
+  const divisionVersion = sp.get('divisionVersion'); if (divisionVersion) where.divisionVersion = divisionVersion;
   const q = sp.get('q')?.trim();
   if (q) where.OR = [
     { title: { contains: q } },

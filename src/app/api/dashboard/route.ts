@@ -23,16 +23,25 @@ function toItems<T extends { _count: { _all: number } }>(
     .sort((a, b) => b.count - a.count);
 }
 
-/** 같은 표시 이름끼리 합치고 건수 내림차순으로. (분과는 라벨을 붙인 뒤에야 합칠 수 있다) */
+/**
+ * 같은 표시 이름끼리 합치고 건수 내림차순으로. (분과는 라벨을 붙인 뒤에야 합칠 수 있다)
+ * 서로 다른 (version, code) 가 같은 라벨로 합쳐지면 드릴다운을 특정할 수 없으므로
+ * code/version 을 떨어뜨린다.
+ */
 function mergeByKey(items: DistributionItem[]): DistributionItem[] {
-  const acc = new Map<string, number>();
+  const acc = new Map<string, DistributionItem>();
   for (const it of items) {
     if (it.count <= 0) continue;
-    acc.set(it.key, (acc.get(it.key) ?? 0) + it.count);
+    const cur = acc.get(it.key);
+    if (!cur) { acc.set(it.key, { ...it }); continue; }
+    const same = cur.code === it.code && cur.version === it.version;
+    acc.set(it.key, {
+      key: it.key,
+      count: cur.count + it.count,
+      ...(same ? { code: cur.code, version: cur.version } : {}),
+    });
   }
-  return [...acc.entries()]
-    .map(([key, count]) => ({ key, count }))
-    .sort((a, b) => b.count - a.count);
+  return [...acc.values()].sort((a, b) => b.count - a.count);
 }
 
 export async function GET(req: Request) {
@@ -169,6 +178,7 @@ export async function GET(req: Request) {
               ? (divName.get(`${r.divisionVersion ?? ''}|${r.divisionCode}`) ?? r.divisionCode)
               : '미분류',
             count: r._count._all,
+            ...(r.divisionCode ? { code: r.divisionCode, version: r.divisionVersion ?? undefined } : {}),
           })),
         ),
         region: toItems(regionRows, 'region', '미지정'),

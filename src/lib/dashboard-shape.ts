@@ -37,7 +37,12 @@ export type TrendPoint = { year: number; projects: number; internships: number }
 
 export type PipelineStage = { status: string; count: number };
 
-export type DistributionItem = { key: string; count: number };
+/**
+ * 분포 한 항목. key 는 화면에 보이는 라벨.
+ * code/version 은 분과 축에서만 채운다. 분과는 코드(A~F)가 old5/new6 두 버전에
+ * 서로 다른 이름으로 존재해서, 드릴다운 링크가 코드만 넘기면 두 분과가 섞인다.
+ */
+export type DistributionItem = { key: string; count: number; code?: string; version?: string };
 
 export type DashboardData = {
   years: number[];
