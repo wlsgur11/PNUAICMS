@@ -19,7 +19,8 @@ async function main() {
   } catch {
     throw new Error('DATABASE_URL 을 해석할 수 없습니다: ' + masked);
   }
-  if (!['localhost', '127.0.0.1', '::1'].includes(hostname)) {
+  // 대소문자 무시, IPv6 리터럴은 URL 파서가 대괄호를 붙여 돌려준다
+  if (!['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname.toLowerCase())) {
     throw new Error('로컬 DB 가 아닙니다. 중단합니다: ' + masked);
   }
 
