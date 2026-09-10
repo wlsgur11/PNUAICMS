@@ -10,8 +10,23 @@ const prisma = new PrismaClient();
 
 async function main() {
   const url = process.env.DATABASE_URL ?? '';
-  if (!url.includes('localhost') && !url.includes('127.0.0.1')) {
-    throw new Error('로컬 DB 가 아닙니다. 중단합니다: ' + url.replace(/:[^:@]*@/, ':***@'));
+  const masked = url.replace(/:[^:@]*@/, ':***@');
+  // 호스트명을 직접 파싱한다. 문자열 포함 검사는 localhost-prod.example.com 같은
+  // 운영 주소를 통과시켜, 아래 deleteMany 가 운영 데이터를 지울 수 있다.
+  let hostname = '';
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    throw new Error('DATABASE_URL 을 해석할 수 없습니다: ' + masked);
+  }
+  if (!['localhost', '127.0.0.1', '::1'].includes(hostname)) {
+    throw new Error('로컬 DB 가 아닙니다. 중단합니다: ' + masked);
+  }
+
+  if (!process.argv.includes('--confirm')) {
+    console.error('⚠ 안전을 위해 --confirm 플래그가 필요합니다.');
+    console.error('   사용: npx tsx scripts/seed-dashboard-demo.ts --confirm');
+    process.exit(1);
   }
 
   const companies = await prisma.company.findMany({ select: { id: true }, orderBy: { code: 'asc' } });
@@ -26,6 +41,8 @@ async function main() {
     });
   }
 
+  // 데모 스크립트는 실적(project, projectStudent, internship)을 통째로 교체하므로
+  // 재실행해도 멱등성을 보장한다. 기업/학생/컨택 데이터는 건드리지 않는다.
   await prisma.projectStudent.deleteMany({});
   await prisma.project.deleteMany({});
   await prisma.internship.deleteMany({});
