@@ -62,13 +62,15 @@ export async function GET(req: Request) {
 
     // ── 누적 타일. delta 는 선택 연도 건수와 전년 건수의 차 (stat/indicators 도 같은 year/prev 에만 의존해 한 배치로 묶는다)
     const [
-      stat, indicators,
+      stat, indicators, prevStat, prevIndicators,
       companyTotal, mouTotal, projectTotal, internshipTotal,
       compThis, compPrev, projThis, projPrev, intThis, intPrev,
       projByYear, intByYear,
     ] = await Promise.all([
       prisma.yearStat.findUnique({ where: { year } }),
       prisma.swcuIndicator.findMany({ where: { year }, orderBy: { sortOrder: 'asc' } }),
+      prisma.yearStat.findUnique({ where: { year: prev } }),
+      prisma.swcuIndicator.findMany({ where: { year: prev }, select: { target: true, actual: true } }),
       prisma.company.count({ where: { isActive: true } }),
       prisma.company.count({ where: { isActive: true, mou: true } }),
       prisma.project.count(),
@@ -96,6 +98,9 @@ export async function GET(req: Request) {
     // 부족분이 큰 순(비율 기준). 목표가 0 이면 뒤로 민다.
     unmetAll.sort((a, b) => (a.target ? a.actual / a.target : 2) - (b.target ? b.actual / b.target : 2));
 
+    // 전년 달성 개수. 분모(지표 수)가 해마다 달라질 수 있어 개수도 같이 보낸다.
+    const prevMet = prevIndicators.filter((r) => r.target != null && r.actual != null && r.actual >= r.target).length;
+
     const trendMap = new Map<number, { projects: number; internships: number }>();
     for (const r of projByYear) {
       const y = r.year as number;
@@ -118,13 +123,19 @@ export async function GET(req: Request) {
           target: stat?.industryTargetRatio ?? null,
           achieved: stat?.industryAchievedRatio ?? null,
           students: stat?.industryStudents ?? null,
+          prevAchieved: prevStat?.industryAchievedRatio ?? null,
         },
         internship: {
           target: stat?.internshipTargetRatio ?? null,
           achieved: stat?.internshipAchievedRatio ?? null,
           students: stat?.internshipStudents ?? null,
+          prevAchieved: prevStat?.internshipAchievedRatio ?? null,
         },
-        swcu: { total: indicators.length, met, unmet: unmetAll.slice(0, 3), unmetCount: unmetAll.length, cells },
+        swcu: {
+          total: indicators.length, met, unmet: unmetAll.slice(0, 3), unmetCount: unmetAll.length, cells,
+          prevMet: prevIndicators.length ? prevMet : null,
+          prevTotal: prevIndicators.length || null,
+        },
       },
       totals: {
         companies: { value: companyTotal, delta: compThis - compPrev },
@@ -143,12 +154,13 @@ export async function GET(req: Request) {
     // 일반 사용자는 요약까지만 본다
     if (user.role === 'GENERAL') return ok(base);
 
+    // 쏠림 진단(dept/division/type)은 특정 연도가 아니라 전체 연도 누적 경향을 보려는 것이라 year 필터를 걸지 않는다.
     const [byStatus, deptRows, divRows, regionRows, typeRows, divisions, recent] = await Promise.all([
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
-      prisma.project.groupBy({ by: ['dept'], where: { year }, _count: { _all: true } }),
-      prisma.project.groupBy({ by: ['divisionVersion', 'divisionCode'], where: { year }, _count: { _all: true } }),
+      prisma.project.groupBy({ by: ['dept'], _count: { _all: true } }),
+      prisma.project.groupBy({ by: ['divisionVersion', 'divisionCode'], _count: { _all: true } }),
       prisma.company.groupBy({ by: ['region'], where: { isActive: true }, _count: { _all: true } }),
-      prisma.project.groupBy({ by: ['type'], where: { year }, _count: { _all: true } }),
+      prisma.project.groupBy({ by: ['type'], _count: { _all: true } }),
       prisma.division.findMany(),
       prisma.contactHistory.findMany({
         orderBy: { contactDate: 'desc' }, take: 5,

@@ -42,7 +42,7 @@ function verdict(axis: Axis, items: DistributionItem[], baseline: Distribution['
   return `정컴 비중이 재학생 비율(${base.toFixed(0)}%)보다 ${Math.abs(gap).toFixed(0)}%p ${gap > 0 ? '높음' : '낮음'}`;
 }
 
-export default function DistributionBlock({ distribution, year }: { distribution: Distribution; year: number }) {
+export default function DistributionBlock({ distribution }: { distribution: Distribution }) {
   const [axis, setAxis] = useState<Axis>('dept');
   const items = collapse(distribution[axis]);
   const total = items.reduce((a, x) => a + x.count, 0);
@@ -55,11 +55,11 @@ export default function DistributionBlock({ distribution, year }: { distribution
     if (key === '기타' || key === '미분류' || key === '미지정') return null;
     const q = encodeURIComponent(key);
     if (axis === 'region') return `/companies?region=${q}`;
-    if (axis === 'dept') return `/projects?year=${year}&dept=${q}`;
-    if (axis === 'type') return `/projects?year=${year}&type=${q}`;
+    if (axis === 'dept') return `/projects?dept=${q}`;
+    if (axis === 'type') return `/projects?type=${q}`;
     if (code) {
       const v = version ? `&divisionVersion=${encodeURIComponent(version)}` : '';
-      return `/projects?year=${year}&division=${encodeURIComponent(code)}${v}`;
+      return `/projects?division=${encodeURIComponent(code)}${v}`;
     }
     return null;
   };
@@ -68,6 +68,7 @@ export default function DistributionBlock({ distribution, year }: { distribution
     <div className="card" style={{ padding: 14 }}>
       <div className="dash-eyebrow">쏠림 진단</div>
       <div className="dash-question">어디에 편중돼 있나?</div>
+      <div className="muted" style={{ fontSize: 11, marginBottom: 8 }}>전체 연도 누적</div>
 
       <div style={{ display: 'flex', gap: 3, marginBottom: 12, flexWrap: 'wrap' }}>
         {AXES.map((a) => (

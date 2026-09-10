@@ -10,6 +10,7 @@ export type GoalMetric = {
   target: number | null;
   achieved: number | null;
   students: number | null;
+  prevAchieved: number | null; // 전년 달성치. 없으면 비교 문구를 생략한다
 };
 
 /** SW중심대학 지표 한 칸의 상태. na = 목표치가 없어 판정 불가 */
@@ -28,6 +29,8 @@ export type SwcuSummary = {
   unmet: SwcuUnmet[];
   unmetCount: number;
   cells: SwcuCell[];
+  prevMet: number | null;   // 전년 달성 개수
+  prevTotal: number | null; // 전년 지표 개수 (분모가 달라질 수 있어 함께 보낸다)
 };
 
 /** 누적 타일 하나. delta = 선택 연도 건수 - 전년 건수. 계산 불가면 null */
