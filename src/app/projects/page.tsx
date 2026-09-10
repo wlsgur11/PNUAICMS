@@ -27,8 +27,9 @@ type Row = {
 type Facets = { type: string[]; track: string[]; years: number[] };
 type Resp = { rows: Row[]; facets: Facets };
 
-type Filters = { year: string; dept: string; category: string; type: string; track: string; q: string };
-const EMPTY: Filters = { year: '', dept: '', category: '', type: '', track: '', q: '' };
+// 분과(division)은 UI 컨트롤이 없고 대시보드에서 링크로만 전달된다.
+type Filters = { year: string; dept: string; category: string; type: string; track: string; division: string; q: string };
+const EMPTY: Filters = { year: '', dept: '', category: '', type: '', track: '', division: '', q: '' };
 
 function ProjectsPageInner() {
   const router = useRouter();
