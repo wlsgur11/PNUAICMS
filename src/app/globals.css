@@ -1699,3 +1699,9 @@ table.data-table {
 }
 .dash-question { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
 .dash-num { font-variant-numeric: tabular-nums; }
+
+/* 다크에서는 --indigo-900 이 페이지 배경보다 어두워 카드가 파묻힌다. 한 단계 밝은 남색으로. */
+:root[data-theme="dark"] .goal-card {
+  background: #16283f;
+  border: 1px solid var(--border);
+}
