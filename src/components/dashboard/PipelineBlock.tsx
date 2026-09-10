@@ -5,8 +5,9 @@ import type { DashboardData } from '@/lib/dashboard-shape';
 
 type Pipeline = NonNullable<DashboardData['pipeline']>;
 
-// 미접촉에서 협약완료로 갈수록 진해진다. 마지막은 초록(성사)
-const STAGE_COLOR = ['var(--slate-300)', '#9dbdea', '#6f9fe3', 'var(--accent)', 'var(--green-600)'];
+// 색은 의미가 있는 곳에만. 마지막 단계(성사)만 초록, 나머지는 같은 강조색이다.
+// 단계마다 다른 색을 쓰면 그 색들이 뜻하는 바가 없어 화면만 시끄러워진다.
+const stageColor = (i: number, last: number) => (i === last ? 'var(--green-600)' : 'var(--accent)');
 
 export default function PipelineBlock({ pipeline }: { pipeline: Pipeline }) {
   const max = Math.max(1, ...pipeline.byStatus.map((s) => s.count));
@@ -15,15 +16,21 @@ export default function PipelineBlock({ pipeline }: { pipeline: Pipeline }) {
       <div className="dash-eyebrow">기업 파이프라인</div>
       <div className="dash-question">협력 기업을 더 늘려야 하나?</div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {pipeline.byStatus.map((s, i) => (
           <Link key={s.status} href={`/companies?status=${encodeURIComponent(s.status)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-2)', marginBottom: 3 }}>
-              <span>{s.status}</span>
-              <span className="dash-num" style={{ fontWeight: 700, color: 'var(--text-1)' }}>{s.count}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span
+                className="dash-num"
+                style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-1)', lineHeight: 1, minWidth: 30, textAlign: 'right' }}
+              >
+                {s.count}
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{s.status}</span>
             </div>
-            <div style={{ height: 14, background: 'var(--slate-100)', borderRadius: 2 }}>
-              <div style={{ width: `${(s.count / max) * 100}%`, height: '100%', background: STAGE_COLOR[i] ?? 'var(--accent)', borderRadius: 2 }} />
+            {/* 막대는 비율을 눈으로 가늠하는 보조 장치다. 얇게 두어 숫자를 가리지 않는다. */}
+            <div style={{ height: 4, background: 'var(--slate-100)', borderRadius: 2, marginTop: 4 }}>
+              <div style={{ width: `${(s.count / max) * 100}%`, height: '100%', background: stageColor(i, pipeline.byStatus.length - 1), borderRadius: 2 }} />
             </div>
           </Link>
         ))}

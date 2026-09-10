@@ -1689,7 +1689,7 @@ table.data-table {
   color: #fff;
 }
 .goal-card .goal-label { font-size: 13px; color: #c7d7f2; }
-.goal-card .goal-value { font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.goal-card .goal-value { font-size: 32px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .goal-card .goal-note { font-size: 10px; color: #9fbdf0; margin-top: 5px; }
 .goal-track { height: 6px; background: rgba(255, 255, 255, 0.16); border-radius: 3px; overflow: hidden; }
 .goal-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }

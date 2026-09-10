@@ -9,7 +9,7 @@ function Tile({ label, tile }: { label: string; tile: TotalTile }) {
   const d = tile.delta;
   return (
     <div style={{ background: 'var(--slate-50)', borderRadius: 'var(--radius-sm)', padding: '11px 10px' }}>
-      <div className="dash-num" style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', lineHeight: 1 }}>
+      <div className="dash-num" style={{ fontSize: 34, fontWeight: 800, color: 'var(--text-1)', lineHeight: 1, letterSpacing: '-0.02em' }}>
         <CountUp end={tile.value} />
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 5 }}>{label}</div>

@@ -14,7 +14,8 @@ const AXES: { key: Axis; label: string }[] = [
   { key: 'type', label: '유형' },
 ];
 
-const COLORS = ['var(--accent)', '#8ab0e8', '#b9cdf0', 'var(--slate-300)', 'var(--slate-200)'];
+// 같은 강조색의 농도 차이만 쓴다. 항목마다 다른 색을 주면 색이 뜻 없이 늘어난다.
+const COLORS = ['var(--accent)', '#7ba3e0', '#a9c3ea', 'var(--slate-300)', 'var(--slate-200)'];
 
 /** 항목이 5개를 넘으면 상위 4개와 기타로 묶는다. */
 function collapse(items: DistributionItem[]): DistributionItem[] {
@@ -87,7 +88,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
         <div className="empty" style={{ fontSize: 12 }}>이 조건에 해당하는 데이터가 없습니다.</div>
       ) : (
         <>
-          <div style={{ display: 'flex', height: 26, borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+          <div style={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', marginBottom: 12 }}>
             {items.map((x, i) => {
               const href = hrefFor(x);
               return href ? (
@@ -112,11 +113,14 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
               const href = hrefFor(x);
               const content = (
                 <>
-                  <span style={{ color: 'var(--text-2)' }}>
-                    <span style={{ color: COLORS[i] ?? 'var(--slate-200)' }}>■</span> {x.key}
+                  <span style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+                    <span className="dash-num" style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-1)', lineHeight: 1, minWidth: 28, textAlign: 'right' }}>
+                      {x.count}
+                    </span>
+                    <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{x.key}</span>
                   </span>
-                  <span className="dash-num" style={{ fontWeight: 700 }}>
-                    {x.count}건 · {((x.count / total) * 100).toFixed(0)}%
+                  <span className="dash-num" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>
+                    {((x.count / total) * 100).toFixed(0)}%
                   </span>
                 </>
               );
@@ -124,12 +128,12 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
                 <Link
                   key={x.key}
                   href={href}
-                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, textDecoration: 'none', color: 'inherit' }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', textDecoration: 'none', color: 'inherit' }}
                 >
                   {content}
                 </Link>
               ) : (
-                <div key={x.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, cursor: 'default' }}>
+                <div key={x.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'default' }}>
                   {content}
                 </div>
               );
