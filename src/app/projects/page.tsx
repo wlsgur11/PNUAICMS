@@ -79,7 +79,6 @@ function ProjectsPageInner() {
           <input placeholder="기업·교수·연구주제 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
-          <button className="btn btn-primary" type="submit">검색</button>
           <button type="button" className="btn" onClick={() => { window.location.href = `/api/projects/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>
       </form>

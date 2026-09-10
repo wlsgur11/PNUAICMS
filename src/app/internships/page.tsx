@@ -71,7 +71,6 @@ function InternshipsPageInner() {
           <input placeholder="기업·프로그램 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} />
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
-          <button className="btn btn-primary" type="submit">검색</button>
           <button type="button" className="btn" onClick={() => { window.location.href = `/api/internships/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>
       </form>

@@ -104,7 +104,6 @@ function CompaniesInner() {
           </label>
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
-          <button className="btn btn-primary" type="submit">검색</button>
           <button
             type="button"
             className="btn"

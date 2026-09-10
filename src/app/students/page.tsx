@@ -48,7 +48,6 @@ function StudentsPageInner() {
           <input placeholder="이름·학번·연락처 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
-          <button className="btn btn-primary" type="submit">검색</button>
           <button type="button" className="btn" onClick={() => router.push('/students/new')}>신규 등록</button>
           <button type="button" className="btn" onClick={() => { window.location.href = `/api/students/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>

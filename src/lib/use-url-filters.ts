@@ -11,8 +11,11 @@
  * 링크 공유나 새로고침에도 조건이 유지된다.
  *
  * empty 객체가 필터의 모양과 기본값을 정의한다. boolean 필드는 '1' 로 직렬화한다.
+ *
+ * 필터를 바꾸면 검색 버튼 없이 바로 반영된다. 타이핑 중 글자마다 조회하지 않도록
+ * 잠깐(delayMs) 모았다 보낸다. 드롭다운이나 체크박스는 이 지연이 체감되지 않는다.
  */
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export type FilterShape = Record<string, string | boolean>;
@@ -26,7 +29,7 @@ export function filterParams<T extends FilterShape>(f: T): URLSearchParams {
   return p;
 }
 
-export function useUrlFilters<T extends FilterShape>(empty: T) {
+export function useUrlFilters<T extends FilterShape>(empty: T, delayMs = 250) {
   const sp = useSearchParams();
 
   // URL 쿼리 → 필터. 없는 키는 empty 의 기본값을 쓴다(예: sort=name_asc).
@@ -46,16 +49,27 @@ export function useUrlFilters<T extends FilterShape>(empty: T) {
 
   const set = <K extends keyof T>(k: K, v: T[K]) => setFilters((p) => ({ ...p, [k]: v }));
 
-  /** 검색 적용 + 조건을 URL 에 반영. history 항목을 늘리지 않도록 replace 를 쓴다. */
-  const apply = (f: T = filters) => {
+  /** 조회 키를 갈아끼우고 조건을 URL 에 반영. history 항목을 늘리지 않도록 replace 를 쓴다. */
+  const commit = useCallback((f: T) => {
     setApplied(f);
     const qs = filterParams(f).toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-  };
+  }, []);
+
+  // 필터가 바뀌면 자동 반영. 실제로 달라진 게 없으면(첫 렌더, 반영 직후) 아무것도 하지 않아
+  // 조건 없이 들어온 화면에 쿼리가 붙지 않고, 무한 갱신도 생기지 않는다.
+  useEffect(() => {
+    if (filterParams(filters).toString() === filterParams(applied).toString()) return;
+    const timer = setTimeout(() => commit(filters), delayMs);
+    return () => clearTimeout(timer);
+  }, [filters, applied, commit, delayMs]);
+
+  /** 엔터 등으로 지연 없이 지금 바로 적용. */
+  const apply = (f: T = filters) => commit(f);
 
   const reset = () => {
     setFilters(empty);
-    apply(empty);
+    commit(empty);
   };
 
   return { filters, setFilters, set, applied, apply, reset, params: filterParams };
