@@ -195,6 +195,7 @@ model Student {
   swPrograms        Json? // {program1..5} SW중심대학 사업참여
   bootcampPrograms  Json? // {program1..5} 부트캠프 사업참여
 
+  version   Int      @default(1) // 낙관적 락 버전 (다른 테이블과 동일 규약)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   createdBy String? // 등록자(이메일)

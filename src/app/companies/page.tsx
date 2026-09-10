@@ -1,13 +1,14 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { ENUMS, COLLAB_FIELDS } from '@/lib/enums';
+import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 
 type Row = {
   id: string; code: string; name: string; professor: string; region: string;
@@ -35,22 +36,6 @@ const EMPTY_FILTERS: Filters = {
   valueSpread: false, fieldTrainingOrg: false,
 };
 
-/** URL 쿼리파라미터를 초기 필터로 변환 (대시보드 카드 등에서 넘어온 조건 적용). */
-function parseFilters(sp: { get: (k: string) => string | null }): Filters {
-  const s = (k: string) => sp.get(k) ?? '';
-  const b = (k: string) => sp.get(k) === '1';
-  return {
-    q: s('q'), region: s('region'), priority: s('priority'), status: s('status'),
-    aiField: s('aiField'), business: s('business'),
-    sort: s('sort') || 'name_asc',
-    mou: b('mou'), includeInactive: b('includeInactive'),
-    internship: b('internship'), industryProject: b('industryProject'),
-    curriculumCommittee: b('curriculumCommittee'), guestLecture: b('guestLecture'),
-    employment: b('employment'), overseasEducation: b('overseasEducation'),
-    valueSpread: b('valueSpread'), fieldTrainingOrg: b('fieldTrainingOrg'),
-  };
-}
-
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'name_asc', label: '기관명 (가나다순)' },
   { value: 'name_desc', label: '기관명 (역순)' },
@@ -64,38 +49,19 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
 
 function CompaniesInner() {
   const router = useRouter();
-  const sp = useSearchParams();
-  // URL 파라미터가 있으면 그 조건으로 시작 (대시보드 카드 → 필터 적용 진입)
-  const [filters, setFilters] = useState<Filters>(() => parseFilters(sp));
-  // 사용자가 '검색'을 눌러 적용한 필터만 SWR 키에 반영 → 입력 중에는 재조회 안 함
-  const [applied, setApplied] = useState<Filters>(() => parseFilters(sp));
+  // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도(뒤로가기/목록 링크) 조건이 유지되고,
+  // 대시보드 카드처럼 조건을 붙여 들어오는 진입도 그대로 반영된다.
+  // 사용자가 '검색'을 눌러 확정한 applied 만 SWR 키에 반영 → 입력 중에는 재조회 안 함.
+  const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY_FILTERS);
 
-  function set<K extends keyof Filters>(k: K, v: Filters[K]) {
-    setFilters((p) => ({ ...p, [k]: v }));
-  }
-
-  const buildParams = (f: Filters) => {
-    const params = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) {
-      if (v === true) params.set(k, '1');
-      else if (typeof v === 'string' && v.trim()) params.set(k, v.trim());
-    }
-    return params;
-  };
-
-  const swrKey = `/api/companies?${buildParams(applied).toString()}`;
+  const swrKey = `/api/companies?${filterParams(applied).toString()}`;
   const { data: rows, isLoading } = useSWR<Row[]>(swrKey);
-
-  function reset() {
-    setFilters(EMPTY_FILTERS);
-    setApplied(EMPTY_FILTERS);
-  }
 
   return (
     <>
       <PageHeader title="협력 기업 리스트" />
 
-      <form onSubmit={(e) => { e.preventDefault(); setApplied(filters); }}>
+      <form onSubmit={(e) => { e.preventDefault(); apply(); }}>
         {/* 1행: 텍스트·드롭다운·MOU·버튼 */}
         <div className="filter-bar">
           <input
@@ -138,12 +104,13 @@ function CompaniesInner() {
           </label>
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
+          {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
           <button className="btn btn-primary" type="submit">검색</button>
           <button
             type="button"
             className="btn"
             onClick={() => {
-              const params = buildParams(filters).toString();
+              const params = filterParams(filters).toString();
               window.location.href = `/api/companies/export${params ? `?${params}` : ''}`;
             }}
             title="현재 검색 조건의 결과를 엑셀(.xlsx)로 내려받습니다."

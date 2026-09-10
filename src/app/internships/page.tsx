@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
+import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 
 type Row = {
   id: string;
@@ -28,18 +29,12 @@ type Resp = { rows: Row[]; facets: Facets };
 type Filters = { year: string; host: string; method: string; domestic: string; q: string };
 const EMPTY: Filters = { year: '', host: '', method: '', domestic: '', q: '' };
 
-export default function InternshipsPage() {
+function InternshipsPageInner() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(EMPTY);
-  const [applied, setApplied] = useState<Filters>(EMPTY);
-  const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((p) => ({ ...p, [k]: v }));
+  // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도 조건이 유지된다.
+  const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY);
 
-  const buildParams = (f: Filters) => {
-    const p = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) if (v.trim()) p.set(k, v.trim());
-    return p;
-  };
-  const { data, isLoading } = useSWR<Resp>(`/api/internships?${buildParams(applied).toString()}`);
+  const { data, isLoading } = useSWR<Resp>(`/api/internships?${filterParams(applied).toString()}`);
   const rows = data?.rows;
   const facets = data?.facets;
   const sum = (key: keyof Row) => (rows ?? []).reduce((a, r) => a + (Number(r[key]) || 0), 0);
@@ -55,7 +50,7 @@ export default function InternshipsPage() {
         </div>
       )}
 
-      <form onSubmit={(e) => { e.preventDefault(); setApplied(filters); }}>
+      <form onSubmit={(e) => { e.preventDefault(); apply(); }}>
         <div className="filter-bar">
           <select value={filters.year} onChange={(e) => set('year', e.target.value)}>
             <option value="">연도 전체</option>
@@ -75,9 +70,10 @@ export default function InternshipsPage() {
           </select>
           <input placeholder="기업·프로그램 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} />
           <div className="spacer" />
-          <button type="button" className="btn" onClick={() => { setFilters(EMPTY); setApplied(EMPTY); }}>초기화</button>
+          <button type="button" className="btn" onClick={reset}>초기화</button>
+          {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
           <button className="btn btn-primary" type="submit">검색</button>
-          <button type="button" className="btn" onClick={() => { window.location.href = `/api/internships/export?${buildParams(applied).toString()}`; }}>엑셀 다운로드</button>
+          <button type="button" className="btn" onClick={() => { window.location.href = `/api/internships/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>
       </form>
 
@@ -129,5 +125,13 @@ export default function InternshipsPage() {
       </FadeContent>
       <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ CMS에 등록된 기업은 행을 클릭하면 기업 상세로 이동합니다. 회색 기업명은 아직 미등록(이름만 보존)입니다.</p>
     </>
+  );
+}
+
+export default function InternshipsPage() {
+  return (
+    <Suspense fallback={<><PageHeader title="인턴십 현황" /><div className="loading">불러오는 중…</div></>}>
+      <InternshipsPageInner />
+    </Suspense>
   );
 }

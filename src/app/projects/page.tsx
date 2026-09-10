@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
+import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 
 type Row = {
   id: string;
@@ -29,20 +30,14 @@ type Resp = { rows: Row[]; facets: Facets };
 type Filters = { year: string; dept: string; category: string; type: string; track: string; q: string };
 const EMPTY: Filters = { year: '', dept: '', category: '', type: '', track: '', q: '' };
 
-export default function ProjectsPage() {
+function ProjectsPageInner() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(EMPTY);
-  const [applied, setApplied] = useState<Filters>(EMPTY);
-  const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((p) => ({ ...p, [k]: v }));
+  // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도 조건이 유지된다.
+  const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY);
 
   const [selected, setSelected] = useState<Row | null>(null);
 
-  const buildParams = (f: Filters) => {
-    const p = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) if (v.trim()) p.set(k, v.trim());
-    return p;
-  };
-  const { data, isLoading } = useSWR<Resp>(`/api/projects?${buildParams(applied).toString()}`);
+  const { data, isLoading } = useSWR<Resp>(`/api/projects?${filterParams(applied).toString()}`);
   const rows = data?.rows;
   const facets = data?.facets;
 
@@ -57,7 +52,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      <form onSubmit={(e) => { e.preventDefault(); setApplied(filters); }}>
+      <form onSubmit={(e) => { e.preventDefault(); apply(); }}>
         <div className="filter-bar">
           <select value={filters.year} onChange={(e) => set('year', e.target.value)}>
             <option value="">연도 전체</option>
@@ -83,9 +78,10 @@ export default function ProjectsPage() {
           </select>
           <input placeholder="기업·교수·연구주제 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
           <div className="spacer" />
-          <button type="button" className="btn" onClick={() => { setFilters(EMPTY); setApplied(EMPTY); }}>초기화</button>
+          <button type="button" className="btn" onClick={reset}>초기화</button>
+          {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
           <button className="btn btn-primary" type="submit">검색</button>
-          <button type="button" className="btn" onClick={() => { window.location.href = `/api/projects/export?${buildParams(applied).toString()}`; }}>엑셀 다운로드</button>
+          <button type="button" className="btn" onClick={() => { window.location.href = `/api/projects/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>
       </form>
 
@@ -173,5 +169,13 @@ export default function ProjectsPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<><PageHeader title="산학협력 현황" /><div className="loading">불러오는 중…</div></>}>
+      <ProjectsPageInner />
+    </Suspense>
   );
 }

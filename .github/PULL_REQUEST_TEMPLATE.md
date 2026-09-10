@@ -21,7 +21,7 @@ Closes #
 ## 확인한 것 (셀프 체크)
 - [ ] `npx tsc --noEmit` 통과
 - [ ] 로컬에서 화면/동작 직접 확인
-- [ ] DB 스키마 변경 시: 운영 DB 영향 검토 (`prisma db push`는 운영 Supabase에 바로 반영됨)
+- [ ] DB 스키마 변경 시: 운영 DB 영향 검토 (`DATABASE_URL`이 운영을 가리키면 `prisma db push`가 바로 반영됨)
 - [ ] 운영 비밀값/`.env`를 커밋하지 않음
 - [ ] `AUTH_BYPASS`를 코드/설정에 `true`로 남기지 않음
 

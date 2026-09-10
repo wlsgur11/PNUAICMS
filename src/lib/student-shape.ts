@@ -51,6 +51,7 @@ export type StudentLinkedProject = {
 
 export type StudentDetail = {
   studentNo: string;
+  version: number; // 낙관적 락. 수정 요청에 그대로 실어 보낸다.
   name: string | null;
   nameMasked: string | null;
   department: string | null;

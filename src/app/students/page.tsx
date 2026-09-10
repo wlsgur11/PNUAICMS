@@ -1,29 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
+import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[] } };
 type Filters = { q: string; department: string; major: string; grade: string; status: string };
 const EMPTY: Filters = { q: '', department: '', major: '', grade: '', status: '' };
 
-export default function StudentsPage() {
+function StudentsPageInner() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(EMPTY);
-  const [applied, setApplied] = useState<Filters>(EMPTY);
-  const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((p) => ({ ...p, [k]: v }));
+  // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도 조건이 유지된다.
+  const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY);
 
-  const buildParams = (f: Filters) => {
-    const p = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) if (v.trim()) p.set(k, v.trim());
-    return p;
-  };
-  const { data, isLoading } = useSWR<Resp>(`/api/students?${buildParams(applied).toString()}`);
+  const { data, isLoading } = useSWR<Resp>(`/api/students?${filterParams(applied).toString()}`);
   const rows = data?.rows;
   const facets = data?.facets;
 
@@ -31,7 +26,7 @@ export default function StudentsPage() {
     <>
       <PageHeader title="학생 목록" />
 
-      <form onSubmit={(e) => { e.preventDefault(); setApplied(filters); }}>
+      <form onSubmit={(e) => { e.preventDefault(); apply(); }}>
         <div className="filter-bar">
           <select value={filters.department} onChange={(e) => set('department', e.target.value)}>
             <option value="">학과 전체</option>
@@ -52,10 +47,11 @@ export default function StudentsPage() {
           </select>
           <input placeholder="이름·학번·연락처 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
           <div className="spacer" />
-          <button type="button" className="btn" onClick={() => { setFilters(EMPTY); setApplied(EMPTY); }}>초기화</button>
+          <button type="button" className="btn" onClick={reset}>초기화</button>
+          {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
           <button className="btn btn-primary" type="submit">검색</button>
           <button type="button" className="btn" onClick={() => router.push('/students/new')}>신규 등록</button>
-          <button type="button" className="btn" onClick={() => { window.location.href = `/api/students/export?${buildParams(applied).toString()}`; }}>엑셀 다운로드</button>
+          <button type="button" className="btn" onClick={() => { window.location.href = `/api/students/export?${filterParams(applied).toString()}`; }}>엑셀 다운로드</button>
         </div>
       </form>
 
@@ -104,5 +100,13 @@ export default function StudentsPage() {
       </FadeContent>
       <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 이름은 마스킹 표시되며, 행을 클릭하면 학생 상세에서 실명과 전체 정보를 볼 수 있습니다.</p>
     </>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={<><PageHeader title="학생 목록" /><div className="loading">불러오는 중…</div></>}>
+      <StudentsPageInner />
+    </Suspense>
   );
 }

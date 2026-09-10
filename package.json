@@ -2,7 +2,7 @@
   "name": "buulgyeong-ai-cms",
   "version": "2.4.1",
   "private": true,
-  "description": "부울경 AI기업 관리 시스템 v2 (Next.js + Supabase/PostgreSQL)",
+  "description": "AI 산학협력 관리 시스템 (Next.js + PostgreSQL, 교내 자체 서버 호스팅)",
   "engines": {
     "node": ">=18.18.0"
   },

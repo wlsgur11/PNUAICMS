@@ -20,9 +20,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env (절대 커밋 금지 — DB 비밀번호·API 키 포함)
+# env (절대 커밋 금지. DB 비밀번호, AUTH_SECRET, OAuth 시크릿, API 키가 들어있다)
+# `.env*.local` 만 막으면 서버에 있는 .env.supabase-backup 같은 파일이 새어나간다.
 .env
-.env*.local
+.env.*
+!.env.example
+
+# DB 덤프와 백업. 학생 실명, 연락처가 들어있어 저장소에 올라가면 되돌리기 어렵다.
+# 서버 ~/cms 에 cms.dump 가 실제로 놓여 있어 `git add .` 한 번에 올라갈 수 있었다.
+# .sql 은 루트만 막는다. prisma/migrations/**/migration.sql 을 무시하면 안 되므로.
+*.dump
+/*.sql
+*.sql.gz
+*.tar.gz
 
 # vercel
 .vercel
@@ -47,3 +57,11 @@ docs/superpowers/
 # Agent skill config (per-machine, not shared)
 CLAUDE.md
 docs/agents/
+
+# 교수님이 SFTP 로 올리는 정적 자료. 저장소에 올리지 않고 서버에만 둔다.
+# 실제 파일은 /srv/aice 에 있고 서버의 ~/cms/aice 는 그쪽을 가리키는 심링크다.
+# (홈 디렉토리가 750 이라 caddy 계정이 통과할 수 없어서 홈 밖으로 뺐다)
+# Caddy 가 aicms.pusan.ac.kr/aice 로 직접 서빙한다. 앱을 거치지 않으므로
+# CMS 로그인과 무관하며, 별도 basic auth 로 막혀 있다.
+# 슬래시 없이 적는다. 심링크는 git 이 파일로 취급해 `/aice/` 로는 안 걸린다.
+/aice
