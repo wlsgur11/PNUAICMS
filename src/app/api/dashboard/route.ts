@@ -14,11 +14,11 @@ import { PIPELINE_STAGES, type DashboardData, type SwcuCell, type SwcuUnmet, typ
 export const dynamic = 'force-dynamic';
 
 /** groupBy 결과를 { key, count } 배열로. null 키는 라벨로 바꾼다. */
-function toItems<T extends Record<string, unknown>>(
+function toItems<T extends { _count: { _all: number } }>(
   rows: T[], field: keyof T, nullLabel: string,
 ): DistributionItem[] {
   return rows
-    .map((r) => ({ key: (r[field] as string | null) || nullLabel, count: Number((r as { _count?: { _all?: number } })._count?._all ?? 0) }))
+    .map((r) => ({ key: (r[field] as string | null) || nullLabel, count: r._count._all }))
     .filter((x) => x.count > 0)
     .sort((a, b) => b.count - a.count);
 }
@@ -51,9 +51,27 @@ export async function GET(req: Request) {
     const year = years.includes(asked) ? asked : (years[0] ?? new Date().getFullYear());
     const prev = year - 1;
 
-    const [stat, indicators] = await Promise.all([
+    // ── 누적 타일. delta 는 선택 연도 건수와 전년 건수의 차 (stat/indicators 도 같은 year/prev 에만 의존해 한 배치로 묶는다)
+    const [
+      stat, indicators,
+      companyTotal, mouTotal, projectTotal, internshipTotal,
+      compThis, compPrev, projThis, projPrev, intThis, intPrev,
+      projByYear, intByYear,
+    ] = await Promise.all([
       prisma.yearStat.findUnique({ where: { year } }),
       prisma.swcuIndicator.findMany({ where: { year }, orderBy: { sortOrder: 'asc' } }),
+      prisma.company.count({ where: { isActive: true } }),
+      prisma.company.count({ where: { isActive: true, mou: true } }),
+      prisma.project.count(),
+      prisma.internship.count(),
+      prisma.company.count({ where: { isActive: true, joinYear: year } }),
+      prisma.company.count({ where: { isActive: true, joinYear: prev } }),
+      prisma.project.count({ where: { year } }),
+      prisma.project.count({ where: { year: prev } }),
+      prisma.internship.count({ where: { year } }),
+      prisma.internship.count({ where: { year: prev } }),
+      prisma.project.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
+      prisma.internship.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
     ]);
 
     // ── SW중심대학 지표: target 이 있는 것만 판정. actual >= target 이면 달성
@@ -68,26 +86,6 @@ export async function GET(req: Request) {
     }
     // 부족분이 큰 순(비율 기준). 목표가 0 이면 뒤로 민다.
     unmetAll.sort((a, b) => (a.target ? a.actual / a.target : 2) - (b.target ? b.actual / b.target : 2));
-
-    // ── 누적 타일. delta 는 선택 연도 건수와 전년 건수의 차
-    const [
-      companyTotal, mouTotal, projectTotal, internshipTotal,
-      compThis, compPrev, projThis, projPrev, intThis, intPrev,
-      projByYear, intByYear,
-    ] = await Promise.all([
-      prisma.company.count({ where: { isActive: true } }),
-      prisma.company.count({ where: { isActive: true, mou: true } }),
-      prisma.project.count(),
-      prisma.internship.count(),
-      prisma.company.count({ where: { isActive: true, joinYear: year } }),
-      prisma.company.count({ where: { isActive: true, joinYear: prev } }),
-      prisma.project.count({ where: { year } }),
-      prisma.project.count({ where: { year: prev } }),
-      prisma.internship.count({ where: { year } }),
-      prisma.internship.count({ where: { year: prev } }),
-      prisma.project.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
-      prisma.internship.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
-    ]);
 
     const trendMap = new Map<number, { projects: number; internships: number }>();
     for (const r of projByYear) {
@@ -127,6 +125,7 @@ export async function GET(req: Request) {
         mou: { value: mouTotal, delta: null },
       },
       trend,
+      // 아래 세 필드는 일반(GENERAL) 전용 기본값. 권한 분기에서 반드시 세 필드 모두 덮어써야 한다
       pipeline: null,
       distribution: null,
       recentHistories: [],
@@ -135,9 +134,8 @@ export async function GET(req: Request) {
     // 일반 사용자는 요약까지만 본다
     if (user.role === 'GENERAL') return ok(base);
 
-    const [byStatus, newThisYear, deptRows, divRows, regionRows, typeRows, divisions, recent] = await Promise.all([
+    const [byStatus, deptRows, divRows, regionRows, typeRows, divisions, recent] = await Promise.all([
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
-      prisma.company.count({ where: { isActive: true, joinYear: year } }),
       prisma.project.groupBy({ by: ['dept'], where: { year }, _count: { _all: true } }),
       prisma.project.groupBy({ by: ['divisionVersion', 'divisionCode'], where: { year }, _count: { _all: true } }),
       prisma.company.groupBy({ by: ['region'], where: { isActive: true }, _count: { _all: true } }),
@@ -160,7 +158,8 @@ export async function GET(req: Request) {
         byStatus: PIPELINE_STAGES.map((s) => ({ status: s, count: statusCount.get(s) ?? 0 })),
         onHold: statusCount.get('보류') ?? 0,
         closed: statusCount.get('종료') ?? 0,
-        newThisYear,
+        // compThis 와 같은 값(기업 증감 delta 의 분자). 다시 쪼개서 따로 세지 말 것
+        newThisYear: compThis,
       },
       distribution: {
         dept: toItems(deptRows, 'dept', '미분류'),
