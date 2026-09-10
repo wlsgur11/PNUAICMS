@@ -9,6 +9,7 @@ import { toast } from '@/components/Toaster';
 import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
 import { COLLAB_FIELDS, ENUMS } from '@/lib/enums';
+import { clickKeys } from '@/lib/a11y';
 
 /** 변경 후 기업 목록·대시보드 캐시도 함께 무효화 */
 function revalidateAllCompanies() {
@@ -236,19 +237,24 @@ export default function CompanyDetailPage() {
                 <th>내용</th>
               </tr></thead>
               <tbody>
-                {c.histories.map((h) => (
-                  <tr key={h.id} className="row-click"
-                    onClick={() => setHistDetail({
-                      id: h.id, version: h.version, personId: h.personId ?? null,
-                      contactDate: h.contactDate, histStatus: h.histStatus,
-                      method: h.method, professor: h.professor, business: h.business ?? null,
-                      personName: h.person?.name ?? null, companyName: c.name, content: h.content,
-                    })}>
-                    <td style={{ whiteSpace: 'nowrap' }}>{h.contactDate}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus}</span></td>
-                    <td><span className="ellipsis" style={{ maxWidth: 240 }}>{h.content || '-'}</span></td>
-                  </tr>
-                ))}
+                {c.histories.map((h) => {
+                  const open = () => setHistDetail({
+                    id: h.id, version: h.version, personId: h.personId ?? null,
+                    contactDate: h.contactDate, histStatus: h.histStatus,
+                    method: h.method, professor: h.professor, business: h.business ?? null,
+                    personName: h.person?.name ?? null, companyName: c.name, content: h.content,
+                  });
+                  return (
+                    <tr key={h.id} className="row-click"
+                      role="button" tabIndex={0}
+                      onClick={open}
+                      onKeyDown={clickKeys(open)}>
+                      <td style={{ whiteSpace: 'nowrap' }}>{h.contactDate}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}><span className={`tag ${h.histStatus === '진행완료' ? 'tag-green' : 'tag-indigo'}`}>{h.histStatus}</span></td>
+                      <td><span className="ellipsis" style={{ maxWidth: 240 }}>{h.content || '-'}</span></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -281,7 +287,7 @@ export default function CompanyDetailPage() {
                           </span>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {g.students.map((s) => (
-                              <span key={s.studentNo} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
+                              <Link key={s.studentNo} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.nameMasked}</Link>
                             ))}
                           </div>
                         </div>
