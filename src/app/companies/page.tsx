@@ -104,6 +104,7 @@ function CompaniesInner() {
           </label>
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
+          {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
           <button className="btn btn-primary" type="submit">검색</button>
           <button
             type="button"
