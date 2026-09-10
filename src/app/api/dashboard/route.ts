@@ -23,6 +23,18 @@ function toItems<T extends Record<string, unknown>>(
     .sort((a, b) => b.count - a.count);
 }
 
+/** 같은 표시 이름끼리 합치고 건수 내림차순으로. (분과는 라벨을 붙인 뒤에야 합칠 수 있다) */
+function mergeByKey(items: DistributionItem[]): DistributionItem[] {
+  const acc = new Map<string, number>();
+  for (const it of items) {
+    if (it.count <= 0) continue;
+    acc.set(it.key, (acc.get(it.key) ?? 0) + it.count);
+  }
+  return [...acc.entries()]
+    .map(([key, count]) => ({ key, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 export async function GET(req: Request) {
   return handle(async () => {
     const user = await requireUser();
@@ -127,7 +139,7 @@ export async function GET(req: Request) {
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
       prisma.company.count({ where: { isActive: true, joinYear: year } }),
       prisma.project.groupBy({ by: ['dept'], where: { year }, _count: { _all: true } }),
-      prisma.project.groupBy({ by: ['divisionCode'], where: { year }, _count: { _all: true } }),
+      prisma.project.groupBy({ by: ['divisionVersion', 'divisionCode'], where: { year }, _count: { _all: true } }),
       prisma.company.groupBy({ by: ['region'], where: { isActive: true }, _count: { _all: true } }),
       prisma.project.groupBy({ by: ['type'], where: { year }, _count: { _all: true } }),
       prisma.division.findMany(),
@@ -138,7 +150,9 @@ export async function GET(req: Request) {
     ]);
 
     const statusCount = new Map(byStatus.map((r) => [r.status, r._count._all]));
-    const divName = new Map(divisions.map((d) => [d.code, d.name]));
+    // 분과 코드(A~F)는 old5 / new6 두 버전에 같은 글자가 서로 다른 이름으로 존재한다.
+    // 버전까지 합쳐 키를 만들지 않으면 다른 분과가 같은 이름으로 뭉개진다.
+    const divName = new Map(divisions.map((d) => [`${d.version}|${d.code}`, d.name]));
 
     return ok({
       ...base,
@@ -150,7 +164,14 @@ export async function GET(req: Request) {
       },
       distribution: {
         dept: toItems(deptRows, 'dept', '미분류'),
-        division: toItems(divRows, 'divisionCode', '미분류').map((d) => ({ ...d, key: divName.get(d.key) ?? d.key })),
+        division: mergeByKey(
+          divRows.map((r) => ({
+            key: r.divisionCode
+              ? (divName.get(`${r.divisionVersion ?? ''}|${r.divisionCode}`) ?? r.divisionCode)
+              : '미분류',
+            count: r._count._all,
+          })),
+        ),
         region: toItems(regionRows, 'region', '미지정'),
         type: toItems(typeRows, 'type', '미분류'),
         baseline: { enrolledCSE: stat?.enrolledCSE ?? null, enrolledDS: stat?.enrolledDS ?? null },
