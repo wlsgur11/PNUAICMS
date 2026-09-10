@@ -47,3 +47,9 @@ docs/superpowers/
 # Agent skill config (per-machine, not shared)
 CLAUDE.md
 docs/agents/
+
+# 교수님이 SFTP 로 올리는 정적 자료. 저장소에 올리지 않고 서버에만 둔다.
+# Caddy 가 aicms.pusan.ac.kr/aice 로 직접 서빙한다(앱을 거치지 않음).
+# 주의: ~/cms 안에 있으므로 이 폴더가 있는 상태에서 `git clean -fdx` 를 절대 실행하지 말 것.
+#       -x 는 gitignore 된 파일까지 지운다.
+/aice/
