@@ -20,9 +20,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env (절대 커밋 금지 — DB 비밀번호·API 키 포함)
+# env (절대 커밋 금지. DB 비밀번호, AUTH_SECRET, OAuth 시크릿, API 키가 들어있다)
+# `.env*.local` 만 막으면 서버에 있는 .env.supabase-backup 같은 파일이 새어나간다.
 .env
-.env*.local
+.env.*
+!.env.example
+
+# DB 덤프와 백업. 학생 실명, 연락처가 들어있어 저장소에 올라가면 되돌리기 어렵다.
+# 서버 ~/cms 에 cms.dump 가 실제로 놓여 있어 `git add .` 한 번에 올라갈 수 있었다.
+# .sql 은 루트만 막는다. prisma/migrations/**/migration.sql 을 무시하면 안 되므로.
+*.dump
+/*.sql
+*.sql.gz
+*.tar.gz
 
 # vercel
 .vercel
