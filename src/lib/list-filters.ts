@@ -40,6 +40,12 @@ export function projectWhere(sp: URLSearchParams): Prisma.ProjectWhereInput {
   return where;
 }
 
+/**
+ * 엑셀 칸이 밀려 들어온 값. 숫자와 기호만 있는 문자열은 교수명이나 유형 이름이
+ * 아니라 옆 칸 값이 새어 들어온 것으로 본다. 목록 필터와 대시보드가 함께 쓴다.
+ */
+export const isJunkValue = (s: string) => /^[\d.,%\s]+$/.test(s);
+
 /** 이름 마스킹: 2글자→끝, 3글자+→가운데 */
 export function maskName(name: string): string {
   const n = (name || '').trim();

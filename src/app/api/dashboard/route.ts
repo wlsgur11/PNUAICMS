@@ -15,6 +15,7 @@ import {
   type ProjectHeadcount,
 } from '@/lib/dashboard-shape';
 import { COLLAB_FIELDS } from '@/lib/enums';
+import { isJunkValue } from '@/lib/list-filters';
 
 // AUTH_BYPASS=true 일 때 Next 가 이 라우트를 정적 캐시하는 것을 막는다.
 export const dynamic = 'force-dynamic';
@@ -297,8 +298,27 @@ export async function GET(req: Request) {
       }
     }
 
-    // 연구실별 과제 수. 과제는 연구실을 최대 하나만 갖기 때문에 합계를 빼면 미연결 건수가 나온다
-    const labbed = labRows.filter((l) => l._count.projects > 0);
+    // 연구실별 과제 수.
+    // Lab 의 식별키가 (교수명|연구실명) 이라, 엑셀 연구실명 칸이 밀려 숫자가 들어오면
+    // 같은 교수가 여러 행으로 쪼개져 과제 수가 나뉜다. 교수 이름으로 합친다.
+    // 교수명 자체가 숫자만인 행은 칸이 밀려 들어온 값이라 목록에서 뺀다.
+    // '백윤주' 와 '백윤주 (정보컴퓨터공학부)' 는 같은 사람이다. 엑셀 지도교수 칸에
+    // 소속이 덧붙은 행이 섞여 있어 뒤 괄호를 떼고 합친다. 이름이 한 글자라도 다르면
+    // 합치지 않는다. 오타를 같은 사람으로 단정할 근거가 없다.
+    const normProf = (v: string) => v.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    const labAgg = new Map<string, { professor: string; labs: Set<string>; count: number }>();
+    for (const l of labRows) {
+      if (l._count.projects === 0) continue;
+      const prof = normProf(l.professorName);
+      if (!prof || isJunkValue(prof)) continue;
+      const cur = labAgg.get(prof) ?? { professor: prof, labs: new Set<string>(), count: 0 };
+      cur.count += l._count.projects;
+      const lab = l.labName?.trim();
+      if (lab && !isJunkValue(lab)) cur.labs.add(lab);
+      labAgg.set(prof, cur);
+    }
+    // 과제는 연구실을 최대 하나만 갖기 때문에 전체에서 빼면 미연결 건수가 나온다
+    const labbedTotal = labRows.reduce((a, l) => a + l._count.projects, 0);
 
     const statusCount = new Map(byStatus.map((r) => [r.status, r._count._all]));
     // 분과 코드(A~F)는 old5 / new6 두 버전에 같은 글자가 서로 다른 이름으로 존재한다.
@@ -348,12 +368,13 @@ export async function GET(req: Request) {
       internshipComposition: { year: toComp(comps.year), total: toComp(comps.total) },
       projectHeadcount: pheads,
       labs: {
-        top: [...labbed]
-          .sort((a, b) => b._count.projects - a._count.projects)
+        top: [...labAgg.values()]
+          .sort((a, b) => b.count - a.count)
           .slice(0, 6)
-          .map((l) => ({ professor: l.professorName, lab: l.labName, count: l._count.projects })),
-        labCount: labbed.length,
-        unlinked: projectTotal - labbed.reduce((a, l) => a + l._count.projects, 0),
+          // 연구실명이 여럿으로 갈려 있으면 어느 쪽도 대표로 쓸 수 없어 비운다
+          .map((l) => ({ professor: l.professor, lab: l.labs.size === 1 ? [...l.labs][0] : null, count: l.count })),
+        labCount: labAgg.size,
+        unlinked: projectTotal - labbedTotal,
       },
       recentHistories: recent.map((h) => ({
         id: h.id, companyId: h.companyId, companyName: h.company.name,

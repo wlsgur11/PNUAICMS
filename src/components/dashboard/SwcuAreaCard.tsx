@@ -22,7 +22,9 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
       </div>
 
       {areas.length === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>이 연도의 성과지표가 아직 없습니다.</div>
+        <div className="empty" style={{ fontSize: 13 }}>
+          {year}년 성과지표가 아직 등록되지 않았습니다. 위쪽 연도 버튼에서 다른 연도를 선택하세요.
+        </div>
       ) : (
         <>
           {areas.map((a) => (

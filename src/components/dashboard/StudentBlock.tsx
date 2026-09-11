@@ -10,6 +10,9 @@ import type { StudentSummary } from '@/lib/dashboard-shape';
  */
 export default function StudentBlock({ s }: { s: StudentSummary }) {
   const maxGrade = Math.max(1, ...s.gradeDistribution.map((g) => g.count));
+  // 운영 데이터는 학년이 비어 있는 학생이 많다. 전부 0 이면 0 짜리 막대 넷만 남아
+  // 자리만 차지하므로 섹션을 접는다
+  const hasGrade = s.gradeDistribution.some((g) => g.count > 0);
 
   return (
     <div className="card dash-card">
@@ -47,6 +50,7 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
             </div>
           </div>
 
+          {hasGrade && <>
           <div className="dash-metric-label" style={{ marginBottom: 10 }}>학년별 분포</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
             {s.gradeDistribution.map((g) => (
@@ -61,6 +65,8 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
               </div>
             ))}
           </div>
+          </>}
+          {!hasGrade && <div className="dash-note">학년이 입력된 학생이 없어 학년별 분포를 표시하지 않습니다.</div>}
 
           <div className="dash-note"><Link href="/students/dashboard" className="text-link">학생 현황 자세히</Link></div>
         </>

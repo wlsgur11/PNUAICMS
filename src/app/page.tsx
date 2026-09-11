@@ -112,7 +112,7 @@ export default function DashboardPage() {
                 재학생이라 두 카드를 같이 보는 편이 맞다 */}
             <div className="dash-section">SW중심대학 성과와 학생</div>
             <div className="dash-grid-auto">
-              <SwcuBlock swcu={data.goals.swcu} />
+              <SwcuBlock swcu={data.goals.swcu} year={data.year} />
               <SwcuAreaCard areas={data.goals.swcu.areas} year={data.year} />
               {data.students && <StudentBlock s={data.students} />}
             </div>
