@@ -48,15 +48,23 @@ async function main() {
   await prisma.project.deleteMany({});
   await prisma.internship.deleteMany({});
 
-  // 연구실. 대시보드 연구실별 카드가 과제 수 상위를 뽑는다
-  await prisma.lab.deleteMany({ where: { professorName: { startsWith: '데모' } } });
-  const labIds: string[] = [];
-  for (const [prof, name, aff] of [
+  // 연구실. 대시보드 연구실별 카드가 과제 수 상위를 뽑는다.
+  // 운영 DB 는 Lab 의 식별키가 (교수명|연구실명) 이라 엑셀 연구실명 칸이 밀리면
+  // 같은 교수가 여러 행으로 쪼개지고, 교수명 칸까지 밀린 행도 있다.
+  // 그 형태를 그대로 재현해 대시보드가 합치고 걸러내는지 확인한다.
+  const demoLabs = [
     ['데모 김교수', '지능시스템연구실', '정컴'],
+    ['데모 김교수', '1772b', '정컴'],          // 연구실명 칸이 밀림. 김교수가 두 행으로 쪼개진다
     ['데모 이교수', '데이터마이닝연구실', 'DS'],
+    ['데모 이교수', '빅데이터연구실', 'DS'],    // 연구실명이 둘. 대표를 못 정해 비워야 한다
     ['데모 박교수', '컴퓨터비전연구실', '정컴'],
+    ['데모 박교수 (정보컴퓨터공학부)', '컴퓨터비전연구실', '정컴'], // 소속이 덧붙음. 박교수로 합쳐야 한다
     ['데모 최교수', null, '정컴'],
-  ] as const) {
+    ['371', '2151', '정컴'],                   // 교수명 칸까지 밀림. 목록에서 빠져야 한다
+  ] as const;
+  await prisma.lab.deleteMany({ where: { professorName: { in: demoLabs.map((l) => l[0]) } } });
+  const labIds: string[] = [];
+  for (const [prof, name, aff] of demoLabs) {
     const lab = await prisma.lab.create({ data: { professorName: prof, labName: name, affiliation: aff } });
     labIds.push(lab.id);
   }
@@ -82,7 +90,7 @@ async function main() {
         companyId: companies[i % companies.length].id,
         title: `${year} 데모 과제 ${i + 1}`,
         // 일부는 연구실을 비워 둔다. 대시보드가 '미연결 과제' 를 따로 센다
-        labId: i % 7 === 6 ? null : labIds[i % labIds.length],
+        labId: i % 9 === 8 ? null : labIds[i % labIds.length],
         // 운영 데이터도 박사·석사는 절반가량이 비어 있다. 그 상태를 그대로 재현해
         // 기재 건수 표기가 동작하는지 본다
         cntPhd: i % 2 === 0 ? 1 + (i % 3) : null,

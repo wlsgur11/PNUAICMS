@@ -67,7 +67,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
       <div className="dash-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h2>쏠림 진단</h2>
-          <p>산학협력 과제가 특정 학과, 분과, 유형에 편중돼 있는지 본다. 전체 연도 누적 기준</p>
+          <p>산학협력 과제의 학과, 분과, 유형별 분포입니다. 전체 연도 누적 기준입니다.</p>
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {AXES.map((a) => (

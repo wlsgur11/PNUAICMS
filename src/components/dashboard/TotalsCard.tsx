@@ -38,7 +38,7 @@ export default function TotalsCard({ totals, partnerCompanies }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>누적 실적</h2>
-        <p>전체 기간 누적. 증감은 선택 연도와 전년의 연간 실적 비교</p>
+        <p>전체 기간 누적입니다. 증감은 선택한 연도와 전년의 연간 실적을 비교한 값입니다.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 20px' }}>
         <Tile label="협력 기업" tile={totals.companies} extra={`실적 있는 기업 ${partnerCompanies}개`} />

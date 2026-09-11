@@ -15,7 +15,7 @@ export default function RecentContactsBlock({ rows }: { rows: Row[] }) {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>최근 컨택 이력</h2>
-        <p>가장 최근 기록 5건. 행을 누르면 전체 내용이 열린다</p>
+        <p>가장 최근 기록 5건입니다. 행을 누르시면 전체 내용이 열립니다.</p>
       </div>
 
       {rows.length === 0 ? (
