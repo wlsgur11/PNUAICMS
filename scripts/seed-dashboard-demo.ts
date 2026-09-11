@@ -48,10 +48,28 @@ async function main() {
   await prisma.project.deleteMany({});
   await prisma.internship.deleteMany({});
 
+  // 연구실. 대시보드 연구실별 카드가 과제 수 상위를 뽑는다
+  await prisma.lab.deleteMany({ where: { professorName: { startsWith: '데모' } } });
+  const labIds: string[] = [];
+  for (const [prof, name, aff] of [
+    ['데모 김교수', '지능시스템연구실', '정컴'],
+    ['데모 이교수', '데이터마이닝연구실', 'DS'],
+    ['데모 박교수', '컴퓨터비전연구실', '정컴'],
+    ['데모 최교수', null, '정컴'],
+  ] as const) {
+    const lab = await prisma.lab.create({ data: { professorName: prof, labName: name, affiliation: aff } });
+    labIds.push(lab.id);
+  }
+
   const depts = ['정컴', '정컴', '정컴', 'DS', null];
   const types = ['졸업과제', 'R&D', '용역', '캡스톤', 'R&D'];
   const divisions = ['A', 'B', 'C', 'A', 'B'];
-  const projects: { year: number; dept: string | null; type: string; divisionCode: string; divisionVersion: string; companyId: string; title: string }[] = [];
+  type DemoProject = {
+    year: number; dept: string | null; type: string; divisionCode: string; divisionVersion: string;
+    companyId: string; title: string; labId: string | null;
+    cntPhd: number | null; cntMaster: number | null; cntUndergrad: number | null;
+  };
+  const projects: DemoProject[] = [];
   for (const year of [2024, 2025, 2026]) {
     const n = year === 2024 ? 6 : year === 2025 ? 10 : 14;
     for (let i = 0; i < n; i++) {
@@ -63,6 +81,13 @@ async function main() {
         divisionVersion: 'new6',
         companyId: companies[i % companies.length].id,
         title: `${year} 데모 과제 ${i + 1}`,
+        // 일부는 연구실을 비워 둔다. 대시보드가 '미연결 과제' 를 따로 센다
+        labId: i % 7 === 6 ? null : labIds[i % labIds.length],
+        // 운영 데이터도 박사·석사는 절반가량이 비어 있다. 그 상태를 그대로 재현해
+        // 기재 건수 표기가 동작하는지 본다
+        cntPhd: i % 2 === 0 ? 1 + (i % 3) : null,
+        cntMaster: i % 3 === 0 ? null : 1 + (i % 4),
+        cntUndergrad: i % 11 === 10 ? null : 2 + (i % 5),
       });
     }
   }
@@ -71,6 +96,7 @@ async function main() {
   // 교육인원과 연계취업자도 채운다. 대시보드 인턴십 실적 카드가 이 값을 합산한다
   const internships: {
     year: number; programName: string; companyId: string;
+    domestic: string; hostType: string; method: string;
     cntCSE: number; cntDS: number; cntNonSW: number; empSW: number; empNonSW: number;
   }[] = [];
   for (const year of [2024, 2025, 2026]) {
@@ -78,6 +104,10 @@ async function main() {
     for (let i = 0; i < n; i++) {
       internships.push({
         year, programName: `${year} 데모 인턴십 ${i + 1}`, companyId: companies[i % companies.length].id,
+        // 해외는 소수. SW중심대학 '해외 인턴십' 미달 지표와 같은 방향으로 둔다
+        domestic: i % 5 === 0 ? '해외' : '국내',
+        hostType: i % 3 === 0 ? '학점연계' : '자체',
+        method: ['집중형', '학기중', '방학중'][i % 3],
         cntCSE: 3 + (i % 4), cntDS: 1 + (i % 3), cntNonSW: i % 2,
         empSW: i % 3 === 0 ? 1 : 0, empNonSW: i % 5 === 0 ? 1 : 0,
       });
@@ -134,16 +164,19 @@ async function main() {
 
   await prisma.swcuYear.upsert({ where: { year: 2026 }, update: {}, create: { year: 2026, university: '부산대학교' } });
   await prisma.swcuIndicator.deleteMany({ where: { year: 2026 } });
+  // 영역을 흩뿌린다. 미달 3개가 서로 다른 영역에 들어가야 영역별 카드의 정렬을 볼 수 있다.
+  // 마지막 하나는 목표를 비워 '판정 불가(회색)' 칸을 만든다
   const indicators = [
-    ['캡스톤 참여율', 80, 62, '%'], ['해외 인턴십', 10, 3, '명'], ['창업 강좌 수', 4, 2, '개'],
-    ['산학 과제 수', 10, 14, '건'], ['MOU 체결', 30, 42, '건'], ['취업률', 70, 78, '%'],
-    ['전공 강좌 수', 40, 44, '개'], ['비교과 참여', 200, 260, '명'], ['논문 실적', 12, 15, '건'],
-    ['특허 출원', 5, 7, '건'], ['교육 만족도', 4, 4.3, '점'], ['현장실습 인원', 50, 61, '명'],
-  ];
+    ['SW교육', '캡스톤 참여율', 80, 62, '%'], ['산학협력', '해외 인턴십', 10, 3, '명'],
+    ['창업', '창업 강좌 수', 4, 2, '개'], ['산학협력', '산학 과제 수', 10, 14, '건'],
+    ['산학협력', 'MOU 체결', 30, 42, '건'], ['SW교육', '취업률', 70, 78, '%'],
+    ['SW교육', '전공 강좌 수', 40, 44, '개'], ['가치확산', '비교과 참여', 200, 260, '명'],
+    ['연구', '논문 실적', 12, 15, '건'], ['연구', '특허 출원', 5, 7, '건'],
+    ['SW교육', '교육 만족도', 4, 4.3, '점'], ['가치확산', '현장실습 인원', null, 61, '명'],
+  ] as const;
   await prisma.swcuIndicator.createMany({
-    data: indicators.map(([name, target, actual, unit], i) => ({
-      year: 2026, name: name as string, target: target as number, actual: actual as number,
-      unit: unit as string, area: '공통', sortOrder: i,
+    data: indicators.map(([area, name, target, actual, unit], i) => ({
+      year: 2026, name, target, actual, unit, area, sortOrder: i,
     })),
   });
 

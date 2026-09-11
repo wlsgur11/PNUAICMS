@@ -8,7 +8,12 @@
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
-import { PIPELINE_STAGES, type DashboardData, type SwcuCell, type SwcuUnmet, type DistributionItem, type InternshipHeadcount } from '@/lib/dashboard-shape';
+import {
+  PIPELINE_STAGES,
+  type DashboardData, type SwcuCell, type SwcuUnmet, type SwcuArea,
+  type DistributionItem, type InternshipHeadcount, type InternshipComposition,
+  type ProjectHeadcount,
+} from '@/lib/dashboard-shape';
 import { COLLAB_FIELDS } from '@/lib/enums';
 
 // AUTH_BYPASS=true 일 때 Next 가 이 라우트를 정적 캐시하는 것을 막는다.
@@ -44,6 +49,14 @@ function mergeByKey(items: DistributionItem[]): DistributionItem[] {
   }
   return [...acc.values()].sort((a, b) => b.count - a.count);
 }
+
+/** 값별 건수 누적기. 빈 값은 하나의 라벨로 모은다 */
+function bump(m: Map<string, number>, v: string | null) {
+  const k = v?.trim() || '미기재';
+  m.set(k, (m.get(k) ?? 0) + 1);
+}
+const toList = (m: Map<string, number>) =>
+  [...m.entries()].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count);
 
 export async function GET(req: Request) {
   return handle(async () => {
@@ -89,13 +102,27 @@ export async function GET(req: Request) {
     // ── SW중심대학 지표: target 이 있는 것만 판정. actual >= target 이면 달성
     const cells: SwcuCell[] = [];
     const unmetAll: SwcuUnmet[] = [];
+    const areaMap = new Map<string, SwcuArea>();
     let met = 0;
     for (const ind of indicators) {
-      if (ind.target == null || ind.actual == null) { cells.push('na'); continue; }
-      if (ind.actual >= ind.target) { cells.push('met'); met++; continue; }
-      cells.push('unmet');
-      unmetAll.push({ name: ind.name, target: ind.target, actual: ind.actual, unit: ind.unit });
+      let cell: SwcuCell = 'na';
+      if (ind.target != null && ind.actual != null) {
+        if (ind.actual >= ind.target) { cell = 'met'; met++; }
+        else {
+          cell = 'unmet';
+          unmetAll.push({ name: ind.name, target: ind.target, actual: ind.actual, unit: ind.unit });
+        }
+      }
+      cells.push(cell);
+
+      const key = ind.area?.trim() || '기타';
+      const a = areaMap.get(key) ?? { area: key, met: 0, unmet: 0, na: 0, total: 0 };
+      a[cell]++;
+      a.total++;
+      areaMap.set(key, a);
     }
+    // 미달이 몰린 영역부터. 같으면 지표가 많은 영역부터
+    const areas = [...areaMap.values()].sort((a, b) => b.unmet - a.unmet || b.total - a.total);
     // 부족분이 큰 순(비율 기준). 목표가 0 이면 뒤로 민다.
     unmetAll.sort((a, b) => (a.target ? a.actual / a.target : 2) - (b.target ? b.actual / b.target : 2));
 
@@ -133,7 +160,7 @@ export async function GET(req: Request) {
           prevAchieved: prevStat?.internshipAchievedRatio ?? null,
         },
         swcu: {
-          total: indicators.length, met, unmet: unmetAll.slice(0, 3), unmetCount: unmetAll.length, cells,
+          total: indicators.length, met, unmet: unmetAll.slice(0, 3), unmetCount: unmetAll.length, cells, areas,
           prevMet: prevIndicators.length ? prevMet : null,
           prevTotal: prevIndicators.length || null,
         },
@@ -146,12 +173,15 @@ export async function GET(req: Request) {
         mou: { value: mouTotal, delta: null },
       },
       trend,
-      // 아래 세 필드는 일반(GENERAL) 전용 기본값. 권한 분기에서 반드시 세 필드 모두 덮어써야 한다
+      // 아래 null 필드는 일반(GENERAL) 전용 기본값. 권한 분기에서 전부 덮어써야 한다
       pipeline: null,
       distribution: null,
       collaboration: null,
       students: null,
       internshipHeadcount: null,
+      internshipComposition: null,
+      projectHeadcount: null,
+      labs: null,
       recentHistories: [],
     };
 
@@ -159,12 +189,10 @@ export async function GET(req: Request) {
     if (user.role === 'GENERAL') return ok(base);
 
     // 쏠림 진단(dept/division/type)은 특정 연도가 아니라 전체 연도 누적 경향을 보려는 것이라 year 필터를 걸지 않는다.
-    const headcountSum = { _sum: { cntCSE: true, cntDS: true, cntNonSW: true, empSW: true, empNonSW: true } } as const;
-
     const [
       byStatus, deptRows, divRows, regionRows, typeRows, divisions, recent,
       collabRows, studentTotal, studentGraduated, studentWithProject, studentWithIntern,
-      gradeRows, attentionRows, headYear, headTotal,
+      gradeRows, attentionRows, internRows, projectRows, labRows,
     ] = await Promise.all([
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
       prisma.project.groupBy({ by: ['dept'], _count: { _all: true } }),
@@ -195,8 +223,18 @@ export async function GET(req: Request) {
         where: { grade: { in: [3, 4] }, OR: [{ graduationDate: null }, { graduationDate: '' }] },
         select: { _count: { select: { counselings: true } } },
       }),
-      prisma.internship.aggregate({ where: { year }, ...headcountSum }),
-      prisma.internship.aggregate({ ...headcountSum }),
+      // 인턴십은 162건 뿐이라 연도별 합계와 구성 여섯 갈래를 따로 질의하는 것보다
+      // 한 번 읽어 와 JS 로 세는 편이 싸다. 협력 항목과 같은 이유다.
+      prisma.internship.findMany({
+        select: {
+          year: true, domestic: true, hostType: true, method: true,
+          cntCSE: true, cntDS: true, cntNonSW: true, empSW: true, empNonSW: true,
+        },
+      }),
+      prisma.project.findMany({ select: { year: true, cntPhd: true, cntMaster: true, cntUndergrad: true } }),
+      prisma.lab.findMany({
+        select: { professorName: true, labName: true, _count: { select: { projects: true } } },
+      }),
     ]);
 
     const collabCount = new Map<string, number>();
@@ -205,10 +243,45 @@ export async function GET(req: Request) {
         if ((row as Record<string, boolean>)[f.key]) collabCount.set(f.label, (collabCount.get(f.label) ?? 0) + 1);
       }
     }
-    const toHead = (a: { _sum: Record<string, number | null> }): InternshipHeadcount => ({
-      cse: a._sum.cntCSE ?? 0, ds: a._sum.cntDS ?? 0, nonSw: a._sum.cntNonSW ?? 0,
-      empSw: a._sum.empSW ?? 0, empNonSw: a._sum.empNonSW ?? 0,
+    // 인턴십: 교육인원·연계취업자 합계와 구성 세 축을 선택 연도/전체 누적 두 벌로 한 번에 센다
+    const newHead = (): InternshipHeadcount => ({ cse: 0, ds: 0, nonSw: 0, empSw: 0, empNonSw: 0 });
+    const newComp = () => ({ domestic: new Map<string, number>(), hostType: new Map<string, number>(), method: new Map<string, number>() });
+    const heads = { year: newHead(), total: newHead() };
+    const comps = { year: newComp(), total: newComp() };
+    for (const r of internRows) {
+      for (const k of (r.year === year ? ['year', 'total'] : ['total']) as ('year' | 'total')[]) {
+        const h = heads[k];
+        h.cse += r.cntCSE ?? 0; h.ds += r.cntDS ?? 0; h.nonSw += r.cntNonSW ?? 0;
+        h.empSw += r.empSW ?? 0; h.empNonSw += r.empNonSW ?? 0;
+        bump(comps[k].domestic, r.domestic);
+        bump(comps[k].hostType, r.hostType);
+        bump(comps[k].method, r.method);
+      }
+    }
+    const toComp = (c: ReturnType<typeof newComp>): InternshipComposition => ({
+      domestic: toList(c.domestic), hostType: toList(c.hostType), method: toList(c.method),
     });
+
+    // 산학 과제 참여 인원. 박사·석사는 기재된 과제가 절반뿐이라 기재 건수도 같이 센다
+    const newPHead = (): ProjectHeadcount => ({
+      projects: 0,
+      phd: { sum: 0, filled: 0 }, master: { sum: 0, filled: 0 }, undergrad: { sum: 0, filled: 0 },
+    });
+    const pheads = { year: newPHead(), total: newPHead() };
+    for (const r of projectRows) {
+      for (const k of (r.year === year ? ['year', 'total'] : ['total']) as ('year' | 'total')[]) {
+        const p = pheads[k];
+        p.projects++;
+        for (const [f, v] of [['phd', r.cntPhd], ['master', r.cntMaster], ['undergrad', r.cntUndergrad]] as const) {
+          if (v == null) continue;
+          p[f].sum += v;
+          p[f].filled++;
+        }
+      }
+    }
+
+    // 연구실별 과제 수. 과제는 연구실을 최대 하나만 갖기 때문에 합계를 빼면 미연결 건수가 나온다
+    const labbed = labRows.filter((l) => l._count.projects > 0);
 
     const statusCount = new Map(byStatus.map((r) => [r.status, r._count._all]));
     // 분과 코드(A~F)는 old5 / new6 두 버전에 같은 글자가 서로 다른 이름으로 존재한다.
@@ -254,7 +327,17 @@ export async function GET(req: Request) {
         })),
         needsAttention: attentionRows.filter((s) => s._count.counselings < 2).length,
       },
-      internshipHeadcount: { year: toHead(headYear), total: toHead(headTotal) },
+      internshipHeadcount: heads,
+      internshipComposition: { year: toComp(comps.year), total: toComp(comps.total) },
+      projectHeadcount: pheads,
+      labs: {
+        top: [...labbed]
+          .sort((a, b) => b._count.projects - a._count.projects)
+          .slice(0, 6)
+          .map((l) => ({ professor: l.professorName, lab: l.labName, count: l._count.projects })),
+        labCount: labbed.length,
+        unlinked: projectTotal - labbed.reduce((a, l) => a + l._count.projects, 0),
+      },
       recentHistories: recent.map((h) => ({
         id: h.id, companyId: h.companyId, companyName: h.company.name,
         professor: h.professor || '', contactDate: h.contactDate,

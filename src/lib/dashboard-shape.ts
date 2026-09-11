@@ -23,12 +23,19 @@ export type SwcuUnmet = {
   unit: string | null;
 };
 
+/**
+ * 영역별 달성 집계. 지표를 하나씩 보면 17줄이지만 영역으로 묶으면
+ * 어느 영역이 약한지 한 줄로 읽힌다. area 는 전 지표에 채워져 있다.
+ */
+export type SwcuArea = { area: string; met: number; unmet: number; na: number; total: number };
+
 export type SwcuSummary = {
   total: number;
   met: number;
   unmet: SwcuUnmet[];
   unmetCount: number;
   cells: SwcuCell[];
+  areas: SwcuArea[];
   prevMet: number | null;   // 전년 달성 개수
   prevTotal: number | null; // 전년 지표 개수 (분모가 달라질 수 있어 함께 보낸다)
 };
@@ -57,6 +64,28 @@ export type StudentSummary = {
   /** 3~4학년인데 상담 기록이 2회 미만인 학생 수. 지금 챙겨야 할 대상 */
   needsAttention: number;
 };
+
+/**
+ * 산학 과제 참여 인원. 박사·석사는 기재되지 않은 과제가 절반이라
+ * 합계만 내면 실제보다 적게 읽힌다. 그래서 기재 건수를 같이 보낸다.
+ */
+export type DegreeCount = { sum: number; filled: number };
+export type ProjectHeadcount = {
+  projects: number;
+  phd: DegreeCount;
+  master: DegreeCount;
+  undergrad: DegreeCount;
+};
+
+/** 인턴십 구성 세 축. 국내외·주관·교육방식은 전 건에 채워져 있다 */
+export type InternshipComposition = {
+  domestic: { key: string; count: number }[];
+  hostType: { key: string; count: number }[];
+  method: { key: string; count: number }[];
+};
+
+/** 연구실별 산학 과제 수 */
+export type LabRank = { professor: string; lab: string | null; count: number };
 
 /** 인턴십 교육인원과 연계취업자. 실적 보고에 그대로 쓰이는 숫자다 */
 export type InternshipHeadcount = {
@@ -96,6 +125,10 @@ export type DashboardData = {
   collaboration: { key: string; count: number }[] | null;
   students: StudentSummary | null;
   internshipHeadcount: { year: InternshipHeadcount; total: InternshipHeadcount } | null;
+  internshipComposition: { year: InternshipComposition; total: InternshipComposition } | null;
+  projectHeadcount: { year: ProjectHeadcount; total: ProjectHeadcount } | null;
+  /** unlinked = 연구실이 연결되지 않은 과제 수. 상위 목록이 전체를 못 덮는 몫 */
+  labs: { top: LabRank[]; labCount: number; unlinked: number } | null;
   recentHistories: {
     id: string;
     companyId: string;
