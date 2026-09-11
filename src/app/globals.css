@@ -1680,9 +1680,9 @@ table.data-table {
   gap: 16px;
 }
 /* 창 너비에 따라 1 -> 2 -> 3 열. 3열에서 멈춘다.
-   3열을 고정하면 1000px 급 창에서 한 칸이 240px 로 좁아져 답답하고,
+   3열을 고정하면 1000px 급 창에서 한 칸이 250px 로 좁아져 답답하고,
    auto-fit 은 상한이 없어 넓은 모니터에서 4열까지 늘어나 6개 카드가 4+2 로 어긋난다.
-   한 칸이 최소 340px 는 되도록 중단점을 잡았다 */
+   1200px(노트북 전체화면)부터 3열. 창을 줄이면 2열로 내려온다 */
 .dash-grid-auto {
   display: grid;
   grid-template-columns: 1fr;
@@ -1692,7 +1692,7 @@ table.data-table {
 @media (min-width: 960px) {
   .dash-grid-auto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (min-width: 1500px) {
+@media (min-width: 1200px) {
   .dash-grid-auto { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .dash-row {
