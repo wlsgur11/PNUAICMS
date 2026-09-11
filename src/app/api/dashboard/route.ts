@@ -63,29 +63,33 @@ export async function GET(req: Request) {
     const user = await requireUser();
     const sp = new URL(req.url).searchParams;
 
-    // 선택 가능한 연도 = 실적 현황판 연도 + SW중심대학 연차
-    const [statYears, swcuYears] = await Promise.all([
-      prisma.yearStat.findMany({ select: { year: true } }),
+    // 실적 현황판 전 연도를 한 번에 읽는다. 선택 연도와 전년 값, 달성률 추이가
+    // 모두 이 배열에서 나오므로 findUnique 를 따로 두지 않는다.
+    const [allStats, swcuYears] = await Promise.all([
+      prisma.yearStat.findMany({ orderBy: { year: 'asc' } }),
       prisma.swcuYear.findMany({ select: { year: true } }),
     ]);
-    const years = [...new Set([...statYears, ...swcuYears].map((y) => y.year))].sort((a, b) => b - a);
+    // 선택 가능한 연도 = 실적 현황판 연도 + SW중심대학 연차
+    const years = [...new Set([...allStats, ...swcuYears].map((y) => y.year))].sort((a, b) => b - a);
 
     const asked = Number(sp.get('year'));
     const year = years.includes(asked) ? asked : (years[0] ?? new Date().getFullYear());
     const prev = year - 1;
+    const stat = allStats.find((r) => r.year === year) ?? null;
+    const prevStat = allStats.find((r) => r.year === prev) ?? null;
 
     // ── 누적 타일. delta 는 선택 연도 건수와 전년 건수의 차 (stat/indicators 도 같은 year/prev 에만 의존해 한 배치로 묶는다)
     const [
-      stat, indicators, prevStat, prevIndicators,
-      companyTotal, mouTotal, projectTotal, internshipTotal,
+      indicators, prevIndicators,
+      companyTotal, partnerCompanies, mouTotal, projectTotal, internshipTotal,
       compThis, compPrev, projThis, projPrev, intThis, intPrev,
       projByYear, intByYear,
     ] = await Promise.all([
-      prisma.yearStat.findUnique({ where: { year } }),
       prisma.swcuIndicator.findMany({ where: { year }, orderBy: { sortOrder: 'asc' } }),
-      prisma.yearStat.findUnique({ where: { year: prev } }),
       prisma.swcuIndicator.findMany({ where: { year: prev }, select: { target: true, actual: true } }),
       prisma.company.count({ where: { isActive: true } }),
+      // 실적이 한 건이라도 붙은 기업. 관리 대상 기업 수(companyTotal)와 다르다
+      prisma.company.count({ where: { OR: [{ projects: { some: {} } }, { internships: { some: {} } }] } }),
       prisma.company.count({ where: { isActive: true, mou: true } }),
       prisma.project.count(),
       prisma.internship.count(),
@@ -173,6 +177,19 @@ export async function GET(req: Request) {
         mou: { value: mouTotal, delta: null },
       },
       trend,
+      goalTrend: allStats.map((r) => ({
+        year: r.year,
+        industryAchieved: r.industryAchievedRatio,
+        industryTarget: r.industryTargetRatio,
+        internshipAchieved: r.internshipAchievedRatio,
+        internshipTarget: r.internshipTargetRatio,
+      })),
+      headcount: {
+        enrolledCSE: stat?.enrolledCSE ?? null, enrolledDS: stat?.enrolledDS ?? null,
+        industryTargetCSE: stat?.industryTargetCSE ?? null, industryTargetDS: stat?.industryTargetDS ?? null,
+        internTargetCSE: stat?.internTargetCSE ?? null, internTargetDS: stat?.internTargetDS ?? null,
+      },
+      partnerCompanies,
       // 아래 null 필드는 일반(GENERAL) 전용 기본값. 권한 분기에서 전부 덮어써야 한다
       pipeline: null,
       distribution: null,

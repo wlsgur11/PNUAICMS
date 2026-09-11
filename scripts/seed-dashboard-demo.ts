@@ -150,16 +150,16 @@ async function main() {
     [2025, 0.152, 0.15, 0.104, 0.125, 540, 230],
     [2026, 0.184, 0.15, 0.092, 0.125, 560, 250],
   ] as const) {
-    await prisma.yearStat.upsert({
-      where: { year },
-      update: {},
-      create: {
-        year,
-        industryAchievedRatio: ind, industryTargetRatio: indT, industryStudents: Math.round(cse * ind),
-        internshipAchievedRatio: itn, internshipTargetRatio: itnT, internshipStudents: Math.round(cse * itn),
-        enrolledCSE: cse, enrolledDS: ds,
-      },
-    });
+    const values = {
+      industryAchievedRatio: ind, industryTargetRatio: indT, industryStudents: Math.round(cse * ind),
+      internshipAchievedRatio: itn, internshipTargetRatio: itnT, internshipStudents: Math.round(cse * itn),
+      enrolledCSE: cse, enrolledDS: ds,
+      // 목표 기준치 인원. 대시보드 목표 대비 카드가 참여율의 분모로 같이 보여준다
+      industryTargetCSE: Math.round(cse * indT), industryTargetDS: Math.round(ds * indT),
+      internTargetCSE: Math.round(cse * itnT), internTargetDS: Math.round(ds * itnT),
+    };
+    // update 를 비워 두면 재실행해도 예전 값이 남아 시드를 늘려도 화면에 안 나온다
+    await prisma.yearStat.upsert({ where: { year }, update: values, create: { year, ...values } });
   }
 
   await prisma.swcuYear.upsert({ where: { year: 2026 }, update: {}, create: { year: 2026, university: '부산대학교' } });

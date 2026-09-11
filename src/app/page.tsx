@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import FadeContent from '@/components/FadeContent';
@@ -21,14 +22,34 @@ import type { DashboardData } from '@/lib/dashboard-shape';
 export default function DashboardPage() {
   const me = useMe();
   const isGeneral = me?.role === 'GENERAL';
-  const { data, error } = useSWR<DashboardData>('/api/dashboard');
+  // 연도를 안 고르면 서버가 가장 최근 연도를 쓴다. 고른 뒤에는 URL 로 넘겨
+  // 목표 대비, 증감, SW중심대학 지표, 연도별 실적이 모두 그 연도를 따른다
+  const [year, setYear] = useState<number | null>(null);
+  const { data, error } = useSWR<DashboardData>(
+    year == null ? '/api/dashboard' : `/api/dashboard?year=${year}`,
+    { keepPreviousData: true },
+  );
 
   if (error) return <><PageHeader title="산학협력 성과" /><div className="card empty">불러오기 실패: {(error as Error).message}</div></>;
   if (!data) return <><PageHeader title="산학협력 성과" /><div className="loading">불러오는 중…</div></>;
 
   return (
     <>
-      <PageHeader title="산학협력 성과" />
+      <PageHeader
+        title="산학협력 성과"
+        extra={data.years.length > 1 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span className="muted" style={{ fontSize: 12 }}>연도</span>
+            {data.years.map((y) => (
+              <button key={y} type="button"
+                      className={`btn btn-sm${y === data.year ? ' btn-primary' : ''}`}
+                      onClick={() => setYear(y)}>
+                {y}
+              </button>
+            ))}
+          </div>
+        ) : undefined}
+      />
 
       {isGeneral && (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -47,8 +68,10 @@ export default function DashboardPage() {
             swcu={data.goals.swcu}
             year={data.year}
             trend={data.trend}
+            goalTrend={data.goalTrend}
+            headcount={data.headcount}
           />
-          <TotalsCard totals={data.totals} />
+          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} />
         </div>
       </FadeContent>
 

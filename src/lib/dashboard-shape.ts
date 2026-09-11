@@ -45,6 +45,25 @@ export type TotalTile = { value: number; delta: number | null };
 
 export type TrendPoint = { year: number; projects: number; internships: number };
 
+/**
+ * 연도별 목표 대비 달성률. 원본(4차연도 현황) 엑셀에 값이 빈 해가 있어
+ * 0 으로 눌러 보내지 않고 null 을 그대로 내려보낸다. 0% 와 '값 없음' 은 다르다.
+ */
+export type GoalTrendPoint = {
+  year: number;
+  industryAchieved: number | null;
+  industryTarget: number | null;
+  internshipAchieved: number | null;
+  internshipTarget: number | null;
+};
+
+/** 정량실적 기준 인원. 엑셀 전체현황 시트의 정컴/DS 인원 */
+export type HeadcountBaseline = {
+  enrolledCSE: number | null; enrolledDS: number | null;
+  industryTargetCSE: number | null; industryTargetDS: number | null;
+  internTargetCSE: number | null; internTargetDS: number | null;
+};
+
 export type PipelineStage = { status: string; count: number };
 
 /**
@@ -108,6 +127,10 @@ export type DashboardData = {
     mou: TotalTile;
   };
   trend: TrendPoint[];
+  goalTrend: GoalTrendPoint[];
+  headcount: HeadcountBaseline;
+  /** 산학 과제나 인턴십 실적이 한 건이라도 있는 기업 수. 관리 대상 기업 수와 다르다 */
+  partnerCompanies: number;
   pipeline: {
     byStatus: PipelineStage[];
     onHold: number;
