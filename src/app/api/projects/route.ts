@@ -5,14 +5,13 @@
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
-import { projectWhere, maskName } from '@/lib/list-filters';
+import { projectWhere, maskName, isJunkValue } from '@/lib/list-filters';
 
-const isJunk = (s: string) => /^[\d.,%\s]+$/.test(s); // 숫자만(잘못 들어간 값)
 async function facet(field: 'type' | 'track'): Promise<string[]> {
   const rows = await prisma.project.findMany({
     where: { [field]: { not: null } }, distinct: [field], orderBy: { [field]: 'asc' },
   });
-  const vals = rows.map((r) => r[field]).filter((v): v is string => typeof v === 'string' && v.length > 0 && !isJunk(v));
+  const vals = rows.map((r) => r[field]).filter((v): v is string => typeof v === 'string' && v.length > 0 && !isJunkValue(v));
   return [...new Set(vals)];
 }
 

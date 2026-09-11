@@ -13,7 +13,7 @@ export default function PipelineBlock({ pipeline }: { pipeline: Pipeline }) {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>기업 파이프라인</h2>
-        <p>협력 기업을 더 늘려야 하는지 판단한다. 미접촉만 쌓여 있으면 접촉이 안 되고 있는 것이고, 협의중 대비 협약완료가 적으면 전환이 안 되는 것이다</p>
+        <p>협력 기업의 진행 단계별 분포입니다. 미접촉 단계에 남아 있는 기업 수와 협의중 대비 협약완료 비중을 확인하실 수 있습니다.</p>
       </div>
 
       {pipeline.byStatus.map((s, i) => (

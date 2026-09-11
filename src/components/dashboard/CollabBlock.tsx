@@ -33,7 +33,7 @@ export default function CollabBlock({ items, region }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>협력 내용과 소재지</h2>
-        <p>기업들이 실제로 어떤 협력을 하고 있는지. 항목을 누르면 그 조건의 기업 목록으로 간다</p>
+        <p>기업별 협력 항목의 분포입니다. 항목을 누르시면 해당 조건의 기업 목록으로 이동합니다.</p>
       </div>
 
       {items.length === 0 ? (

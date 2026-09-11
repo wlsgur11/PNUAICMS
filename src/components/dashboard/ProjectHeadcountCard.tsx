@@ -29,7 +29,7 @@ export default function ProjectHeadcountCard({ year, data }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>산학 참여 인원</h2>
-        <p>과제에 기재된 학위별 참여 인원. 인원을 적지 않은 과제가 있어 실제보다 적게 나온다</p>
+        <p>과제에 기재된 학위별 참여 인원입니다. 인원이 기재되지 않은 과제가 있어 실제보다 적게 집계됩니다.</p>
       </div>
 
       {p.projects === 0 ? (
@@ -44,13 +44,17 @@ export default function ProjectHeadcountCard({ year, data }: {
             </div>
           </div>
 
+          {/* '13 / 7건 기재' 로 붙여 쓰면 슬래시 때문에 '7 중 13' 처럼 읽힌다.
+              인원과 기재 건수는 분자·분모가 아니라 서로 다른 값이라 괄호로 끊는다 */}
           {DEGREES.map(({ key, label }) => (
             <div key={key} className="dash-list-row">
               <span className="name">{label}</span>
               <span className="num">
-                {p[key].sum}
+                {p[key].sum}명
                 <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>
-                  {' '}/ {p[key].filled}건 기재
+                  {p[key].filled === 0
+                    ? ' (기재된 과제 없음)'
+                    : ` (${p[key].filled}/${p.projects}건 기재)`}
                 </span>
               </span>
             </div>
