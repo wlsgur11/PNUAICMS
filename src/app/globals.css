@@ -724,6 +724,15 @@ a {
   margin-top: 0;
 }
 
+/* 대시보드 그리드도 같다. 이게 없으면 각 행의 첫 카드만 20px 위로 올라가
+   열 사이 윗선이 어긋난다 */
+.dash-grid-7-5 .card+.card,
+.dash-grid-auto .card+.card,
+.dash-grid-2 .card+.card,
+.dash-grid-4 .card+.card {
+  margin-top: 0;
+}
+
 .metric-grid .card+.card {
   margin-top: 0;
 }
@@ -1695,6 +1704,37 @@ table.data-table {
 @media (min-width: 1200px) {
   .dash-grid-auto { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+/* 구역마다 카드 수에 열 수를 맞춘다. 한 구역이 항상 한 행을 꽉 채워야
+   행이 반만 찬 것처럼 보이지 않는다 */
+.dash-grid-2,
+.dash-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 960px) {
+  .dash-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 카드 넷은 2x2 로. 3열을 거치면 3+1 로 한 장이 혼자 남는다 */
+  .dash-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* 4열은 한 칸이 340px 을 넘는 폭에서만. 1500px 에서 넷을 늘어놓으면 한 칸이
+   274px 라 카드 안 지표가 2열을 못 만들고 1열로 접혀 세로로 길어진다 */
+@media (min-width: 1600px) {
+  .dash-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* 구역 제목. 사이드바 메뉴와 같은 단위로 끊어 카드를 찾는 기준을 하나로 만든다 */
+.dash-section {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  margin: 26px 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--slate-200);
+}
+.dash-section + .dash-grid-auto { margin-top: 0; }
+
 .dash-row {
   margin-top: 16px;
 }

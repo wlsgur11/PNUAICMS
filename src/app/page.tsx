@@ -12,6 +12,9 @@ import DistributionBlock from '@/components/dashboard/DistributionBlock';
 import CollabBlock from '@/components/dashboard/CollabBlock';
 import StudentBlock from '@/components/dashboard/StudentBlock';
 import InternshipStatsCard from '@/components/dashboard/InternshipStatsCard';
+import SwcuAreaCard from '@/components/dashboard/SwcuAreaCard';
+import ProjectHeadcountCard from '@/components/dashboard/ProjectHeadcountCard';
+import LabRankCard from '@/components/dashboard/LabRankCard';
 import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import type { DashboardData } from '@/lib/dashboard-shape';
 
@@ -51,22 +54,48 @@ export default function DashboardPage() {
 
       {data.pipeline && data.distribution && (
         <>
-          {/* 아래 카드를 한 그리드에 모아 둔다. 행마다 쪼개면 auto-fit 이
-              항목 수 이상으로 열을 만들 수 없어 넓은 화면에서도 2열에 머문다 */}
+          {/* 구역은 사이드바 메뉴 단위로 끊고, 구역마다 카드 수에 열 수를 맞춘다.
+              카드 수가 기업 2 / 산학·인턴십 4 / 지표·학생 3 이라 어느 구역도
+              행을 반만 채우지 않는다. 최근 컨택은 4열 표라 좁은 칸에 넣지 않고
+              구역 밖 전체 폭에 둔다 */}
           <FadeContent delay={100}>
-            <div className="dash-grid-auto">
+            <div className="dash-section">기업</div>
+            <div className="dash-grid-2">
               <PipelineBlock pipeline={data.pipeline} />
-              <SwcuBlock swcu={data.goals.swcu} />
-              <DistributionBlock distribution={data.distribution} />
               <CollabBlock items={data.collaboration ?? []} region={data.distribution.region} />
-              {data.students && <StudentBlock s={data.students} />}
-              {data.internshipHeadcount && (
-                <InternshipStatsCard year={data.year} data={data.internshipHeadcount} />
+            </div>
+          </FadeContent>
+
+          <FadeContent delay={150}>
+            <div className="dash-section">산학·인턴십 실적</div>
+            <div className="dash-grid-4">
+              <DistributionBlock distribution={data.distribution} />
+              {data.projectHeadcount && (
+                <ProjectHeadcountCard year={data.year} data={data.projectHeadcount} />
+              )}
+              {data.labs && <LabRankCard labs={data.labs} />}
+              {data.internshipHeadcount && data.internshipComposition && (
+                <InternshipStatsCard
+                  year={data.year}
+                  data={data.internshipHeadcount}
+                  composition={data.internshipComposition}
+                />
               )}
             </div>
           </FadeContent>
 
           <FadeContent delay={200}>
+            {/* 학생을 지표와 같은 구역에 둔다. SW중심대학 참여율 지표의 분모가
+                재학생이라 두 카드를 같이 보는 편이 맞다 */}
+            <div className="dash-section">SW중심대학 성과와 학생</div>
+            <div className="dash-grid-auto">
+              <SwcuBlock swcu={data.goals.swcu} />
+              <SwcuAreaCard areas={data.goals.swcu.areas} year={data.year} />
+              {data.students && <StudentBlock s={data.students} />}
+            </div>
+          </FadeContent>
+
+          <FadeContent delay={250}>
             <div className="dash-row">
               <RecentContactsBlock rows={data.recentHistories} />
             </div>
