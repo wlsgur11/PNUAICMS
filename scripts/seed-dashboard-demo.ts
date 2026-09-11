@@ -68,14 +68,52 @@ async function main() {
   }
   await prisma.project.createMany({ data: projects });
 
-  const internships: { year: number; programName: string; companyId: string }[] = [];
+  // 교육인원과 연계취업자도 채운다. 대시보드 인턴십 실적 카드가 이 값을 합산한다
+  const internships: {
+    year: number; programName: string; companyId: string;
+    cntCSE: number; cntDS: number; cntNonSW: number; empSW: number; empNonSW: number;
+  }[] = [];
   for (const year of [2024, 2025, 2026]) {
     const n = year === 2024 ? 4 : year === 2025 ? 9 : 6; // 2026 은 전년 대비 감소
     for (let i = 0; i < n; i++) {
-      internships.push({ year, programName: `${year} 데모 인턴십 ${i + 1}`, companyId: companies[i % companies.length].id });
+      internships.push({
+        year, programName: `${year} 데모 인턴십 ${i + 1}`, companyId: companies[i % companies.length].id,
+        cntCSE: 3 + (i % 4), cntDS: 1 + (i % 3), cntNonSW: i % 2,
+        empSW: i % 3 === 0 ? 1 : 0, empNonSW: i % 5 === 0 ? 1 : 0,
+      });
     }
   }
   await prisma.internship.createMany({ data: internships });
+
+  // 학생. 학년, 졸업, 상담 건수를 흩뿌려 대시보드 학생 카드가 의미 있는 값을 보이게 한다
+  await prisma.counseling.deleteMany({});
+  await prisma.studentInternship.deleteMany({});
+  await prisma.student.deleteMany({ where: { studentNo: { startsWith: '9999' } } });
+  const names = ['김민수', '이서연', '박지훈', '최유진', '정하늘', '강도윤', '윤서아', '임준호', '한가을', '오세훈', '신예린', '배준서'];
+  for (let i = 0; i < names.length; i++) {
+    const grade = (i % 4) + 1;
+    const graduated = grade === 4 && i % 3 === 0;
+    await prisma.student.create({
+      data: {
+        studentNo: `9999${String(i).padStart(4, '0')}`,
+        name: names[i],
+        nameMasked: names[i][0] + '*'.repeat(names[i].length - 2) + names[i].slice(-1),
+        department: i % 3 === 0 ? 'DS' : '정컴',
+        grade,
+        graduationDate: graduated ? '2026-02-20' : null,
+        careerGoal: i % 2 === 0 ? '취업(대기업)' : '대학원진학',
+        // 3~4학년 일부는 상담을 비워 '관리 필요' 로 잡히게 한다
+        counselings: i % 3 === 0 ? { create: [] } : { create: [{ counselDate: '2026-03-02', counselor: '지도교수', content: '진로 상담' }] },
+        manualInternships: i % 4 === 0 ? { create: [{ internshipType: '기업체험형', companyName: null, durationWeeks: 4, activityDate: '2026-07-01' }] } : undefined,
+      },
+    });
+  }
+  // 산학 참여 학생 연결
+  const someProjects = await prisma.project.findMany({ where: { year: 2026 }, select: { id: true }, take: 5 });
+  const someStudents = await prisma.student.findMany({ where: { studentNo: { startsWith: '9999' } }, select: { studentNo: true }, take: 5 });
+  for (let i = 0; i < Math.min(someProjects.length, someStudents.length); i++) {
+    await prisma.projectStudent.create({ data: { projectId: someProjects[i].id, studentNo: someStudents[i].studentNo } });
+  }
 
   for (const [year, ind, indT, itn, itnT, cse, ds] of [
     [2024, 0.121, 0.15, 0.081, 0.125, 520, 210],
