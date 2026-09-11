@@ -1679,21 +1679,34 @@ table.data-table {
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   gap: 16px;
 }
-.dash-grid-6-6 {
+/* 창 너비에 따라 1 -> 2 -> 3 열. 3열에서 멈춘다.
+   3열을 고정하면 1000px 급 창에서 한 칸이 240px 로 좁아져 답답하고,
+   auto-fit 은 상한이 없어 넓은 모니터에서 4열까지 늘어나 6개 카드가 4+2 로 어긋난다.
+   한 칸이 최소 340px 는 되도록 중단점을 잡았다 */
+.dash-grid-auto {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 16px;
+}
+@media (min-width: 960px) {
+  .dash-grid-auto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1500px) {
+  .dash-grid-auto { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .dash-row {
   margin-top: 16px;
 }
 @media (max-width: 1180px) {
-  .dash-grid-7-5, .dash-grid-6-6 { grid-template-columns: 1fr; }
+  .dash-grid-7-5 { grid-template-columns: 1fr; }
 }
 
 /* 카드 안쪽 여백. 템플릿 실측 24px. 기존 14~18px 은 답답했다 */
-.dash-card { padding: 24px; }
+.dash-card { padding: 24px; display: flex; flex-direction: column; }
+/* 같은 행의 카드는 높이가 맞춰지므로 짧은 카드 아래가 비어 보인다.
+   맨 끝 보조 문구를 바닥으로 밀어 그 여백을 카드 안에 분산시킨다 */
+.dash-card > .dash-note:last-child { margin-top: auto; padding-top: 16px; }
 @media (max-width: 640px) { .dash-card { padding: 18px; } }
 
 /* 카드 머리. 제목은 작고 약하게, 그 아래 한 줄 설명을 회색으로 */

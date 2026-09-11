@@ -51,22 +51,14 @@ export default function DashboardPage() {
 
       {data.pipeline && data.distribution && (
         <>
+          {/* 아래 카드를 한 그리드에 모아 둔다. 행마다 쪼개면 auto-fit 이
+              항목 수 이상으로 열을 만들 수 없어 넓은 화면에서도 2열에 머문다 */}
           <FadeContent delay={100}>
-            <div className="dash-grid-6-6">
+            <div className="dash-grid-auto">
               <PipelineBlock pipeline={data.pipeline} />
               <SwcuBlock swcu={data.goals.swcu} />
-            </div>
-          </FadeContent>
-
-          <FadeContent delay={160}>
-            <div className="dash-grid-6-6">
               <DistributionBlock distribution={data.distribution} />
               <CollabBlock items={data.collaboration ?? []} region={data.distribution.region} />
-            </div>
-          </FadeContent>
-
-          <FadeContent delay={220}>
-            <div className="dash-grid-6-6">
               {data.students && <StudentBlock s={data.students} />}
               {data.internshipHeadcount && (
                 <InternshipStatsCard year={data.year} data={data.internshipHeadcount} />
@@ -74,13 +66,14 @@ export default function DashboardPage() {
             </div>
           </FadeContent>
 
-          <FadeContent delay={280}>
+          <FadeContent delay={200}>
             <div className="dash-row">
               <RecentContactsBlock rows={data.recentHistories} />
             </div>
           </FadeContent>
         </>
       )}
+
     </>
   );
 }
