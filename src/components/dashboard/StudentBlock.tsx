@@ -18,7 +18,7 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>학생 관리 현황</h2>
-        <p>등록된 학생과 실적 참여 규모. 상담이 부족한 고학년은 바로 챙길 대상이다</p>
+        <p>등록된 학생 수와 실적 참여 규모입니다. 상담 횟수가 적은 고학년은 따로 집계했습니다.</p>
       </div>
 
       {s.total === 0 ? (

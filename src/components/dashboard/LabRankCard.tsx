@@ -19,7 +19,7 @@ export default function LabRankCard({ labs }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>연구실별 산학 과제</h2>
-        <p>과제 수 상위 연구실. 누르면 그 교수의 과제 목록으로 간다. 전체 연도 누적 기준</p>
+        <p>과제 수가 많은 연구실입니다. 이름을 누르시면 해당 교수의 과제 목록으로 이동합니다. 전체 연도 누적 기준입니다.</p>
       </div>
 
       {labs.top.length === 0 ? (

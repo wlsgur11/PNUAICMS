@@ -12,7 +12,7 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
     <div className="card dash-card">
       <div className="dash-head">
         <h2>SW중심대학 성과지표</h2>
-        <p>하반기에 무엇을 밀어야 하는지 판단한다. 목표에 못 미친 지표를 부족분이 큰 순으로 보여준다</p>
+        <p>목표에 못 미친 지표를 부족분이 큰 순서로 보여 드립니다.</p>
       </div>
 
       {swcu.total === 0 ? (
@@ -34,7 +34,7 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
 
           <div className="dash-metric-label" style={{ marginBottom: 2 }}>미달 지표</div>
           {swcu.unmet.length === 0 ? (
-            <div className="dash-note" style={{ color: 'var(--green-600)', marginTop: 8 }}>전 지표 달성</div>
+            <div className="dash-note" style={{ color: 'var(--green-600)', marginTop: 8 }}>모든 지표를 달성했습니다.</div>
           ) : (
             swcu.unmet.map((u) => (
               <div key={u.name} className="dash-list-row">

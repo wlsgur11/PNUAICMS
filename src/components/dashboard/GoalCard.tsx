@@ -88,7 +88,7 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
     <div className="card dash-card">
       <div className="dash-head">
         <h2>{year}년 목표 대비</h2>
-        <p>산학협력과 인턴십 참여율, SW중심대학 성과지표 달성 현황</p>
+        <p>산학협력과 인턴십 참여율, SW중심대학 성과지표의 달성 현황입니다.</p>
       </div>
 
       <div className="dash-metrics">

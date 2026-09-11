@@ -18,7 +18,7 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
     <div className="card dash-card">
       <div className="dash-head">
         <h2>SW중심대학 영역별</h2>
-        <p>{year}년 지표를 영역으로 묶은 달성 현황. 미달이 많은 영역이 위로 온다</p>
+        <p>{year}년 지표를 영역별로 묶은 달성 현황입니다. 미달 지표가 많은 영역을 위에 표시합니다.</p>
       </div>
 
       {areas.length === 0 ? (
@@ -46,7 +46,7 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
           ))}
 
           <div className="dash-note">
-            회색은 목표치가 없어 판정하지 않은 지표.{' '}
+            회색은 목표치가 없어 달성 여부를 판정하지 않은 지표입니다.{' '}
             <Link href="/swcu" className="text-link">지표 상세</Link>
           </div>
         </>

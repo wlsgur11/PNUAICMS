@@ -29,7 +29,7 @@ export default function ProjectHeadcountCard({ year, data }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>산학 참여 인원</h2>
-        <p>과제에 기재된 학위별 참여 인원. 인원을 적지 않은 과제가 있어 실제보다 적게 나온다</p>
+        <p>과제에 기재된 학위별 참여 인원입니다. 인원이 기재되지 않은 과제가 있어 실제보다 적게 집계됩니다.</p>
       </div>
 
       {p.projects === 0 ? (

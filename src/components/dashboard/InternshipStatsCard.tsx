@@ -63,7 +63,7 @@ export default function InternshipStatsCard({ year, data, composition }: {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>인턴십 교육 실적</h2>
-        <p>실적 엑셀의 교육인원과 연계취업자를 합산한 값. 해외 인턴십은 SW중심대학 지표에도 들어간다</p>
+        <p>실적 자료의 교육인원과 연계취업자를 합산한 값입니다. 해외 인턴십은 SW중심대학 성과지표에도 반영됩니다.</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <Row label={`${year}년`} h={data.year} />
