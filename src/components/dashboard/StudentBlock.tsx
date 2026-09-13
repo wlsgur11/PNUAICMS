@@ -31,23 +31,23 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
           <div className="dash-metrics" style={{ marginBottom: 22 }}>
             <div>
               <div className="dash-metric-label">전체 학생</div>
-              <div className="dash-metric-value"><CountUp end={s.total} /></div>
+              <div className="dash-metric-value"><CountUp end={s.total} /><span className="unit">명</span></div>
               <div className="dash-metric-sub">졸업 {s.graduated}명</div>
             </div>
             <div>
               <div className="dash-metric-label">산학 참여</div>
-              <div className="dash-metric-value"><CountUp end={s.projectParticipants} /></div>
+              <div className="dash-metric-value"><CountUp end={s.projectParticipants} /><span className="unit">명</span></div>
               <div className="dash-metric-sub">전체의 {((s.projectParticipants / s.total) * 100).toFixed(0)}%</div>
             </div>
             <div>
               <div className="dash-metric-label">인턴십 참여</div>
-              <div className="dash-metric-value"><CountUp end={s.internParticipants} /></div>
+              <div className="dash-metric-value"><CountUp end={s.internParticipants} /><span className="unit">명</span></div>
               <div className="dash-metric-sub">전체의 {((s.internParticipants / s.total) * 100).toFixed(0)}%</div>
             </div>
             <div>
               <div className="dash-metric-label">상담 관리 필요</div>
               <div className="dash-metric-value" style={{ color: s.needsAttention > 0 ? 'var(--red-600)' : 'var(--text-1)' }}>
-                <CountUp end={s.needsAttention} />
+                <CountUp end={s.needsAttention} /><span className="unit">명</span>
               </div>
               <div className="dash-metric-sub">3~4학년, 상담 2회 미만</div>
             </div>

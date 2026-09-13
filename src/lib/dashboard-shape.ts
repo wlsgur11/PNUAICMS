@@ -29,6 +29,13 @@ export type SwcuUnmet = {
  */
 export type SwcuArea = { area: string; met: number; unmet: number; na: number; total: number };
 
+/**
+ * 연도별 달성 개수. 17개 중 몇 개를 달성했는지가 좋아지는 추세인지 나빠지는
+ * 추세인지가 사업 평가의 핵심이라, 전년 한 해만 비교해서는 답이 안 나온다.
+ * 분모(total)가 해마다 달라지므로 비율이 아니라 개수 두 개를 그대로 보낸다.
+ */
+export type SwcuTrendPoint = { year: number; met: number; total: number };
+
 export type SwcuSummary = {
   total: number;
   met: number;
@@ -36,12 +43,34 @@ export type SwcuSummary = {
   unmetCount: number;
   cells: SwcuCell[];
   areas: SwcuArea[];
+  trend: SwcuTrendPoint[];
   prevMet: number | null;   // 전년 달성 개수
   prevTotal: number | null; // 전년 지표 개수 (분모가 달라질 수 있어 함께 보낸다)
 };
 
-/** 누적 타일 하나. delta = 선택 연도 건수 - 전년 건수. 계산 불가면 null */
-export type TotalTile = { value: number; delta: number | null };
+/**
+ * 실적 타일 하나.
+ *
+ * value 가 무엇을 센 값인지는 항목마다 다르다. 산학 과제와 인턴십은 선택한
+ * 연도의 연간 실적이고, 협력 기업과 MOU 는 시점 개념이 없어 현재 기준 총량이다.
+ * basis 가 그것을 말한다. 큰 숫자 하나만 보고 기준을 짐작하게 두면 '426 에서
+ * 60 이 줄었다' 처럼 서로 다른 것을 센 두 숫자가 한 문장으로 읽힌다.
+ */
+export type TotalTile = {
+  value: number;
+  /** 선택 연도 - 전년. 계산 불가면 null */
+  delta: number | null;
+  /** 전체 기간 누적. basis 가 'current' 면 value 와 같다 */
+  total: number;
+  /** value 가 연간 실적인지(annual) 현재 총량인지(current) */
+  basis: 'annual' | 'current';
+  /**
+   * current 타일에서 선택 연도에 새로 들어온 수. annual 타일은 value 가 이미
+   * 그 값이라 null 이다. 총량 타일은 delta 를 못 쓴다. 기업의 연간 증감은 신규
+   * 유입이라 '현재 104곳' 옆에 붙으면 총량이 그만큼 변한 것으로 읽힌다.
+   */
+  newThisYear: number | null;
+};
 
 export type TrendPoint = { year: number; projects: number; internships: number };
 
@@ -65,6 +94,33 @@ export type HeadcountBaseline = {
 };
 
 export type PipelineStage = { status: string; count: number };
+
+/**
+ * 다음에 연락할 기업 한 곳.
+ *
+ * 대시보드의 다른 카드가 전부 집계 숫자라 '지금 어떤 상태인가' 에만 답한다.
+ * '그래서 내일 뭘 하나' 에 답하려면 숫자가 아니라 이름이 나와야 한다.
+ */
+export type FollowUpCompany = {
+  id: string;
+  name: string;
+  status: string;
+  priority: string | null;
+  /** 마지막 컨택일(yyyy-MM-dd). 기록이 없으면 null */
+  lastContact: string | null;
+};
+
+export type FollowUp = {
+  rows: FollowUpCompany[];
+  /** 아직 한 번도 접촉하지 않은 기업 수 */
+  untouched: number;
+  /** 접촉은 했는데 반년 넘게 기록이 없는 기업 수 */
+  stale: number;
+  /** 협약완료·보류·종료가 아닌, 후속 조치가 남은 기업 수 */
+  total: number;
+  /** 우선순위가 한 곳도 기재돼 있지 않으면 true. 정렬 근거가 약하다는 뜻 */
+  noPriority: boolean;
+};
 
 /**
  * 분포 한 항목. key 는 화면에 보이는 라벨.
@@ -146,6 +202,7 @@ export type DashboardData = {
   } | null;
   /** 협력 항목 10종별 기업 수. 파이프라인이 진행 단계 축이라면 이쪽은 협력 내용 축이다 */
   collaboration: { key: string; count: number }[] | null;
+  followUp: FollowUp | null;
   students: StudentSummary | null;
   internshipHeadcount: { year: InternshipHeadcount; total: InternshipHeadcount } | null;
   internshipComposition: { year: InternshipComposition; total: InternshipComposition } | null;
