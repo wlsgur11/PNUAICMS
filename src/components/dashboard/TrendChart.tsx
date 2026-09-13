@@ -1,18 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { TrendPoint } from '@/lib/dashboard-shape';
 
 /**
- * 연도별 산학, 인턴십 건수.
+ * 연도별 산학, 인턴십 건수. 막대 위에 연결선을 얹은 형태다.
  *
- * 선이 아니라 막대로 그린다. 연간 집계는 이산값이라 2024 와 2025 사이에는 값이
- * 존재하지 않는다. 선으로 이으면, 특히 곡선으로 이으면 그 사이를 연속적으로
- * 변한 것처럼 보여 준다. 없는 값을 지어내는 셈이다.
+ * 막대는 그 해 값을 읽고 이웃 해와 길이를 견주는 데 쓰고, 선은 방향을 읽는 데
+ * 쓴다. 같은 축 위에 그린다. 막대와 선에 축을 따로 주면 두 축의 상대 높이가
+ * 임의라서 스케일만 바꿔도 선이 막대 위아래로 움직인다. 없는 상관을 만든다.
  *
- * 면적도 깔지 않는다. 면적은 누적량을 뜻하는데 연간 건수는 누적이 아니다.
+ * 선은 직선이다. 연간 집계는 이산값이라 2024 와 2025 사이에는 값이 없다.
+ * 곡선으로 이으면 그 구간을 부풀려 지나가며 없는 값을 그려낸다. 직선은 관행상
+ * '읽기 보조선' 으로 이해되고, 점이 실측치 위치를 표시한다.
  *
- * 목표 대비 달성률 차트와 같은 모양이라야 토글로 오갈 때 값만 바뀐 것으로 읽힌다.
+ * 면적은 깔지 않는다. 면적은 누적량을 뜻하는데 연간 건수는 누적이 아니다.
  */
 const SERIES = [
   { key: 'projects', label: '산학협력', color: 'var(--chart-1)' },
@@ -21,6 +23,7 @@ const SERIES = [
 
 export default function TrendChart({ data }: { data: TrendPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
+  const uid = useId();
   // 호출부가 값을 안 넘겼을 때도 화면이 죽지 않게 한다
   const series = [...(data ?? [])].sort((a, b) => a.year - b.year);
 
@@ -28,22 +31,37 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
     return <div className="muted" style={{ fontSize: 12, padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
   }
 
+  const W = 480, H = 150, padL = 28, padR = 8, padT = 10, padB = 20;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
   const rawMax = Math.max(1, ...series.flatMap((d) => [d.projects, d.internships]));
   // 축 최대값은 중간 눈금까지 정수로 떨어지는 값으로 올린다.
   // 17 로 두면 중간 눈금이 8.5 인데 라벨은 '9' 로 반올림돼 선 위치와 어긋난다
   const unit = Math.max(2, Math.pow(10, Math.floor(Math.log10(rawMax))));
   const max = Math.ceil((rawMax * 1.1) / unit) * unit;
   const ticks = [0, max / 2, max];
+  const yOf = (v: number) => padT + plotH * (1 - v / max);
+
+  // 한 해가 차지하는 폭. 그 안에 계열 수만큼 막대를 넣는다
+  const slot = plotW / series.length;
+  const barW = Math.min(20, (slot * 0.56) / SERIES.length);
+  const gap = 3;
+  // 계열 si 의 막대 중심. 연도 묶음의 가운데를 기준으로 좌우로 편다
+  const centerOf = (i: number, si: number) => {
+    const groupW = SERIES.length * barW + (SERIES.length - 1) * gap;
+    const left = padL + slot * i + (slot - groupW) / 2;
+    return left + si * (barW + gap) + barW / 2;
+  };
 
   // 올해는 아직 안 끝난 해다. 사선을 얹어 확정 수치가 아님을 드러낸다.
   // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것으로 읽힌다
   const nowYear = new Date().getFullYear();
   const hasPartial = series.some((d) => d.year === nowYear);
-  const H = 120;
+  const active = hover == null ? null : series.find((d) => d.year === hover) ?? null;
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 14, marginBottom: 8, fontSize: 11, color: 'var(--text-3)' }}>
+      <div style={{ display: 'flex', gap: 14, marginBottom: 6, fontSize: 11, color: 'var(--text-3)' }}>
         {SERIES.map((s) => (
           <span key={s.key}>
             <span style={{ display: 'inline-block', width: 8, height: 8, background: s.color, borderRadius: 1, marginRight: 5 }} />
@@ -52,77 +70,77 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        {/* Y축. 막대와 같은 높이 상자를 두고 눈금 위치에 라벨을 얹는다 */}
-        <div style={{ position: 'relative', width: 26, height: H, flexShrink: 0 }}>
-          {ticks.map((t) => (
-            <span key={t} style={{
-              position: 'absolute', right: 0, bottom: `${(t / max) * 100}%`,
-              transform: 'translateY(50%)', fontSize: 10, color: 'var(--text-3)',
-            }}>{t}</span>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}
+           role="img" aria-label="연도별 산학협력과 인턴십 건수">
+        <defs>
+          {/* 진행중인 해의 사선. CSS .chart-gap-overlay 와 같은 모양을 SVG 로 낸다 */}
+          {SERIES.map((s) => (
+            <pattern key={s.key} id={`${uid}-${s.key}`} width="5" height="5"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="5" height="5" fill={s.color} />
+              <line x1="0" y1="0" x2="0" y2="5" stroke="var(--surface)" strokeWidth="1.6" />
+            </pattern>
           ))}
-        </div>
+        </defs>
 
-        <div style={{ position: 'relative', flex: 1, height: H }}>
-          {/* 가로 눈금. 실선으로 그으면 격자가 막대보다 진해진다 */}
-          {ticks.map((t) => (
-            <div key={t} style={{
-              position: 'absolute', left: 0, right: 0, bottom: `${(t / max) * 100}%`,
-              borderTop: '1px dashed var(--chart-grid)',
-            }} />
-          ))}
-
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10, height: '100%' }}>
-            {series.map((d) => (
-              <div
-                key={d.year}
-                onMouseEnter={() => setHover(d.year)}
-                onMouseLeave={() => setHover(null)}
-                style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4 }}
-              >
-                {SERIES.map((s) => (
-                  <div key={s.key} style={{ flex: 1, maxWidth: 26, height: '100%', position: 'relative' }}>
-                    <div
-                      className={d.year === nowYear ? 'chart-gap-overlay' : undefined}
-                      title={`${d.year} ${s.label} ${d[s.key]}건${d.year === nowYear ? ' · 진행중' : ''}`}
-                      style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        // 0 건인 해는 높이를 주지 않는다. 최소 높이를 주면 실적이
-                        // 조금 있는 것으로 읽힌다
-                        height: `${(d[s.key] / max) * 100}%`,
-                        backgroundColor: s.color, borderRadius: '2px 2px 0 0',
-                        opacity: hover == null || hover === d.year ? 1 : 0.4,
-                        transition: 'opacity 160ms',
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 연도 라벨은 Y축 폭(26) 과 간격(8) 만큼 밀어 막대와 세로를 맞춘다 */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 34 }}>
-        {series.map((d) => (
-          <div key={d.year} style={{
-            flex: 1, textAlign: 'center', fontSize: 10,
-            color: hover === d.year ? 'var(--text-1)' : 'var(--text-3)',
-          }}>
-            {d.year}
-          </div>
+        {/* 가로 눈금. 실선으로 그으면 격자가 데이터보다 진해진다 */}
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={padL} y1={yOf(t)} x2={W - padR} y2={yOf(t)}
+                  stroke="var(--chart-grid)" strokeWidth={1} strokeDasharray="3 4" />
+            <text x={padL - 6} y={yOf(t) + 3.5} textAnchor="end" fontSize={10} fill="var(--text-3)">{t}</text>
+          </g>
         ))}
-      </div>
+
+        {SERIES.map((s, si) => {
+          const pts = series.map((d, i) => ({ x: centerOf(i, si), y: yOf(d[s.key]) }));
+          return (
+            <g key={s.key}>
+              {series.map((d, i) => {
+                const h = (d[s.key] / max) * plotH;
+                return (
+                  <rect
+                    key={d.year}
+                    x={centerOf(i, si) - barW / 2} y={padT + plotH - h}
+                    width={barW} height={h} rx={2}
+                    fill={d.year === nowYear ? `url(#${uid}-${s.key})` : s.color}
+                    opacity={hover == null || hover === d.year ? 1 : 0.35}
+                    style={{ transition: 'opacity 160ms' }}
+                  />
+                );
+              })}
+              {/* 막대 끝을 잇는 직선. 방향만 읽는 보조선이라 얇게 둔다 */}
+              {series.length > 1 && (
+                <polyline
+                  points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
+                  fill="none" stroke={s.color} strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
+                />
+              )}
+              {pts.map((p, i) => (
+                <circle key={series[i].year} cx={p.x} cy={p.y} r={2.6}
+                        fill="var(--surface)" stroke={s.color} strokeWidth={1.5} />
+              ))}
+            </g>
+          );
+        })}
+
+        {series.map((d, i) => (
+          <g key={d.year}>
+            <text x={padL + slot * (i + 0.5)} y={H - 5} textAnchor="middle" fontSize={10}
+                  fill={hover === d.year ? 'var(--text-1)' : 'var(--text-3)'}>{d.year}</text>
+            {/* 마우스 판정용 투명 세로 띠. 막대만 판정하면 사이가 죽은 영역이 된다 */}
+            <rect x={padL + slot * i} y={0} width={slot} height={H} fill="transparent"
+                  onMouseEnter={() => setHover(d.year)} onMouseLeave={() => setHover(null)} />
+          </g>
+        ))}
+      </svg>
 
       {/* 마우스를 올린 해의 값은 글로 적는다. 막대 위 라벨을 상시로 띄우면
           네 해 여덟 개 숫자가 격자보다 먼저 읽힌다 */}
-      <div className="dash-note" style={{ marginTop: 8, minHeight: 18 }}>
-        {hover != null
-          ? (() => {
-            const d = series.find((x) => x.year === hover)!;
-            return `${d.year}년 산학협력 ${d.projects}건, 인턴십 ${d.internships}건${d.year === nowYear ? ' (진행중)' : ''}`;
-          })()
+      <div className="dash-note" style={{ marginTop: 6, minHeight: 18 }}>
+        {active
+          ? `${active.year}년 산학협력 ${active.projects}건, 인턴십 ${active.internships}건${active.year === nowYear ? ' (진행중)' : ''}`
           : hasPartial
             ? `사선 막대(${nowYear}년)는 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.`
             : ''}
