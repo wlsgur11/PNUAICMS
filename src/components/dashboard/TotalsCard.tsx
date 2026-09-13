@@ -17,10 +17,12 @@ import type { TotalTile } from '@/lib/dashboard-shape';
  * 차트가 이미 있어 한 화면에서 같은 것을 두 번 그리는 꼴이었고, 연간 집계를
  * 선으로 이은 것 자체가 없는 값을 지어내는 표기였다.
  */
-function Tile({ label, tile, year, extra }: {
+function Tile({ label, tile, year, unit, extra }: {
   label: string;
   tile: TotalTile;
   year: number;
+  /** 큰 숫자 뒤에 붙일 단위. 기업은 곳, 과제·인턴십·MOU 는 건 */
+  unit: string;
   extra?: string;
 }) {
   const d = tile.delta;
@@ -31,7 +33,9 @@ function Tile({ label, tile, year, extra }: {
   return (
     <div>
       <div className="dash-metric-label">{label}</div>
-      <div className="dash-metric-value"><CountUp end={tile.value} /></div>
+      <div className="dash-metric-value">
+        <CountUp end={tile.value} /><span className="unit">{unit}</span>
+      </div>
       <div className="dash-metric-sub">
         {annual ? `${year}년 실적` : '현재 기준'}
         {annual && d != null && (
@@ -49,8 +53,8 @@ function Tile({ label, tile, year, extra }: {
       </div>
 
       <div className="dash-metric-sub" style={{ marginTop: 8 }}>
-        {annual && `전체 누적 ${tile.total}`}
-        {newThisYear != null && `${year}년 신규 ${newThisYear}개`}
+        {annual && `전체 누적 ${tile.total}${unit}`}
+        {newThisYear != null && `${year}년 신규 ${newThisYear}${unit}`}
         {extra && <>{(annual || newThisYear != null) && <br />}{extra}</>}
       </div>
     </div>
@@ -70,11 +74,13 @@ export default function TotalsCard({ totals, partnerCompanies, year }: {
         <p>산학 과제와 인턴십은 선택한 연도의 연간 실적입니다. 협력 기업과 MOU는 현재 기준입니다.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 20px' }}>
-        <Tile label="협력 기업" tile={totals.companies} year={year} extra={`실적 있는 기업 ${partnerCompanies}개`} />
-        <Tile label="산학 과제" tile={totals.projects} year={year} />
-        <Tile label="인턴십" tile={totals.internships} year={year} />
-        {/* MOU 는 체결일 칸이 없어 연도별로 가를 수 없다. 추이선도 없다 */}
-        <Tile label="MOU 체결" tile={totals.mou} year={year} extra="체결일이 없어 연도별 비교 불가" />
+        <Tile label="협력 기업" tile={totals.companies} year={year} unit="곳" extra={`실적 있는 기업 ${partnerCompanies}곳`} />
+        <Tile label="산학 과제" tile={totals.projects} year={year} unit="건" />
+        {/* 아래 인턴십 교육 실적 카드에 '교육인원 5765명' 이 있어서, 단위를 안
+            붙이면 이 숫자가 인원인지 건수인지 한 화면에서 구분되지 않는다 */}
+        <Tile label="인턴십" tile={totals.internships} year={year} unit="건" />
+        {/* MOU 는 체결일 칸이 없어 연도별로 가를 수 없다 */}
+        <Tile label="MOU 체결" tile={totals.mou} year={year} unit="건" extra="체결일이 없어 연도별 비교 불가" />
       </div>
     </div>
   );

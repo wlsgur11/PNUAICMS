@@ -43,13 +43,13 @@ export default function FollowUpBlock({ data }: { data: FollowUp }) {
             <div>
               <div className="dash-metric-label">컨택 기록 없음</div>
               <div className="dash-metric-value" style={{ color: data.untouched > 0 ? 'var(--red-600)' : 'var(--text-1)' }}>
-                {data.untouched}
+                {data.untouched}<span className="unit">곳</span>
               </div>
               <div className="dash-metric-sub">후속 대상 {data.total}곳 중</div>
             </div>
             <div>
               <div className="dash-metric-label">반년 넘게 조용</div>
-              <div className="dash-metric-value">{data.stale}</div>
+              <div className="dash-metric-value">{data.stale}<span className="unit">곳</span></div>
               <div className="dash-metric-sub">접촉은 했으나 기록이 끊긴 곳</div>
             </div>
           </div>

@@ -76,7 +76,9 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
             </div>
             <div>
               <div className="dash-metric-label">미달</div>
-              <div className="dash-metric-value" style={{ color: swcu.unmetCount > 0 ? 'var(--red-600)' : 'var(--text-1)' }}>{swcu.unmetCount}</div>
+              <div className="dash-metric-value" style={{ color: swcu.unmetCount > 0 ? 'var(--red-600)' : 'var(--text-1)' }}>
+                {swcu.unmetCount}<span className="unit">개</span>
+              </div>
             </div>
           </div>
 

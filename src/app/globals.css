@@ -1804,6 +1804,12 @@ table.data-table {
 }
 .dash-metric-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; line-height: 1.5; }
 .dash-metric-value.met { color: var(--green-600); }
+/* 큰 숫자 뒤 단위. 숫자와 같은 크기로 붙이면 24px 숫자끼리의 크기 비교가 흐려진다.
+   확실히 작고 연해야 단위는 읽히면서 숫자가 주가 된다 */
+.dash-metric-value .unit {
+  font-size: 15px; font-weight: 400; color: var(--text-3);
+  letter-spacing: 0; margin-left: 2px;
+}
 
 /* 진행 막대. 숫자를 가리지 않도록 얇게 */
 .dash-track { height: 4px; background: var(--slate-100); border-radius: 2px; margin-top: 10px; overflow: hidden; }
