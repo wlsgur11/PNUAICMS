@@ -8,9 +8,16 @@ import type { SwcuArea } from '@/lib/dashboard-shape';
  * 이쪽은 '어디가' 에 답한다. 미달이 한 영역에 몰려 있는지, 여러 영역에 퍼져 있는지가
  * 하반기 배분을 정한다.
  */
-function seg(count: number, total: number, color: string) {
+/**
+ * 막대 한 구간. color 가 null 이면 판정 불가(목표치 없음) 몫이다.
+ * 회색으로 채우면 '달성도가 낮다' 로 읽히는데 실제로는 채점을 안 한 칸이라,
+ * 색 대신 사선을 깔아 다른 종류의 값임을 드러낸다.
+ */
+function seg(count: number, total: number, color: string | null) {
   if (count === 0) return null;
-  return <div style={{ width: `${(count / total) * 100}%`, background: color }} />;
+  const width = `${(count / total) * 100}%`;
+  if (color == null) return <div className="chart-gap" style={{ width }} />;
+  return <div style={{ width, background: color }} />;
 }
 
 export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year: number }) {
@@ -37,16 +44,16 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
                   {a.unmet > 0 && <span style={{ color: 'var(--red-600)' }}> · 미달 {a.unmet}</span>}
                 </span>
               </div>
-              <div style={{ display: 'flex', height: 6, borderRadius: 2, overflow: 'hidden', background: 'var(--slate-100)' }}>
-                {seg(a.met, a.total, 'var(--green-600)')}
-                {seg(a.unmet, a.total, 'var(--red-600)')}
-                {seg(a.na, a.total, 'var(--slate-300)')}
+              <div style={{ display: 'flex', height: 6, borderRadius: 2, overflow: 'hidden', background: 'var(--chart-track)' }}>
+                {seg(a.met, a.total, 'var(--chart-met)')}
+                {seg(a.unmet, a.total, 'var(--chart-unmet)')}
+                {seg(a.na, a.total, null)}
               </div>
             </div>
           ))}
 
           <div className="dash-note">
-            회색은 목표치가 없어 달성 여부를 판정하지 않은 지표입니다.{' '}
+            사선은 목표치가 없어 달성 여부를 판정하지 않은 지표입니다.{' '}
             <Link href="/swcu" className="text-link">지표 상세</Link>
           </div>
         </>

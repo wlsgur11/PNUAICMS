@@ -46,21 +46,38 @@ export default function ProjectHeadcountCard({ year, data }: {
 
           {/* '13 / 7건 기재' 로 붙여 쓰면 슬래시 때문에 '7 중 13' 처럼 읽힌다.
               인원과 기재 건수는 분자·분모가 아니라 서로 다른 값이라 괄호로 끊는다 */}
-          {DEGREES.map(({ key, label }) => (
-            <div key={key} className="dash-list-row">
-              <span className="name">{label}</span>
-              <span className="num">
-                {p[key].sum}명
-                <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>
-                  {p[key].filled === 0
-                    ? ' (기재된 과제 없음)'
-                    : ` (${p[key].filled}/${p.projects}건 기재)`}
-                </span>
-              </span>
-            </div>
-          ))}
+          {DEGREES.map(({ key, label }) => {
+            const d = p[key];
+            const ratio = p.projects === 0 ? 0 : d.filled / p.projects;
+            return (
+              <div key={key} style={{ padding: '9px 0', borderBottom: '1px solid var(--slate-100)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{label}</span>
+                  <span className="dash-num" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-1)' }}>
+                    {d.sum}명
+                    <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>
+                      {d.filled === 0
+                        ? ' (기재된 과제 없음)'
+                        : ` (${d.filled}/${p.projects}건 기재)`}
+                    </span>
+                  </span>
+                </div>
+                {/* 채워진 칸은 인원이 기재된 과제, 사선은 아직 안 채워진 과제다.
+                    숫자만 두면 각주를 안 읽은 사람에게 박사 참여가 실제로 적은 것으로 읽힌다 */}
+                <div
+                  className="chart-gap"
+                  style={{ height: 6, borderRadius: 2, overflow: 'hidden' }}
+                  title={`${p.projects}건 중 ${d.filled}건에 ${label} 인원이 기재됨`}
+                >
+                  <div style={{ width: `${ratio * 100}%`, height: '100%', background: 'var(--chart-1)' }} />
+                </div>
+              </div>
+            );
+          })}
 
           <div className="dash-note">
+            사선은 인원이 기재되지 않은 과제입니다.
+            <br />
             전체 누적 {sumOf(data.total)}명
             {' ('}
             {DEGREES.map(({ key, label }) => `${label} ${data.total[key].sum}`).join(', ')}

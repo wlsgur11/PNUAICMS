@@ -13,8 +13,15 @@ const AXES: { key: Axis; label: string }[] = [
   { key: 'type', label: '유형' },
 ];
 
-// 강조색 하나의 농도 차이만 쓴다. 항목마다 다른 색을 주면 색이 뜻 없이 늘어난다
-const SHADES = ['var(--accent)', '#7ba3e0', '#a9c3ea', 'var(--slate-300)', 'var(--slate-200)'];
+// 강조색 하나의 농도 차이만 쓴다. 항목마다 다른 색을 주면 색이 뜻 없이 늘어난다.
+// 05 가 가장 진하다. 순위가 곧 농도라 범례 없이도 위아래가 읽힌다
+const SHADES = [
+  'var(--chart-scale-05)',
+  'var(--chart-scale-04)',
+  'var(--chart-scale-03)',
+  'var(--chart-scale-02)',
+  'var(--chart-scale-01)',
+];
 
 /** 항목이 5개를 넘으면 상위 4개와 기타로 묶는다 */
 function collapse(items: DistributionItem[]): DistributionItem[] {
@@ -43,6 +50,9 @@ function verdict(axis: Axis, items: DistributionItem[], baseline: Distribution['
 
 export default function DistributionBlock({ distribution }: { distribution: Distribution }) {
   const [axis, setAxis] = useState<Axis>('dept');
+  // 누적 막대의 칸과 아래 목록 행을 짝지어 서로를 밝힌다. 칸이 다섯이고 색이
+  // 농도 차이뿐이라, 어느 칸이 어느 항목인지 색만으로는 짚기 어렵다
+  const [hot, setHot] = useState<string | null>(null);
   const items = collapse(distribution[axis]);
   const total = items.reduce((a, x) => a + x.count, 0);
   const note = verdict(axis, distribution[axis], distribution.baseline);
@@ -84,8 +94,20 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
         <>
           <div style={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', marginBottom: 18 }}>
             {items.map((x, i) => (
-              <div key={x.key} title={`${x.key} ${x.count}건`}
-                   style={{ width: `${(x.count / total) * 100}%`, background: SHADES[i] ?? 'var(--slate-200)' }} />
+              <div
+                key={x.key}
+                title={`${x.key} ${x.count}건`}
+                onMouseEnter={() => setHot(x.key)}
+                onMouseLeave={() => setHot(null)}
+                style={{
+                  width: `${(x.count / total) * 100}%`,
+                  background: SHADES[i] ?? 'var(--chart-scale-01)',
+                  // 지목한 칸만 남기고 나머지를 흐린다. 칸을 진하게 만드는 쪽은
+                  // 이미 가장 진한 05 칸에서 변화가 안 보인다
+                  opacity: hot == null || hot === x.key ? 1 : 0.35,
+                  transition: 'opacity 160ms',
+                }}
+              />
             ))}
           </div>
 
@@ -93,10 +115,17 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 28px' }}>
             {items.map((x, i) => {
               const href = hrefFor(x);
+              const rowProps = {
+                onMouseEnter: () => setHot(x.key),
+                onMouseLeave: () => setHot(null),
+                // 막대 칸에 마우스를 올렸을 때도 짝이 되는 행이 밝아져야 한다.
+                // CSS :hover 로는 반대 방향이 안 걸린다
+                style: hot === x.key ? { background: 'var(--slate-50)' } : undefined,
+              };
               const body = (
                 <>
                   <span className="name">
-                    <span style={{ color: SHADES[i] ?? 'var(--slate-200)', marginRight: 6 }}>■</span>{x.key}
+                    <span style={{ color: SHADES[i] ?? 'var(--chart-scale-01)', marginRight: 6 }}>■</span>{x.key}
                   </span>
                   <span className="num">
                     {x.count}
@@ -105,8 +134,8 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
                 </>
               );
               return href
-                ? <Link key={x.key} href={href} className="dash-list-row">{body}</Link>
-                : <div key={x.key} className="dash-list-row">{body}</div>;
+                ? <Link key={x.key} href={href} className="dash-list-row" {...rowProps}>{body}</Link>
+                : <div key={x.key} className="dash-list-row" {...rowProps}>{body}</div>;
             })}
           </div>
 
