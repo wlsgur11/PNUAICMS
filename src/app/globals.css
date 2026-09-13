@@ -70,6 +70,7 @@
   --chart-1: var(--accent);      /* 주 계열: 산학협력 */
   --chart-2: var(--slate-400);   /* 보조 계열: 인턴십 */
   --chart-track: var(--slate-100); /* 막대 뒤 트랙 */
+  --chart-grid: var(--slate-200);  /* 축 눈금선. 데이터보다 연해야 한다 */
   --chart-met: var(--green-600);
   --chart-unmet: var(--red-600);
   --chart-na: var(--slate-300);  /* 판정 불가(목표치 없음) */
