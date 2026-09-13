@@ -69,6 +69,17 @@ async function main() {
     labIds.push(lab.id);
   }
 
+  // 운영 데이터는 기업 104곳 중 98곳이 미접촉이고 컨택 기록이 아예 없다.
+  // 데모는 다섯 곳 모두 최근 기록이 있어 '다음 컨택 대상' 카드의 핵심인
+  // '기록 없음' 과 '반년 넘게 조용' 이 한 줄도 안 나온다. 그 모양을 만든다.
+  if (companies.length >= 3) {
+    // 앞 두 곳은 기록을 지워 미접촉으로 둔다
+    await prisma.contactHistory.deleteMany({ where: { companyId: { in: companies.slice(0, 2).map((c) => c.id) } } });
+    // 세 번째는 마지막 컨택을 2년 전으로 밀어 '오래 조용한' 쪽을 만든다
+    const old = new Date(Date.now() - 730 * 864e5).toISOString().slice(0, 10);
+    await prisma.contactHistory.updateMany({ where: { companyId: companies[2].id }, data: { contactDate: old } });
+  }
+
   const depts = ['정컴', '정컴', '정컴', 'DS', null];
   const types = ['졸업과제', 'R&D', '용역', '캡스톤', 'R&D'];
   const divisions = ['A', 'B', 'C', 'A', 'B'];
@@ -173,8 +184,13 @@ async function main() {
     await prisma.yearStat.upsert({ where: { year }, update: values, create: { year, ...values } });
   }
 
-  await prisma.swcuYear.upsert({ where: { year: 2026 }, update: {}, create: { year: 2026, university: '부산대학교' } });
-  await prisma.swcuIndicator.deleteMany({ where: { year: 2026 } });
+  // 연도별 달성 추이를 보려면 해가 여럿이어야 한다. 실적을 해마다 조금씩 올려
+  // 달성 개수가 늘어나는 모양을 만든다
+  const swcuYears = [2023, 2024, 2025, 2026] as const;
+  for (const y of swcuYears) {
+    await prisma.swcuYear.upsert({ where: { year: y }, update: {}, create: { year: y, university: '부산대학교' } });
+  }
+  await prisma.swcuIndicator.deleteMany({ where: { year: { in: [...swcuYears] } } });
   // 영역을 흩뿌린다. 미달이 서로 다른 영역에 들어가야 영역별 카드의 정렬을 볼 수 있다.
   // 목표가 빈 행 하나로 '판정 불가(사선)' 칸을 만든다.
   //
@@ -191,9 +207,24 @@ async function main() {
     ['688', '창업률', 0.05, 1 / 55, '%'], ['535', '인턴십 연계취업률', 0.05, 1 / 22, '%'],
   ] as const;
   await prisma.swcuIndicator.createMany({
-    data: indicators.map(([area, name, target, actual, unit], i) => ({
-      year: 2026, name, target, actual, unit, area, sortOrder: i,
-    })),
+    data: swcuYears.flatMap((y, yi) =>
+      indicators.map(([area, name, target, actual, unit], i) => ({
+        // 과거로 갈수록 실적을 깎아 달성 개수가 해마다 늘어나게 둔다.
+        // 2023 은 지표를 두 개 적게 넣어 분모가 달라지는 해도 만든다
+        year: y,
+        name,
+        target,
+        // 명·건·개 는 정수라야 한다. 2.7명 이 화면에 뜨면 데모를 보는 사람이
+        // 표시 버그로 읽는다. % 와 점만 소수를 남긴다
+        actual: actual == null ? null : (() => {
+          const v = actual * (0.72 + 0.09 * yi);
+          return unit === '%' || unit === '점' ? Math.round(v * 1000) / 1000 : Math.round(v);
+        })(),
+        unit,
+        area,
+        sortOrder: i,
+      })).slice(0, y === 2023 ? indicators.length - 2 : indicators.length),
+    ),
   });
 
   console.log('데모 데이터 적재 완료');

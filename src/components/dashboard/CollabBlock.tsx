@@ -48,7 +48,9 @@ export default function CollabBlock({ items, region }: {
                 <span className="dash-bar">
                   <span style={{ width: `${(x.count / max) * 100}%` }} />
                 </span>
-                <span className="num" style={{ minWidth: 28, textAlign: 'right' }}>{x.count}</span>
+                {/* 여기 숫자는 기업 수다. 실적 요약의 '인턴십 6건' 과 한 화면에
+                    같이 보여서, 단위를 안 붙이면 '인턴십 50' 이 인턴십 건수로 읽힌다 */}
+                <span className="num" style={{ minWidth: 34, textAlign: 'right' }}>{x.count}곳</span>
               </span>
             </>
           );
@@ -66,7 +68,8 @@ export default function CollabBlock({ items, region }: {
               <Link key={r.key} href={`/companies?region=${encodeURIComponent(r.key)}`}
                     style={{ fontSize: 12, color: 'var(--text-2)', textDecoration: 'none' }}>
                 {r.key} <span className="dash-num" style={{ color: 'var(--text-1)', fontWeight: 500 }}>{r.count}</span>
-                <span style={{ color: 'var(--text-3)' }}> · {((r.count / regionTotal) * 100).toFixed(0)}%</span>
+                {/* 위 협력 항목과 같은 기업 수라 단위를 맞춘다 */}
+                곳<span style={{ color: 'var(--text-3)' }}> · {((r.count / regionTotal) * 100).toFixed(0)}%</span>
               </Link>
             ))}
           </div>

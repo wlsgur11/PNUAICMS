@@ -39,7 +39,7 @@ export default function ProjectHeadcountCard({ year, data }: {
           <div className="dash-metrics" style={{ marginBottom: 18 }}>
             <div>
               <div className="dash-metric-label">{year}년 참여 인원</div>
-              <div className="dash-metric-value"><CountUp end={total} /></div>
+              <div className="dash-metric-value"><CountUp end={total} /><span className="unit">명</span></div>
               <div className="dash-metric-sub">과제 {p.projects}건</div>
             </div>
           </div>

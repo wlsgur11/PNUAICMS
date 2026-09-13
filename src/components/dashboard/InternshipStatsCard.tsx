@@ -15,12 +15,12 @@ function Row({ label, h }: { label: string; h: InternshipHeadcount }) {
       <div className="dash-metrics">
         <div>
           <div className="dash-metric-label">교육인원</div>
-          <div className="dash-metric-value">{edu}</div>
+          <div className="dash-metric-value">{edu}<span className="unit">명</span></div>
           <div className="dash-metric-sub">정컴 {h.cse}, DS {h.ds}, 비SW {h.nonSw}</div>
         </div>
         <div>
           <div className="dash-metric-label">연계취업자</div>
-          <div className="dash-metric-value">{emp}</div>
+          <div className="dash-metric-value">{emp}<span className="unit">명</span></div>
           <div className="dash-metric-sub">
             SW {h.empSw}, 비SW {h.empNonSw}
             {edu > 0 && <><br />교육인원의 {((emp / edu) * 100).toFixed(0)}%</>}
