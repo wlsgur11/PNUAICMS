@@ -13,6 +13,9 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
   // 운영 데이터는 학년이 비어 있는 학생이 많다. 전부 0 이면 0 짜리 막대 넷만 남아
   // 자리만 차지하므로 섹션을 접는다
   const hasGrade = s.gradeDistribution.some((g) => g.count > 0);
+  // 학년이 기재된 학생 수. 운영 데이터는 930명 중 3명만 학년이 있는 식이라,
+  // 이 숫자를 안 적으면 막대가 전체 학생의 학년 분포로 읽힌다
+  const gradedTotal = s.gradeDistribution.reduce((a, g) => a + g.count, 0);
 
   return (
     <div className="card dash-card">
@@ -65,6 +68,11 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
               </div>
             ))}
           </div>
+          {gradedTotal < s.total && (
+            <div className="dash-note">
+              학년이 기재된 학생은 {gradedTotal}명입니다. 전체 {s.total}명의 분포가 아닙니다.
+            </div>
+          )}
           </>}
           {!hasGrade && <div className="dash-note">학년이 입력된 학생이 없어 학년별 분포를 표시하지 않습니다.</div>}
 

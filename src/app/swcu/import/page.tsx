@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { toast } from '@/components/Toaster';
+import { formatSwcuValue } from '@/lib/swcu-format';
 
 type IndicatorRow = {
   area: string | null; name: string; unit: string | null;
@@ -14,11 +15,8 @@ type Preview = {
   indicators: IndicatorRow[]; rawCount: number;
 };
 
-const fmt = (n: number | null, unit: string | null) => {
-  if (n == null) return '-';
-  if (unit === '%') return (n * 100).toFixed(2) + '%';
-  return String(Math.round(n * 100) / 100);
-};
+// 업로드 미리보기는 파싱 결과를 눈으로 대조하는 화면이라 한 자리 더 보여준다
+const fmt = (n: number | null, unit: string | null) => formatSwcuValue(n, unit, 2);
 
 export default function SwcuImportPage() {
   const [file, setFile] = useState<File | null>(null);
