@@ -83,7 +83,12 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
                         style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
                           height: `${Math.max(2, (actual / max) * 100)}%`,
-                          backgroundColor: s.color, borderRadius: '2px 2px 0 0',
+                          // 목표를 넘은 해는 초록. 막대가 목표 눈금 위로 올라간 것만으로도
+                          // 달성이 보이지만, 색이 같이 바뀌어야 훑을 때 걸린다.
+                          // 지표 상세 화면이 이미 같은 규칙을 쓴다.
+                          // 미달한 막대는 계열색을 지켜 어느 쪽이 산학이고 인턴십인지 남긴다
+                          backgroundColor: target != null && actual >= target ? 'var(--chart-met)' : s.color,
+                          borderRadius: '2px 2px 0 0',
                         }}
                       />
                     )}
@@ -116,6 +121,10 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
           </span>
         ))}
         <span>--- 목표</span>
+        <span>
+          <span style={{ display: 'inline-block', width: 8, height: 8, background: 'var(--chart-met)', borderRadius: 1, marginRight: 4 }} />
+          목표 달성
+        </span>
       </div>
       {hasPartial && (
         <div className="dash-note" style={{ marginTop: 6 }}>

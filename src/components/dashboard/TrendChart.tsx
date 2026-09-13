@@ -57,7 +57,13 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
   // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것으로 읽힌다
   const nowYear = new Date().getFullYear();
   const hasPartial = series.some((d) => d.year === nowYear);
-  const active = hover == null ? null : series.find((d) => d.year === hover) ?? null;
+  const hoverIdx = hover == null ? -1 : series.findIndex((d) => d.year === hover);
+  const active = hoverIdx < 0 ? null : series[hoverIdx];
+  // 말풍선은 그 해 묶음 가운데에, 차트 위쪽에 고정으로 뜬다.
+  // 막대 끝에 붙이려 했더니 값이 큰 해에서 차트 밖으로 나갔다. SVG 의 실제
+  // 렌더 높이가 카드 폭에 따라 변해서 퍼센트로는 넘침을 막을 수 없다.
+  // 위에 고정하면 키 큰 막대를 덮지만 값은 말풍선 안에 글로 적혀 있다
+  const tipLeft = active ? ((padL + slot * (hoverIdx + 0.5)) / W) * 100 : 0;
 
   return (
     <div>
@@ -70,6 +76,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
         ))}
       </div>
 
+      <div style={{ position: 'relative' }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}
            role="img" aria-label="연도별 산학협력과 인턴십 건수">
         <defs>
@@ -136,15 +143,38 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
         ))}
       </svg>
 
-      {/* 마우스를 올린 해의 값은 글로 적는다. 막대 위 라벨을 상시로 띄우면
-          네 해 여덟 개 숫자가 격자보다 먼저 읽힌다 */}
-      <div className="dash-note" style={{ marginTop: 6, minHeight: 18 }}>
-        {active
-          ? `${active.year}년 산학협력 ${active.projects}건, 인턴십 ${active.internships}건${active.year === nowYear ? ' (진행중)' : ''}`
-          : hasPartial
-            ? `사선 막대(${nowYear}년)는 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.`
-            : ''}
+      {/* 값은 마우스를 올렸을 때만 띄운다. 막대마다 상시 라벨을 달면 네 해
+          여덟 개 숫자가 격자보다 먼저 읽힌다 */}
+      {active && (
+        <div
+          style={{
+            position: 'absolute', left: `${tipLeft}%`, top: 2,
+            // 양끝 해는 가운데 정렬하면 카드 밖으로 잘린다
+            transform: `translateX(${hoverIdx === 0 ? '-10%' : hoverIdx === series.length - 1 ? '-90%' : '-50%'})`,
+            background: 'var(--slate-900)', color: 'var(--surface)',
+            borderRadius: 'var(--radius-sm)', padding: '7px 10px',
+            fontSize: 11, lineHeight: 1.6, whiteSpace: 'nowrap',
+            pointerEvents: 'none', boxShadow: 'var(--shadow-md)', zIndex: 1,
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 2 }}>
+            {active.year}{active.year === nowYear ? ' (진행중)' : ''}
+          </div>
+          {SERIES.map((s) => (
+            <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 6, height: 6, background: s.color, borderRadius: 1, flexShrink: 0 }} />
+              {s.label} {active[s.key]}건
+            </div>
+          ))}
+        </div>
+      )}
       </div>
+
+      {hasPartial && (
+        <div className="dash-note" style={{ marginTop: 6 }}>
+          사선 막대({nowYear}년)는 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.
+        </div>
+      )}
     </div>
   );
 }
