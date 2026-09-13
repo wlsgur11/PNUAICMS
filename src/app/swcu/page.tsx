@@ -4,6 +4,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import { clickKeys } from '@/lib/a11y';
+import { formatSwcuValue } from '@/lib/swcu-format';
 
 type Indicator = {
   area: string | null; name: string; unit: string | null;
@@ -15,11 +16,7 @@ type Indicator = {
 type Raw = { scope: string; category: string | null; label: string; value: number | null; sortOrder: number };
 type YearData = { year: number; university: string | null; submittedAt: string | null; indicators: Indicator[]; raws: Raw[] };
 
-const fmt = (n: number | null, unit: string | null) => {
-  if (n == null) return '-';
-  if (unit === '%') return (n * 100).toFixed(1) + '%';
-  return String(Math.round(n * 100) / 100);
-};
+const fmt = (n: number | null, unit: string | null) => formatSwcuValue(n, unit);
 
 // 낮을수록 좋은 지표 (목표 이하면 달성)
 const LOWER_BETTER = new Set<string>(['참여학과 교원 1인당 학생수']);
