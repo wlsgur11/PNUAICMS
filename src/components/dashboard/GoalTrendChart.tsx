@@ -12,8 +12,8 @@ import type { GoalTrendPoint } from '@/lib/dashboard-shape';
  * 목표치는 막대 위에 가로 눈금으로 얹는다. 막대가 눈금을 넘으면 달성이다.
  */
 const SERIES = [
-  { key: 'industry', label: '산학협력', color: 'var(--accent)' },
-  { key: 'internship', label: '인턴십', color: 'var(--slate-400)' },
+  { key: 'industry', label: '산학협력', color: 'var(--chart-1)' },
+  { key: 'internship', label: '인턴십', color: 'var(--chart-2)' },
 ] as const;
 
 const pick = (d: GoalTrendPoint, k: 'industry' | 'internship') =>
@@ -31,11 +31,37 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
     const { actual, target } = pick(d, s.key);
     return [actual, target];
   })).filter((v): v is number => v != null);
-  const max = Math.max(0.01, ...all) * 1.2;
+  // 축 최대값은 5%p 단위로 올린다. 17.3% 같은 값을 축 꼭대기에 두면 눈금이 안 읽힌다
+  const max = Math.max(0.05, Math.ceil((Math.max(...all) * 1.15) / 0.05) * 0.05);
+  const ticks = [0, max / 2, max];
+  const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
+  const H = 92; // 그래프 높이. Y축 라벨과 막대가 같은 좌표계를 쓴다
+  // 올해는 아직 안 끝난 해다. 막대에 사선을 얹어 확정 수치가 아님을 드러낸다.
+  // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것처럼 읽힌다
+  const nowYear = new Date().getFullYear();
+  const hasPartial = series.some((d) => d.year === nowYear);
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 78 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {/* Y축. 막대와 같은 높이 상자를 두고 눈금 위치에 라벨을 얹는다 */}
+        <div style={{ position: 'relative', width: 34, height: H, flexShrink: 0 }}>
+          {ticks.map((t) => (
+            <span key={t} style={{
+              position: 'absolute', right: 0, bottom: `${(t / max) * 100}%`,
+              transform: 'translateY(50%)', fontSize: 10, color: 'var(--text-3)', whiteSpace: 'nowrap',
+            }}>{pct(t)}</span>
+          ))}
+        </div>
+        <div style={{ position: 'relative', flex: 1, height: H }}>
+          {/* 가로 눈금. 실선으로 그으면 격자가 막대보다 진해진다 */}
+          {ticks.map((t) => (
+            <div key={t} style={{
+              position: 'absolute', left: 0, right: 0, bottom: `${(t / max) * 100}%`,
+              borderTop: '1px dashed var(--chart-grid)',
+            }} />
+          ))}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10, height: '100%' }}>
         {series.map((d) => (
           <div key={d.year} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
             {/* 막대 폭을 묶어 둔다. flex 로만 두면 연도가 셋일 때 한 막대가 90px 을 넘어
@@ -45,18 +71,21 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
                 const { actual, target } = pick(d, s.key);
                 const title = actual == null
                   ? `${d.year} ${s.label} 값 없음`
-                  : `${d.year} ${s.label} ${(actual * 100).toFixed(1)}%${target != null ? ` (목표 ${(target * 100).toFixed(1)}%)` : ''}`;
+                  : `${d.year} ${s.label} ${(actual * 100).toFixed(1)}%${target != null ? ` (목표 ${(target * 100).toFixed(1)}%)` : ''}${d.year === nowYear ? ' · 진행중' : ''}`;
                 return (
                   <div key={s.key} title={title} style={{ flex: 1, maxWidth: 26, position: 'relative', height: '100%' }}>
                     {actual == null ? (
                       /* 값이 없는 해. 0% 막대로 보이면 미달성으로 읽히므로 점선만 둔다 */
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, borderTop: '1px dashed var(--slate-300)' }} />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, borderTop: '1px dashed var(--chart-na)' }} />
                     ) : (
-                      <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        height: `${Math.max(2, (actual / max) * 100)}%`,
-                        background: s.color, borderRadius: '2px 2px 0 0',
-                      }} />
+                      <div
+                        className={d.year === nowYear ? 'chart-gap-overlay' : undefined}
+                        style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          height: `${Math.max(2, (actual / max) * 100)}%`,
+                          backgroundColor: s.color, borderRadius: '2px 2px 0 0',
+                        }}
+                      />
                     )}
                     {target != null && (
                       <div style={{
@@ -70,8 +99,11 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
             </div>
           </div>
         ))}
+          </div>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+      {/* 연도 라벨은 Y축 폭(34) 과 간격(8) 만큼 밀어 막대와 세로를 맞춘다 */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 42 }}>
         {series.map((d) => (
           <div key={d.year} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'var(--text-3)' }}>{d.year}</div>
         ))}
@@ -85,6 +117,11 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
         ))}
         <span>--- 목표</span>
       </div>
+      {hasPartial && (
+        <div className="dash-note" style={{ marginTop: 6 }}>
+          사선 막대({nowYear}년)는 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.
+        </div>
+      )}
     </div>
   );
 }

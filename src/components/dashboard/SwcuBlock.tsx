@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { SwcuSummary } from '@/lib/dashboard-shape';
+import { formatSwcuValue } from '@/lib/swcu-format';
 
 /**
  * 미달 지표의 이름과 수치를 직접 나열하는 것이 이 카드의 핵심이다.
@@ -39,8 +40,13 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
             swcu.unmet.map((u) => (
               <div key={u.name} className="dash-list-row">
                 <span className="name">{u.name}</span>
+                {/* 단위가 % 인 지표는 DB 에 비율로 들어 있다. 그대로 찍으면
+                    '0.01818181818181818 / 0.05%' 가 나온다 */}
                 <span className="num" style={{ color: 'var(--red-600)' }}>
-                  {u.actual}<span style={{ fontSize: 12, color: 'var(--text-3)' }}> / {u.target}{u.unit ?? ''}</span>
+                  {formatSwcuValue(u.actual, u.unit)}
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                    {' / '}{formatSwcuValue(u.target, u.unit)}{u.unit === '%' ? '' : (u.unit ?? '')}
+                  </span>
                 </span>
               </div>
             ))

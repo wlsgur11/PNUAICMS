@@ -38,7 +38,7 @@ async function main() {
   for (let i = 0; i < companies.length; i++) {
     await prisma.company.update({
       where: { id: companies[i].id },
-      data: { status: stages[i % stages.length], joinYear: 2024 + (i % 3) },
+      data: { status: stages[i % stages.length], joinYear: 2023 + (i % 4) },
     });
   }
 
@@ -78,8 +78,9 @@ async function main() {
     cntPhd: number | null; cntMaster: number | null; cntUndergrad: number | null;
   };
   const projects: DemoProject[] = [];
-  for (const year of [2024, 2025, 2026]) {
-    const n = year === 2024 ? 6 : year === 2025 ? 10 : 14;
+  // 연도별 과제 수. 늘어나는 추세로 두어 추이 차트의 곡선이 실제로 휘게 한다.
+  // 2026 은 아직 끝나지 않은 해라 추이 차트에서 점선 구간으로 그려진다
+  for (const [year, n] of [[2023, 3], [2024, 6], [2025, 10], [2026, 14]] as const) {
     for (let i = 0; i < n; i++) {
       projects.push({
         year,
@@ -107,8 +108,9 @@ async function main() {
     domestic: string; hostType: string; method: string;
     cntCSE: number; cntDS: number; cntNonSW: number; empSW: number; empNonSW: number;
   }[] = [];
-  for (const year of [2024, 2025, 2026]) {
-    const n = year === 2024 ? 4 : year === 2025 ? 9 : 6; // 2026 은 전년 대비 감소
+  // 2026 이 전년보다 적은 것은 연중이기 때문이다. 이 모양이 있어야
+  // 진행중 연도를 점선으로 끊는 표기가 실제로 필요한지 눈으로 확인된다
+  for (const [year, n] of [[2023, 2], [2024, 4], [2025, 9], [2026, 6]] as const) {
     for (let i = 0; i < n; i++) {
       internships.push({
         year, programName: `${year} 데모 인턴십 ${i + 1}`, companyId: companies[i % companies.length].id,
@@ -154,6 +156,7 @@ async function main() {
   }
 
   for (const [year, ind, indT, itn, itnT, cse, ds] of [
+    [2023, 0.095, 0.15, 0.062, 0.125, 500, 195],
     [2024, 0.121, 0.15, 0.081, 0.125, 520, 210],
     [2025, 0.152, 0.15, 0.104, 0.125, 540, 230],
     [2026, 0.184, 0.15, 0.092, 0.125, 560, 250],
@@ -172,15 +175,20 @@ async function main() {
 
   await prisma.swcuYear.upsert({ where: { year: 2026 }, update: {}, create: { year: 2026, university: '부산대학교' } });
   await prisma.swcuIndicator.deleteMany({ where: { year: 2026 } });
-  // 영역을 흩뿌린다. 미달 3개가 서로 다른 영역에 들어가야 영역별 카드의 정렬을 볼 수 있다.
-  // 마지막 하나는 목표를 비워 '판정 불가(회색)' 칸을 만든다
+  // 영역을 흩뿌린다. 미달이 서로 다른 영역에 들어가야 영역별 카드의 정렬을 볼 수 있다.
+  // 목표가 빈 행 하나로 '판정 불가(사선)' 칸을 만든다.
+  //
+  // 단위가 '%' 인 지표는 운영 DB 에 비율로 들어 있다 (78% 는 0.78). 나눗셈 결과가
+  // 그대로 들어와 0.018181818181818... 같은 값이 되는 행이 있어 그 모양도 같이 둔다.
+  // 영역 칸이 밀려 숫자만 들어간 행도 운영에 섞여 있다 (688, 535 같은 값)
   const indicators = [
-    ['SW교육', '캡스톤 참여율', 80, 62, '%'], ['산학협력', '해외 인턴십', 10, 3, '명'],
+    ['SW교육', '캡스톤 참여율', 0.8, 0.62, '%'], ['산학협력', '해외 인턴십', 10, 3, '명'],
     ['창업', '창업 강좌 수', 4, 2, '개'], ['산학협력', '산학 과제 수', 10, 14, '건'],
-    ['산학협력', 'MOU 체결', 30, 42, '건'], ['SW교육', '취업률', 70, 78, '%'],
+    ['산학협력', 'MOU 체결', 30, 42, '건'], ['SW교육', '취업률', 0.7, 0.78, '%'],
     ['SW교육', '전공 강좌 수', 40, 44, '개'], ['가치확산', '비교과 참여', 200, 260, '명'],
     ['연구', '논문 실적', 12, 15, '건'], ['연구', '특허 출원', 5, 7, '건'],
     ['SW교육', '교육 만족도', 4, 4.3, '점'], ['가치확산', '현장실습 인원', null, 61, '명'],
+    ['688', '창업률', 0.05, 1 / 55, '%'], ['535', '인턴십 연계취업률', 0.05, 1 / 22, '%'],
   ] as const;
   await prisma.swcuIndicator.createMany({
     data: indicators.map(([area, name, target, actual, unit], i) => ({

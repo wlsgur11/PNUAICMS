@@ -33,8 +33,8 @@ export default function LabRankCard({ labs }: {
                 {l.lab && <span style={{ color: 'var(--text-3)', fontSize: 12 }}> · {l.lab}</span>}
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ display: 'block', width: 70, height: 4, background: 'var(--slate-100)', borderRadius: 2 }}>
-                  <span style={{ display: 'block', width: `${(l.count / max) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 2 }} />
+                <span className="dash-bar" style={{ '--bar-w': '70px' } as React.CSSProperties}>
+                  <span style={{ width: `${(l.count / max) * 100}%` }} />
                 </span>
                 <span className="num" style={{ minWidth: 26, textAlign: 'right' }}>{l.count}</span>
               </span>

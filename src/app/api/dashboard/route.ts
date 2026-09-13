@@ -120,7 +120,10 @@ export async function GET(req: Request) {
       }
       cells.push(cell);
 
-      const key = ind.area?.trim() || '기타';
+      // 운영 엑셀에 영역 칸이 밀려 숫자만 들어간 행이 섞여 있다. 688, 535 같은 값을
+      // 그대로 쓰면 영역별 카드가 숫자 목록이 되어 어느 영역이 약한지 못 읽는다
+      const rawArea = ind.area?.trim();
+      const key = rawArea && !isJunkValue(rawArea) ? rawArea : '영역 미기재';
       const a = areaMap.get(key) ?? { area: key, met: 0, unmet: 0, na: 0, total: 0 };
       a[cell]++;
       a.total++;
