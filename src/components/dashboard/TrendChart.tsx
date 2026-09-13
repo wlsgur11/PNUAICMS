@@ -103,6 +103,17 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
               선을 두 번 따로 계산해 이어 붙이면 경계에서 기울기가 어긋나 꺾인 자국이 남는다 */}
           <clipPath id={`${uid}-solid`}><rect x={0} y={0} width={splitX} height={H} /></clipPath>
           <clipPath id={`${uid}-dash`}><rect x={splitX} y={0} width={W - splitX} height={H} /></clipPath>
+          {/* 선이 왼쪽에서 그려지며 나타난다. rect 의 width 속성은 이미 전체 폭이라
+              SMIL 이 안 돌아도 차트는 그냥 다 보인다. 애니메이션이 멈춰서 그래프가
+              사라지는 일은 없다. CSS clip-path 로 하면 그 사고가 난다 */}
+          <clipPath id={`${uid}-reveal`}>
+            <rect x={0} y={0} width={W} height={H}>
+              <animate
+                attributeName="width" values={`0;${W}`} dur="0.62s" fill="freeze"
+                calcMode="spline" keyTimes="0;1" keySplines="0.85 0 0.15 1"
+              />
+            </rect>
+          </clipPath>
         </defs>
 
         {/* 가로 눈금. 실선으로 그으면 격자가 데이터보다 진해진다 */}
@@ -113,14 +124,18 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
           </g>
         ))}
 
-        {series.length > 1 && <path d={areaPath} fill={`url(#${uid}-fill)`} clipPath={`url(#${uid}-solid)`} />}
+        {/* 선과 면만 나타난다. 눈금과 라벨까지 같이 쓸려 들어오면
+            축이 움직이는 것처럼 보여서 값이 흔들린 것으로 읽힌다 */}
+        <g clipPath={`url(#${uid}-reveal)`}>
+          {series.length > 1 && <path d={areaPath} fill={`url(#${uid}-fill)`} clipPath={`url(#${uid}-solid)`} />}
 
-        {SERIES.map((s) => (
-          <g key={s.key} fill="none" stroke={s.color} strokeWidth={s.width} strokeLinecap="round" strokeLinejoin="round">
-            <path d={pathOf(s.key)} clipPath={`url(#${uid}-solid)`} />
-            {partial && <path d={pathOf(s.key)} clipPath={`url(#${uid}-dash)`} strokeDasharray="4 4" />}
-          </g>
-        ))}
+          {SERIES.map((s) => (
+            <g key={s.key} fill="none" stroke={s.color} strokeWidth={s.width} strokeLinecap="round" strokeLinejoin="round">
+              <path d={pathOf(s.key)} clipPath={`url(#${uid}-solid)`} />
+              {partial && <path d={pathOf(s.key)} clipPath={`url(#${uid}-dash)`} strokeDasharray="4 4" />}
+            </g>
+          ))}
+        </g>
 
         {/* 마우스를 올린 연도에만 세로선과 점을 띄운다 */}
         {hover != null && (

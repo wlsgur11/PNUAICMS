@@ -31,7 +31,11 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
     const { actual, target } = pick(d, s.key);
     return [actual, target];
   })).filter((v): v is number => v != null);
-  const max = Math.max(0.01, ...all) * 1.2;
+  // 축 최대값은 5%p 단위로 올린다. 17.3% 같은 값을 축 꼭대기에 두면 눈금이 안 읽힌다
+  const max = Math.max(0.05, Math.ceil((Math.max(...all) * 1.15) / 0.05) * 0.05);
+  const ticks = [0, max / 2, max];
+  const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
+  const H = 92; // 그래프 높이. Y축 라벨과 막대가 같은 좌표계를 쓴다
   // 올해는 아직 안 끝난 해다. 막대에 사선을 얹어 확정 수치가 아님을 드러낸다.
   // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것처럼 읽힌다
   const nowYear = new Date().getFullYear();
@@ -39,7 +43,25 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 78 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {/* Y축. 막대와 같은 높이 상자를 두고 눈금 위치에 라벨을 얹는다 */}
+        <div style={{ position: 'relative', width: 34, height: H, flexShrink: 0 }}>
+          {ticks.map((t) => (
+            <span key={t} style={{
+              position: 'absolute', right: 0, bottom: `${(t / max) * 100}%`,
+              transform: 'translateY(50%)', fontSize: 10, color: 'var(--text-3)', whiteSpace: 'nowrap',
+            }}>{pct(t)}</span>
+          ))}
+        </div>
+        <div style={{ position: 'relative', flex: 1, height: H }}>
+          {/* 가로 눈금. 실선으로 그으면 격자가 막대보다 진해진다 */}
+          {ticks.map((t) => (
+            <div key={t} style={{
+              position: 'absolute', left: 0, right: 0, bottom: `${(t / max) * 100}%`,
+              borderTop: '1px dashed var(--chart-grid)',
+            }} />
+          ))}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10, height: '100%' }}>
         {series.map((d) => (
           <div key={d.year} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
             {/* 막대 폭을 묶어 둔다. flex 로만 두면 연도가 셋일 때 한 막대가 90px 을 넘어
@@ -77,8 +99,11 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
             </div>
           </div>
         ))}
+          </div>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+      {/* 연도 라벨은 Y축 폭(34) 과 간격(8) 만큼 밀어 막대와 세로를 맞춘다 */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 42 }}>
         {series.map((d) => (
           <div key={d.year} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'var(--text-3)' }}>{d.year}</div>
         ))}

@@ -21,11 +21,12 @@ export default function PipelineBlock({ pipeline }: { pipeline: Pipeline }) {
           <span className="name">{s.status}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
             {/* 막대는 비율을 눈으로 가늠하는 보조 장치다 */}
-            <span style={{ flex: '0 1 120px', height: 4, background: 'var(--chart-track)', borderRadius: 2 }}>
+            <span className="dash-bar" style={{ '--bar-w': '120px' } as React.CSSProperties}>
               <span style={{
-                display: 'block', width: `${(s.count / max) * 100}%`, height: '100%', borderRadius: 2,
-                background: i === last ? 'var(--chart-met)' : 'var(--chart-1)',
-              }} />
+                width: `${(s.count / max) * 100}%`,
+                // 마지막 단계(협약완료)만 초록. 여기까지 온 것이 목표다
+                ...(i === last ? { '--bar-color': 'var(--chart-met)' } : {}),
+              } as React.CSSProperties} />
             </span>
             <span className="num" style={{ minWidth: 28, textAlign: 'right' }}>{s.count}</span>
           </span>
