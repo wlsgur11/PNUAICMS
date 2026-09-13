@@ -71,7 +71,7 @@ export default function DashboardPage() {
             goalTrend={data.goalTrend}
             headcount={data.headcount}
           />
-          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} />
+          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
         </div>
       </FadeContent>
 

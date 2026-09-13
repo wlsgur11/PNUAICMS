@@ -81,28 +81,31 @@ export async function GET(req: Request) {
 
     // ── 누적 타일. delta 는 선택 연도 건수와 전년 건수의 차 (stat/indicators 도 같은 year/prev 에만 의존해 한 배치로 묶는다)
     const [
-      indicators, prevIndicators,
+      allIndicators,
       companyTotal, partnerCompanies, mouTotal, projectTotal, internshipTotal,
-      compThis, compPrev, projThis, projPrev, intThis, intPrev,
-      projByYear, intByYear,
+      projThis, projPrev, intThis, intPrev,
+      projByYear, intByYear, compByYear,
     ] = await Promise.all([
-      prisma.swcuIndicator.findMany({ where: { year }, orderBy: { sortOrder: 'asc' } }),
-      prisma.swcuIndicator.findMany({ where: { year: prev }, select: { target: true, actual: true } }),
+      // 연도별 달성 추이를 그리려면 어차피 전 연도가 필요하다. 올해와 전년을 따로
+      // 읽던 쿼리 두 개를 하나로 합친다
+      prisma.swcuIndicator.findMany({ orderBy: [{ year: 'asc' }, { sortOrder: 'asc' }] }),
       prisma.company.count({ where: { isActive: true } }),
       // 실적이 한 건이라도 붙은 기업. 관리 대상 기업 수(companyTotal)와 다르다
       prisma.company.count({ where: { OR: [{ projects: { some: {} } }, { internships: { some: {} } }] } }),
       prisma.company.count({ where: { isActive: true, mou: true } }),
       prisma.project.count(),
       prisma.internship.count(),
-      prisma.company.count({ where: { isActive: true, joinYear: year } }),
-      prisma.company.count({ where: { isActive: true, joinYear: prev } }),
       prisma.project.count({ where: { year } }),
       prisma.project.count({ where: { year: prev } }),
       prisma.internship.count({ where: { year } }),
       prisma.internship.count({ where: { year: prev } }),
       prisma.project.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
       prisma.internship.groupBy({ by: ['year'], where: { year: { not: null } }, _count: { _all: true } }),
+      prisma.company.groupBy({ by: ['joinYear'], where: { isActive: true, joinYear: { not: null } }, _count: { _all: true } }),
     ]);
+
+    const indicators = allIndicators.filter((r) => r.year === year);
+    const prevIndicators = allIndicators.filter((r) => r.year === prev);
 
     // ── SW중심대학 지표: target 이 있는 것만 판정. actual >= target 이면 달성
     const cells: SwcuCell[] = [];
@@ -137,6 +140,18 @@ export async function GET(req: Request) {
     // 전년 달성 개수. 분모(지표 수)가 해마다 달라질 수 있어 개수도 같이 보낸다.
     const prevMet = prevIndicators.filter((r) => r.target != null && r.actual != null && r.actual >= r.target).length;
 
+    // 연도별 달성 개수. 전년 한 해만 비교해서는 좋아지는 중인지 답이 안 나온다
+    const swcuTrendMap = new Map<number, { met: number; total: number }>();
+    for (const r of allIndicators) {
+      const cur = swcuTrendMap.get(r.year) ?? { met: 0, total: 0 };
+      cur.total++;
+      if (r.target != null && r.actual != null && r.actual >= r.target) cur.met++;
+      swcuTrendMap.set(r.year, cur);
+    }
+    const swcuTrend = [...swcuTrendMap.entries()]
+      .map(([y, v]) => ({ year: y, ...v }))
+      .sort((a, b) => a.year - b.year);
+
     const trendMap = new Map<number, { projects: number; internships: number }>();
     for (const r of projByYear) {
       const y = r.year as number;
@@ -150,6 +165,12 @@ export async function GET(req: Request) {
     const trend = [...trendMap.entries()]
       .map(([y, v]) => ({ year: y, ...v }))
       .sort((a, b) => a.year - b.year);
+
+    // 타일 밑 스파크라인용. 연도 축은 years 를 그대로 쓴다. 건수가 없는 해를 빼면
+    // 간격이 달라져서 '그 해에 실적이 0' 인 것과 '그 해가 없는 것' 이 섞인다
+    const axis = [...years].sort((a, b) => a - b);
+    const seriesOf = (get: (y: number) => number) => axis.map((y) => ({ year: y, count: get(y) }));
+    const compCount = new Map(compByYear.map((r) => [r.joinYear as number, r._count._all]));
 
     const base: DashboardData = {
       years,
@@ -169,16 +190,33 @@ export async function GET(req: Request) {
         },
         swcu: {
           total: indicators.length, met, unmet: unmetAll.slice(0, 3), unmetCount: unmetAll.length, cells, areas,
+          trend: swcuTrend,
           prevMet: prevIndicators.length ? prevMet : null,
           prevTotal: prevIndicators.length || null,
         },
       },
       totals: {
-        companies: { value: companyTotal, delta: compThis - compPrev },
-        projects: { value: projectTotal, delta: projThis - projPrev },
-        internships: { value: internshipTotal, delta: intThis - intPrev },
-        // MOU 는 체결일 컬럼이 없어 연도별 증감을 계산할 수 없다
-        mou: { value: mouTotal, delta: null },
+        // 기업과 MOU 는 시점 개념이 없다. joinYear 로 연간 신규는 셀 수 있지만
+        // '올해 몇 곳과 협력 중인가' 의 답은 현재 총량이라 그쪽을 머리 숫자로 둔다
+        // delta 는 머리 숫자를 설명하는 값이라야 한다. 기업의 연간 증감은 '신규 유입'
+        // 이라 '현재 관리 중인 총량' 옆에 붙이면 총량이 그만큼 변한 것으로 읽힌다.
+        // 연간 신규는 series 에 들어 있고 화면이 거기서 꺼내 쓴다
+        companies: {
+          value: companyTotal, delta: null, total: companyTotal,
+          basis: 'current', series: seriesOf((y) => compCount.get(y) ?? 0),
+        },
+        // 과제와 인턴십은 '2026년에 몇 건 했나' 가 머리 숫자다. 누적은 보조로 내린다.
+        // 연도를 바꿔도 머리 숫자가 안 움직이면 연도 버튼이 고장 난 것처럼 보인다
+        projects: {
+          value: projThis, delta: projThis - projPrev, total: projectTotal,
+          basis: 'annual', series: seriesOf((y) => trendMap.get(y)?.projects ?? 0),
+        },
+        internships: {
+          value: intThis, delta: intThis - intPrev, total: internshipTotal,
+          basis: 'annual', series: seriesOf((y) => trendMap.get(y)?.internships ?? 0),
+        },
+        // MOU 는 체결일 컬럼이 없어 연도별로 가를 수 없다. 현재 기준 총량만 낸다
+        mou: { value: mouTotal, delta: null, total: mouTotal, basis: 'current', series: null },
       },
       trend,
       goalTrend: allStats.map((r) => ({
@@ -334,8 +372,8 @@ export async function GET(req: Request) {
         byStatus: PIPELINE_STAGES.map((s) => ({ status: s, count: statusCount.get(s) ?? 0 })),
         onHold: statusCount.get('보류') ?? 0,
         closed: statusCount.get('종료') ?? 0,
-        // compThis 와 같은 값(기업 증감 delta 의 분자). 다시 쪼개서 따로 세지 말 것
-        newThisYear: compThis,
+        // 타일 추이선이 쓰는 연도별 신규 집계에서 꺼낸다. 같은 값을 따로 세지 말 것
+        newThisYear: compCount.get(year) ?? 0,
       },
       distribution: {
         dept: toItems(deptRows, 'dept', '미분류'),

@@ -29,6 +29,13 @@ export type SwcuUnmet = {
  */
 export type SwcuArea = { area: string; met: number; unmet: number; na: number; total: number };
 
+/**
+ * 연도별 달성 개수. 17개 중 몇 개를 달성했는지가 좋아지는 추세인지 나빠지는
+ * 추세인지가 사업 평가의 핵심이라, 전년 한 해만 비교해서는 답이 안 나온다.
+ * 분모(total)가 해마다 달라지므로 비율이 아니라 개수 두 개를 그대로 보낸다.
+ */
+export type SwcuTrendPoint = { year: number; met: number; total: number };
+
 export type SwcuSummary = {
   total: number;
   met: number;
@@ -36,12 +43,30 @@ export type SwcuSummary = {
   unmetCount: number;
   cells: SwcuCell[];
   areas: SwcuArea[];
+  trend: SwcuTrendPoint[];
   prevMet: number | null;   // 전년 달성 개수
   prevTotal: number | null; // 전년 지표 개수 (분모가 달라질 수 있어 함께 보낸다)
 };
 
-/** 누적 타일 하나. delta = 선택 연도 건수 - 전년 건수. 계산 불가면 null */
-export type TotalTile = { value: number; delta: number | null };
+/**
+ * 실적 타일 하나.
+ *
+ * value 가 무엇을 센 값인지는 항목마다 다르다. 산학 과제와 인턴십은 선택한
+ * 연도의 연간 실적이고, 협력 기업과 MOU 는 시점 개념이 없어 현재 기준 총량이다.
+ * basis 가 그것을 말한다. 큰 숫자 하나만 보고 기준을 짐작하게 두면 '426 에서
+ * 60 이 줄었다' 처럼 서로 다른 것을 센 두 숫자가 한 문장으로 읽힌다.
+ */
+export type TotalTile = {
+  value: number;
+  /** 선택 연도 - 전년. 계산 불가면 null */
+  delta: number | null;
+  /** 전체 기간 누적. basis 가 'current' 면 value 와 같다 */
+  total: number;
+  /** value 가 연간 실적인지(annual) 현재 총량인지(current) */
+  basis: 'annual' | 'current';
+  /** 연도별 건수. 시계열을 만들 수 없는 항목은 null */
+  series: { year: number; count: number }[] | null;
+};
 
 export type TrendPoint = { year: number; projects: number; internships: number };
 
