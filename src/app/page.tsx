@@ -11,6 +11,7 @@ import PipelineBlock from '@/components/dashboard/PipelineBlock';
 import SwcuBlock from '@/components/dashboard/SwcuBlock';
 import DistributionBlock from '@/components/dashboard/DistributionBlock';
 import CollabBlock from '@/components/dashboard/CollabBlock';
+import FollowUpBlock from '@/components/dashboard/FollowUpBlock';
 import StudentBlock from '@/components/dashboard/StudentBlock';
 import InternshipStatsCard from '@/components/dashboard/InternshipStatsCard';
 import SwcuAreaCard from '@/components/dashboard/SwcuAreaCard';
@@ -83,7 +84,11 @@ export default function DashboardPage() {
               구역 밖 전체 폭에 둔다 */}
           <FadeContent delay={100}>
             <div className="dash-section">기업</div>
-            <div className="dash-grid-2">
+            {/* 다음 컨택 대상을 파이프라인 왼쪽에 둔다. 파이프라인이 '몇 곳이
+                어느 단계인가' 라면 이쪽은 '그래서 누구부터 연락하나' 라서,
+                숫자를 보고 바로 이름으로 넘어가는 순서가 된다 */}
+            <div className="dash-grid-auto">
+              {data.followUp && <FollowUpBlock data={data.followUp} />}
               <PipelineBlock pipeline={data.pipeline} />
               <CollabBlock items={data.collaboration ?? []} region={data.distribution.region} />
             </div>

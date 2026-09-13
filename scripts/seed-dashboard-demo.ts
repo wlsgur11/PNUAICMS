@@ -69,6 +69,17 @@ async function main() {
     labIds.push(lab.id);
   }
 
+  // 운영 데이터는 기업 104곳 중 98곳이 미접촉이고 컨택 기록이 아예 없다.
+  // 데모는 다섯 곳 모두 최근 기록이 있어 '다음 컨택 대상' 카드의 핵심인
+  // '기록 없음' 과 '반년 넘게 조용' 이 한 줄도 안 나온다. 그 모양을 만든다.
+  if (companies.length >= 3) {
+    // 앞 두 곳은 기록을 지워 미접촉으로 둔다
+    await prisma.contactHistory.deleteMany({ where: { companyId: { in: companies.slice(0, 2).map((c) => c.id) } } });
+    // 세 번째는 마지막 컨택을 2년 전으로 밀어 '오래 조용한' 쪽을 만든다
+    const old = new Date(Date.now() - 730 * 864e5).toISOString().slice(0, 10);
+    await prisma.contactHistory.updateMany({ where: { companyId: companies[2].id }, data: { contactDate: old } });
+  }
+
   const depts = ['정컴', '정컴', '정컴', 'DS', null];
   const types = ['졸업과제', 'R&D', '용역', '캡스톤', 'R&D'];
   const divisions = ['A', 'B', 'C', 'A', 'B'];

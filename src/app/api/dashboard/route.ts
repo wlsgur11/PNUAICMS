@@ -166,10 +166,6 @@ export async function GET(req: Request) {
       .map(([y, v]) => ({ year: y, ...v }))
       .sort((a, b) => a.year - b.year);
 
-    // 타일 밑 스파크라인용. 연도 축은 years 를 그대로 쓴다. 건수가 없는 해를 빼면
-    // 간격이 달라져서 '그 해에 실적이 0' 인 것과 '그 해가 없는 것' 이 섞인다
-    const axis = [...years].sort((a, b) => a - b);
-    const seriesOf = (get: (y: number) => number) => axis.map((y) => ({ year: y, count: get(y) }));
     const compCount = new Map(compByYear.map((r) => [r.joinYear as number, r._count._all]));
 
     const base: DashboardData = {
@@ -203,20 +199,20 @@ export async function GET(req: Request) {
         // 연간 신규는 series 에 들어 있고 화면이 거기서 꺼내 쓴다
         companies: {
           value: companyTotal, delta: null, total: companyTotal,
-          basis: 'current', series: seriesOf((y) => compCount.get(y) ?? 0),
+          basis: 'current', newThisYear: compCount.get(year) ?? 0,
         },
         // 과제와 인턴십은 '2026년에 몇 건 했나' 가 머리 숫자다. 누적은 보조로 내린다.
         // 연도를 바꿔도 머리 숫자가 안 움직이면 연도 버튼이 고장 난 것처럼 보인다
         projects: {
           value: projThis, delta: projThis - projPrev, total: projectTotal,
-          basis: 'annual', series: seriesOf((y) => trendMap.get(y)?.projects ?? 0),
+          basis: 'annual', newThisYear: null,
         },
         internships: {
           value: intThis, delta: intThis - intPrev, total: internshipTotal,
-          basis: 'annual', series: seriesOf((y) => trendMap.get(y)?.internships ?? 0),
+          basis: 'annual', newThisYear: null,
         },
-        // MOU 는 체결일 컬럼이 없어 연도별로 가를 수 없다. 현재 기준 총량만 낸다
-        mou: { value: mouTotal, delta: null, total: mouTotal, basis: 'current', series: null },
+        // MOU 는 체결일 칸이 없어 연도별로 가를 수 없다. 현재 기준 총량만 낸다
+        mou: { value: mouTotal, delta: null, total: mouTotal, basis: 'current', newThisYear: null },
       },
       trend,
       goalTrend: allStats.map((r) => ({
@@ -236,6 +232,7 @@ export async function GET(req: Request) {
       pipeline: null,
       distribution: null,
       collaboration: null,
+      followUp: null,
       students: null,
       internshipHeadcount: null,
       internshipComposition: null,
@@ -251,7 +248,7 @@ export async function GET(req: Request) {
     const [
       byStatus, deptRows, divRows, regionRows, typeRows, divisions, recent,
       collabRows, studentTotal, studentGraduated, studentWithProject, studentWithIntern,
-      gradeRows, attentionRows, internRows, projectRows, labRows,
+      gradeRows, attentionRows, internRows, projectRows, labRows, followUpRows,
     ] = await Promise.all([
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
       prisma.project.groupBy({ by: ['dept'], _count: { _all: true } }),
@@ -293,6 +290,15 @@ export async function GET(req: Request) {
       prisma.project.findMany({ select: { year: true, cntPhd: true, cntMaster: true, cntUndergrad: true } }),
       prisma.lab.findMany({
         select: { professorName: true, labName: true, _count: { select: { projects: true } } },
+      }),
+      // 후속 조치가 남은 기업만. 협약완료·보류·종료는 지금 할 일이 없다.
+      // 마지막 컨택일이 필요해 관계에서 최신 한 건만 끌어온다
+      prisma.company.findMany({
+        where: { isActive: true, status: { notIn: ['협약완료', '보류', '종료'] } },
+        select: {
+          id: true, name: true, status: true, priority: true,
+          histories: { select: { contactDate: true }, orderBy: { contactDate: 'desc' }, take: 1 },
+        },
       }),
     ]);
 
@@ -339,6 +345,33 @@ export async function GET(req: Request) {
       }
     }
 
+    // ── 다음에 연락할 기업. 후속 조치가 남은 곳만 읽고 정렬은 JS 에서 한다.
+    // 마지막 컨택일이 관계 테이블에 있어 DB 정렬로는 한 번에 못 세운다.
+    const FOLLOWUP_DONE = ['협약완료', '보류', '종료'];
+    // 우선순위 A > B > C > 미기재. 같으면 오래 조용한 곳부터
+    const PRIORITY_RANK: Record<string, number> = { A: 0, B: 1, C: 2 };
+    const rankOf = (p: string | null) => (p && PRIORITY_RANK[p.trim().toUpperCase()] != null
+      ? PRIORITY_RANK[p.trim().toUpperCase()] : 3);
+    const followUp = followUpRows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      status: c.status,
+      priority: c.priority?.trim() || null,
+      // contactDate 는 yyyy-MM-dd 문자열이라 사전순 정렬이 곧 날짜순이다
+      lastContact: c.histories[0]?.contactDate ?? null,
+    }));
+    followUp.sort((a, b) => {
+      const r = rankOf(a.priority) - rankOf(b.priority);
+      if (r !== 0) return r;
+      // 기록이 없는 곳이 가장 오래 조용한 곳이다. 맨 앞으로 보낸다
+      if (a.lastContact == null && b.lastContact == null) return a.name.localeCompare(b.name, 'ko');
+      if (a.lastContact == null) return -1;
+      if (b.lastContact == null) return 1;
+      return a.lastContact.localeCompare(b.lastContact);
+    });
+    // 반년. 컨택 주기가 학기 단위라 한 학기를 통째로 건너뛴 셈이 되는 길이다
+    const halfYearAgo = new Date(Date.now() - 182 * 864e5).toISOString().slice(0, 10);
+
     // 연구실별 과제 수.
     // Lab 의 식별키가 (교수명|연구실명) 이라, 엑셀 연구실명 칸이 밀려 숫자가 들어오면
     // 같은 교수가 여러 행으로 쪼개져 과제 수가 나뉜다. 교수 이름으로 합친다.
@@ -374,6 +407,13 @@ export async function GET(req: Request) {
         closed: statusCount.get('종료') ?? 0,
         // 타일 추이선이 쓰는 연도별 신규 집계에서 꺼낸다. 같은 값을 따로 세지 말 것
         newThisYear: compCount.get(year) ?? 0,
+      },
+      followUp: {
+        rows: followUp.slice(0, 6),
+        untouched: followUp.filter((c) => c.lastContact == null).length,
+        stale: followUp.filter((c) => c.lastContact != null && c.lastContact < halfYearAgo).length,
+        total: followUp.length,
+        noPriority: followUp.every((c) => rankOf(c.priority) === 3),
       },
       distribution: {
         dept: toItems(deptRows, 'dept', '미분류'),

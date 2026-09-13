@@ -1,7 +1,6 @@
 'use client';
 
 import CountUp from '@/components/CountUp';
-import Sparkline from './Sparkline';
 import type { TotalTile } from '@/lib/dashboard-shape';
 
 /**
@@ -13,6 +12,10 @@ import type { TotalTile } from '@/lib/dashboard-shape';
  *
  * 지금은 항목마다 성질에 맞는 값을 머리에 둔다. 과제·인턴십은 선택 연도의 연간
  * 실적, 기업·MOU 는 시점 개념이 없어 현재 기준 총량이다. 기준은 타일마다 적는다.
+ *
+ * 타일마다 작은 추이선을 깔았다가 뺐다. 바로 옆 카드에 같은 데이터로 그린 연도별
+ * 차트가 이미 있어 한 화면에서 같은 것을 두 번 그리는 꼴이었고, 연간 집계를
+ * 선으로 이은 것 자체가 없는 값을 지어내는 표기였다.
  */
 function Tile({ label, tile, year, extra }: {
   label: string;
@@ -24,7 +27,7 @@ function Tile({ label, tile, year, extra }: {
   const annual = tile.basis === 'annual';
   // 현재 기준 타일은 증감을 머리 숫자 옆에 못 붙인다. 기업의 연간 증감은 신규
   // 유입이라 총량이 그만큼 변한 것으로 읽힌다. 추이선 밑에 따로 적는다
-  const newThisYear = annual ? null : tile.series?.find((s) => s.year === year)?.count ?? null;
+  const { newThisYear } = tile;
   return (
     <div>
       <div className="dash-metric-label">{label}</div>
@@ -45,9 +48,7 @@ function Tile({ label, tile, year, extra }: {
         )}
       </div>
 
-      {tile.series && <Sparkline data={tile.series} activeYear={year} />}
-
-      <div className="dash-metric-sub" style={{ marginTop: tile.series ? 4 : 8 }}>
+      <div className="dash-metric-sub" style={{ marginTop: 8 }}>
         {annual && `전체 누적 ${tile.total}`}
         {newThisYear != null && `${year}년 신규 ${newThisYear}개`}
         {extra && <>{(annual || newThisYear != null) && <br />}{extra}</>}
