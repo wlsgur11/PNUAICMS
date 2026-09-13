@@ -102,10 +102,15 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
           {/* 지표 하나당 눈금 하나. 개수와 달성 여부만 읽히면 되므로 얇게 둔다 */}
           <div style={{ display: 'flex', gap: 2, marginTop: 10, height: 4 }}>
             {swcu.cells.map((c, i) => (
-              <div key={i} style={{
-                flex: 1, borderRadius: 1,
-                background: c === 'met' ? 'var(--green-600)' : c === 'unmet' ? 'var(--red-600)' : 'var(--slate-200)',
-              }} />
+              /* na 는 목표치가 없어 판정을 못 한 칸이다. 사선으로 둬야 미달과 구분된다 */
+              <div
+                key={i}
+                className={c === 'na' ? 'chart-gap' : undefined}
+                style={{
+                  flex: 1, borderRadius: 1,
+                  background: c === 'met' ? 'var(--chart-met)' : c === 'unmet' ? 'var(--chart-unmet)' : undefined,
+                }}
+              />
             ))}
           </div>
           <div className="dash-metric-sub">

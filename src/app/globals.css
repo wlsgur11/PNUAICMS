@@ -62,6 +62,28 @@
   --neutral-soft-text: #5b6473;
   --amber-soft-bg: #fbf0d8;
   --amber-soft-text: #a05a07;
+
+  /* 차트 토큰.
+     계열(series)과 강도(scale)를 분리한다. 계열은 '다른 항목' 이고 강도는 '더 큰 값' 인데,
+     한 벌로 섞어 쓰면 색이 다른 것이 값이 큰 것으로 읽힌다.
+     컴포넌트가 --accent 나 생색을 직접 쓰지 않고 이 층만 본다. 다크 대비 조정도 여기서 한다 */
+  --chart-1: var(--accent);      /* 주 계열: 산학협력 */
+  --chart-2: var(--slate-400);   /* 보조 계열: 인턴십 */
+  --chart-track: var(--slate-100); /* 막대 뒤 트랙 */
+  --chart-met: var(--green-600);
+  --chart-unmet: var(--red-600);
+  --chart-na: var(--slate-300);  /* 판정 불가(목표치 없음) */
+
+  /* 순차 스케일. 01 = 가장 약함, 05 = 가장 강함. 분포 막대처럼 순위만 읽히면 되는 곳에 쓴다 */
+  --chart-scale-05: #2f6bd1;
+  --chart-scale-04: #7ba3e0;
+  --chart-scale-03: #a9c3ea;
+  --chart-scale-02: #cdd4de;
+  --chart-scale-01: #e3e8ef;
+
+  /* 불완전 데이터(미기재, 진행중 연도)용 사선. .chart-gap 이 쓴다 */
+  --chart-gap-bg: #f4f6fa;
+  --chart-gap-fg: #cdd4de;
 }
 
 :root[data-theme="dark"] {
@@ -113,6 +135,17 @@
   --neutral-soft-text: #aeb9c8;
   --amber-soft-bg: rgba(214, 160, 74, 0.18);
   --amber-soft-text: #e6c07a;
+
+  /* --chart-1/2/track/met/unmet/na 는 참조하는 변수가 위에서 이미 뒤집혀 그대로 따라간다.
+     아래는 생색이라 따라가지 못하는 것만 다시 잡는다 */
+  --chart-scale-05: #4f8bf0;
+  --chart-scale-04: #3f6dae;
+  --chart-scale-03: #34557f;
+  --chart-scale-02: #3f4a59;
+  --chart-scale-01: #343f4d;
+
+  --chart-gap-bg: #2b3543;
+  --chart-gap-fg: #4b5666;
 }
 
 * {
@@ -1796,4 +1829,26 @@ table.data-table {
 a.dash-list-row:hover { background: var(--slate-50); }
 
 .dash-note { font-size: 12px; color: var(--text-3); line-height: 1.6; margin-top: 14px; }
+
+/* 불완전한 데이터 몫. 솔리드는 확인된 값, 사선은 아직 채워지지 않은 값이다.
+   미기재 과제 인원과 아직 끝나지 않은 연도에 같은 표기를 쓴다. 표기가 하나여야
+   '사선 = 이 숫자는 덜 찼다' 가 한 번만 학습된다 */
+.chart-gap {
+  background-color: var(--chart-gap-bg);
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--chart-gap-fg) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+
+/* 값은 있지만 아직 확정이 아닌 몫(진행중인 연도). 아래 계열색을 살려야 어느 계열인지
+   읽히므로 배경은 건드리지 않고 사선만 얹는다. 줄 색은 표면색이라 두 테마에서 같이 산다 */
+.chart-gap-overlay {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--surface) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
 .dash-num { font-variant-numeric: tabular-nums; }

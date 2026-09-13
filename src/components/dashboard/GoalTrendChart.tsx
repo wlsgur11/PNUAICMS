@@ -12,8 +12,8 @@ import type { GoalTrendPoint } from '@/lib/dashboard-shape';
  * 목표치는 막대 위에 가로 눈금으로 얹는다. 막대가 눈금을 넘으면 달성이다.
  */
 const SERIES = [
-  { key: 'industry', label: '산학협력', color: 'var(--accent)' },
-  { key: 'internship', label: '인턴십', color: 'var(--slate-400)' },
+  { key: 'industry', label: '산학협력', color: 'var(--chart-1)' },
+  { key: 'internship', label: '인턴십', color: 'var(--chart-2)' },
 ] as const;
 
 const pick = (d: GoalTrendPoint, k: 'industry' | 'internship') =>
@@ -32,6 +32,10 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
     return [actual, target];
   })).filter((v): v is number => v != null);
   const max = Math.max(0.01, ...all) * 1.2;
+  // 올해는 아직 안 끝난 해다. 막대에 사선을 얹어 확정 수치가 아님을 드러낸다.
+  // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것처럼 읽힌다
+  const nowYear = new Date().getFullYear();
+  const hasPartial = series.some((d) => d.year === nowYear);
 
   return (
     <div>
@@ -45,18 +49,21 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
                 const { actual, target } = pick(d, s.key);
                 const title = actual == null
                   ? `${d.year} ${s.label} 값 없음`
-                  : `${d.year} ${s.label} ${(actual * 100).toFixed(1)}%${target != null ? ` (목표 ${(target * 100).toFixed(1)}%)` : ''}`;
+                  : `${d.year} ${s.label} ${(actual * 100).toFixed(1)}%${target != null ? ` (목표 ${(target * 100).toFixed(1)}%)` : ''}${d.year === nowYear ? ' · 진행중' : ''}`;
                 return (
                   <div key={s.key} title={title} style={{ flex: 1, maxWidth: 26, position: 'relative', height: '100%' }}>
                     {actual == null ? (
                       /* 값이 없는 해. 0% 막대로 보이면 미달성으로 읽히므로 점선만 둔다 */
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, borderTop: '1px dashed var(--slate-300)' }} />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, borderTop: '1px dashed var(--chart-na)' }} />
                     ) : (
-                      <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        height: `${Math.max(2, (actual / max) * 100)}%`,
-                        background: s.color, borderRadius: '2px 2px 0 0',
-                      }} />
+                      <div
+                        className={d.year === nowYear ? 'chart-gap-overlay' : undefined}
+                        style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          height: `${Math.max(2, (actual / max) * 100)}%`,
+                          backgroundColor: s.color, borderRadius: '2px 2px 0 0',
+                        }}
+                      />
                     )}
                     {target != null && (
                       <div style={{
@@ -85,6 +92,11 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
         ))}
         <span>--- 목표</span>
       </div>
+      {hasPartial && (
+        <div className="dash-note" style={{ marginTop: 6 }}>
+          사선 막대({nowYear}년)는 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.
+        </div>
+      )}
     </div>
   );
 }

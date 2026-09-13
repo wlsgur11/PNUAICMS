@@ -45,8 +45,8 @@ export default function CollabBlock({ items, region }: {
             <>
               <span className="name">{x.key}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
-                <span style={{ flex: '0 1 110px', height: 4, background: 'var(--slate-100)', borderRadius: 2 }}>
-                  <span style={{ display: 'block', width: `${(x.count / max) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 2 }} />
+                <span style={{ flex: '0 1 110px', height: 4, background: 'var(--chart-track)', borderRadius: 2 }}>
+                  <span style={{ display: 'block', width: `${(x.count / max) * 100}%`, height: '100%', background: 'var(--chart-1)', borderRadius: 2 }} />
                 </span>
                 <span className="num" style={{ minWidth: 28, textAlign: 'right' }}>{x.count}</span>
               </span>

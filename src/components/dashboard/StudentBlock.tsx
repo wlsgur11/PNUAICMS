@@ -55,8 +55,8 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
             {s.gradeDistribution.map((g) => (
               <div key={g.grade}>
-                <div style={{ height: 4, background: 'var(--slate-100)', borderRadius: 2, marginBottom: 6 }}>
-                  <div style={{ width: `${(g.count / maxGrade) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 2 }} />
+                <div style={{ height: 4, background: 'var(--chart-track)', borderRadius: 2, marginBottom: 6 }}>
+                  <div style={{ width: `${(g.count / maxGrade) * 100}%`, height: '100%', background: 'var(--chart-1)', borderRadius: 2 }} />
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
                   <span>{g.grade}학년</span>

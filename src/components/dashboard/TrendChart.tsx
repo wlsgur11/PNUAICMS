@@ -28,7 +28,12 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
   const bandLeft = (i: number) => (i === 0 ? 0 : (xOf(i - 1) + xOf(i)) / 2);
   const bandRight = (i: number) => (i === series.length - 1 ? W : (xOf(i) + xOf(i + 1)) / 2);
 
-  const line = (key: 'projects' | 'internships') => series.map((d, i) => `${xOf(i)},${yOf(d[key])}`).join(' ');
+  // 마지막 연도가 올해면 아직 안 끝난 해다. 그 구간만 점선으로 끊는다.
+  // 실선으로 이으면 9월까지 쌓인 실적이 전년 대비 '감소' 로 읽힌다.
+  const partial = series.length > 1 && series[series.length - 1].year === new Date().getFullYear();
+  const solidEnd = partial ? series.length - 1 : series.length; // 실선이 덮는 점 개수
+  const pts = (key: 'projects' | 'internships', from: number, to: number) =>
+    series.slice(from, to).map((d, i) => `${xOf(from + i)},${yOf(d[key])}`).join(' ');
   const area = `M${series.map((d, i) => `${xOf(i)},${yOf(d.projects)}`).join(' L')} L${xOf(series.length - 1)},${padT + plotH} L${xOf(0)},${padT + plotH} Z`;
 
   const active = hover == null ? null : series[hover];
@@ -38,16 +43,34 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }} role="img" aria-label="연도별 산학협력과 인턴십 건수 추이">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--chart-1)" stopOpacity="0" />
           </linearGradient>
         </defs>
         {series.length > 1 && <path d={area} fill={`url(#${gradientId})`} />}
-        <polyline points={line('projects')} fill="none" stroke="var(--accent)" strokeWidth={2.5} strokeLinecap="round" />
-        <polyline points={line('internships')} fill="none" stroke="var(--slate-300)" strokeWidth={2} strokeLinecap="round" />
+        {([
+          { key: 'projects', color: 'var(--chart-1)', w: 2.5 },
+          { key: 'internships', color: 'var(--chart-2)', w: 2 },
+        ] as const).map((s) => (
+          <g key={s.key}>
+            <polyline points={pts(s.key, 0, solidEnd)} fill="none" stroke={s.color} strokeWidth={s.w} strokeLinecap="round" />
+            {partial && (
+              <polyline
+                points={pts(s.key, solidEnd - 1, series.length)}
+                fill="none" stroke={s.color} strokeWidth={s.w} strokeLinecap="round"
+                strokeDasharray="4 3"
+              />
+            )}
+          </g>
+        ))}
         {series.map((d, i) => (
           <g key={d.year}>
-            <circle cx={xOf(i)} cy={yOf(d.projects)} r={hover === i ? 5 : 3.5} fill="var(--accent)" />
+            {/* 미완결 연도의 점은 속을 비운다. 꽉 찬 점은 확정된 값이라는 뜻으로 쓴다 */}
+            <circle
+              cx={xOf(i)} cy={yOf(d.projects)} r={hover === i ? 5 : 3.5}
+              fill={partial && i === series.length - 1 ? 'var(--surface)' : 'var(--chart-1)'}
+              stroke="var(--chart-1)" strokeWidth={partial && i === series.length - 1 ? 2 : 0}
+            />
             <text x={xOf(i)} y={H - 4} textAnchor="middle" fontSize={10} fill="var(--text-3)">{d.year}</text>
             {/* 마우스 판정용 투명 세로 띠 */}
             <rect
@@ -72,6 +95,11 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
           <div style={{ fontWeight: 700 }}>{active.year}</div>
           <div>산학 {active.projects}건</div>
           <div>인턴십 {active.internships}건</div>
+        </div>
+      )}
+      {partial && (
+        <div className="dash-note" style={{ marginTop: 6 }}>
+          점선 구간({series[series.length - 1].year}년)은 아직 끝나지 않은 연도라 실적이 계속 쌓입니다.
         </div>
       )}
     </div>

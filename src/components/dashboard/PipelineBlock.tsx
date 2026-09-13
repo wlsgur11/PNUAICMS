@@ -21,10 +21,10 @@ export default function PipelineBlock({ pipeline }: { pipeline: Pipeline }) {
           <span className="name">{s.status}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
             {/* 막대는 비율을 눈으로 가늠하는 보조 장치다 */}
-            <span style={{ flex: '0 1 120px', height: 4, background: 'var(--slate-100)', borderRadius: 2 }}>
+            <span style={{ flex: '0 1 120px', height: 4, background: 'var(--chart-track)', borderRadius: 2 }}>
               <span style={{
                 display: 'block', width: `${(s.count / max) * 100}%`, height: '100%', borderRadius: 2,
-                background: i === last ? 'var(--green-600)' : 'var(--accent)',
+                background: i === last ? 'var(--chart-met)' : 'var(--chart-1)',
               }} />
             </span>
             <span className="num" style={{ minWidth: 28, textAlign: 'right' }}>{s.count}</span>

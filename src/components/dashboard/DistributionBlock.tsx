@@ -13,8 +13,15 @@ const AXES: { key: Axis; label: string }[] = [
   { key: 'type', label: '유형' },
 ];
 
-// 강조색 하나의 농도 차이만 쓴다. 항목마다 다른 색을 주면 색이 뜻 없이 늘어난다
-const SHADES = ['var(--accent)', '#7ba3e0', '#a9c3ea', 'var(--slate-300)', 'var(--slate-200)'];
+// 강조색 하나의 농도 차이만 쓴다. 항목마다 다른 색을 주면 색이 뜻 없이 늘어난다.
+// 05 가 가장 진하다. 순위가 곧 농도라 범례 없이도 위아래가 읽힌다
+const SHADES = [
+  'var(--chart-scale-05)',
+  'var(--chart-scale-04)',
+  'var(--chart-scale-03)',
+  'var(--chart-scale-02)',
+  'var(--chart-scale-01)',
+];
 
 /** 항목이 5개를 넘으면 상위 4개와 기타로 묶는다 */
 function collapse(items: DistributionItem[]): DistributionItem[] {
@@ -85,7 +92,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
           <div style={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', marginBottom: 18 }}>
             {items.map((x, i) => (
               <div key={x.key} title={`${x.key} ${x.count}건`}
-                   style={{ width: `${(x.count / total) * 100}%`, background: SHADES[i] ?? 'var(--slate-200)' }} />
+                   style={{ width: `${(x.count / total) * 100}%`, background: SHADES[i] ?? 'var(--chart-scale-01)' }} />
             ))}
           </div>
 
@@ -96,7 +103,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
               const body = (
                 <>
                   <span className="name">
-                    <span style={{ color: SHADES[i] ?? 'var(--slate-200)', marginRight: 6 }}>■</span>{x.key}
+                    <span style={{ color: SHADES[i] ?? 'var(--chart-scale-01)', marginRight: 6 }}>■</span>{x.key}
                   </span>
                   <span className="num">
                     {x.count}
