@@ -1837,6 +1837,76 @@ a.dash-list-row:hover { background: var(--slate-50); }
 
 .dash-note { font-size: 12px; color: var(--text-3); line-height: 1.6; margin-top: 14px; }
 
+/* 실적 업로드 미리보기. git diff 를 파일 단위로 접듯 연도 단위로 묶는다.
+   빠진 건과 들어온 건을 한 줄기로 이어 붙여야 그 해에 무엇이 갈렸는지 읽힌다 */
+/* 왼쪽 트리 + 오른쪽 본문. 트리는 '어디에 뭐가 바뀌는지' 를 한눈에 세는 자리라
+   스크롤을 따라다녀야 한다 */
+.diff-layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 1000px) {
+  .diff-layout { grid-template-columns: 230px minmax(0, 1fr); gap: 20px; }
+  .diff-tree { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 40px); overflow: auto; }
+}
+.diff-tree-group {
+  font-size: 12px; font-weight: 500; color: var(--text-3);
+  letter-spacing: 0.03em; margin: 14px 0 4px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--slate-200);
+}
+.diff-tree-group:first-child { margin-top: 0; }
+.diff-tree-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; text-align: left; background: none; border: 0;
+  padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 13px; color: var(--text-2); font-family: inherit;
+}
+.diff-tree-item:hover { background: var(--slate-50); }
+.diff-tree-item.quiet { color: var(--text-3); }
+.diff-tree-item .n { font-size: 11px; display: flex; gap: 5px; flex-shrink: 0; }
+.diff-tree-item .n .add { color: var(--green-600); }
+.diff-tree-item .n .del { color: var(--red-600); }
+
+.diff-file {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 12px;
+  background: var(--surface);
+}
+/* 머리글이 곧 접기 버튼이다. button 기본 스타일을 지운다 */
+.diff-file-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  width: 100%; text-align: left; border: 0; cursor: pointer;
+  padding: 9px 12px;
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 500; color: var(--text-1);
+  font-family: inherit;
+}
+.diff-file-head:hover { background: var(--slate-100); }
+.diff-file-stat { font-size: 12px; font-weight: 400; display: flex; align-items: center; gap: 8px; }
+.diff-file-stat .add { color: var(--green-600); font-weight: 500; }
+.diff-file-stat .del { color: var(--red-600); font-weight: 500; }
+/* 증감 비율 막대. 다섯 칸 중 몇 칸이 추가이고 몇 칸이 삭제인지 */
+.diff-bar { display: inline-flex; gap: 2px; }
+.diff-bar i { width: 8px; height: 8px; border-radius: 1px; background: var(--slate-200); }
+.diff-bar i.add { background: var(--green-600); }
+.diff-bar i.del { background: var(--red-600); }
+
+/* 한 줄. 왼쪽 홈에 기호, 오른쪽에 내용. 기호 자리를 고정해야 줄이 눈으로 정렬된다 */
+.diff-row { display: flex; font-size: 12.5px; line-height: 1.9; }
+.diff-row > .sign {
+  flex: 0 0 26px; text-align: center; font-weight: 700;
+  user-select: none; color: inherit;
+}
+.diff-row > .body { flex: 1; min-width: 0; padding-right: 12px; word-break: break-all; }
+.diff-row.del { background: #fdecec; color: #8a1f1c; }
+.diff-row.add { background: #e8f6ed; color: #17612f; }
+.diff-row.ctx { background: var(--surface); color: var(--text-3); font-size: 12px; }
+.diff-body { max-height: 340px; overflow: auto; }
+
+:root[data-theme="dark"] .diff-row.del { background: rgba(241, 121, 122, 0.14); color: #f3a9a9; }
+:root[data-theme="dark"] .diff-row.add { background: rgba(95, 207, 151, 0.14); color: #8fe0b4; }
+
 /* 불완전한 데이터 몫. 솔리드는 확인된 값, 사선은 아직 채워지지 않은 값이다.
    미기재 과제 인원과 아직 끝나지 않은 연도에 같은 표기를 쓴다. 표기가 하나여야
    '사선 = 이 숫자는 덜 찼다' 가 한 번만 학습된다 */

@@ -38,9 +38,15 @@ export async function POST(req: Request) {
     }
 
     if (form.get('dryRun')) {
+      // 건별 대조에 쓸 필드까지 읽는다. 적재할 때마다 id 가 새로 생겨
+      // id 로는 못 맞추고, 사람이 같은 건이라 부르는 연도·기업·제목으로 맞춘다
       const [curProjects, curInternships] = await Promise.all([
-        prisma.project.findMany({ select: { year: true } }),
-        prisma.internship.findMany({ select: { year: true } }),
+        prisma.project.findMany({
+          select: { year: true, title: true, companyNameRaw: true, company: { select: { name: true } } },
+        }),
+        prisma.internship.findMany({
+          select: { year: true, programName: true, companyNameRaw: true, company: { select: { name: true } } },
+        }),
       ]);
       return ok(buildRecordsPreview(parsed, curProjects, curInternships));
     }
