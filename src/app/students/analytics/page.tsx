@@ -20,7 +20,7 @@ function Bars({ title, items }: { title: string; items: { label: string; count: 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.map((it) => (
             <div key={it.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 130, fontSize: 13 }} className="muted">{it.label}</div>
+              <div style={{ width: 130, fontSize: 'calc(13px * var(--fs, 1))' }} className="muted">{it.label}</div>
               <div style={{ flex: 1, background: 'var(--slate-100)', borderRadius: 6, height: 18 }}>
                 <div style={{ width: `${(it.count / max) * 100}%`, background: 'var(--indigo-500)', height: '100%', borderRadius: 6 }} />
               </div>
@@ -56,8 +56,8 @@ export default function StudentAnalyticsPage() {
           { label: '졸업생', value: data.graduated },
         ].map((c) => (
           <div key={c.label} className="card">
-            <div className="muted" style={{ fontSize: 13 }}>{c.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 700 }}><CountUp end={c.value} /><span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>명</span></div>
+            <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{c.label}</div>
+            <div style={{ fontSize: 'calc(26px * var(--fs, 1))', fontWeight: 700 }}><CountUp end={c.value} /><span className="muted" style={{ fontSize: 'calc(14px * var(--fs, 1))', fontWeight: 400 }}>명</span></div>
           </div>
         ))}
       </div>

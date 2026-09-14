@@ -54,8 +54,8 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
         <span className="accent-bar" />
         <span style={{ flex: 1 }}>{title}{unit ? <span className="muted" style={{ fontWeight: 400 }}> ({unit})</span> : ''}</span>
         {latestKmac?.verifyResult && (
-          <span className="muted" style={{ fontSize: 11, fontWeight: 400 }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>{latestKmac.verifyResult}</span>
+          <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', fontWeight: 400 }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
+            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{latestKmac.verifyResult}</span>
           </span>
         )}
       </div>
@@ -79,7 +79,7 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
           );
         })}
       </svg>
-      <div className="muted" style={{ fontSize: 12 }}>막대=실적(초록=목표 달성), 가는 검정선=목표</div>
+      <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>막대=실적(초록=목표 달성), 가는 검정선=목표</div>
     </div>
   );
 }
@@ -162,7 +162,7 @@ export default function SwcuDashboardPage() {
             {areaOrder.map((area) => (
               <div key={area} style={{ marginBottom: 18 }}>
                 <div style={{ margin: '4px 2px 10px' }}>
-                  <span className="tag tag-indigo" style={{ fontSize: 13 }}>{area}</span>
+                  <span className="tag tag-indigo" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{area}</span>
                 </div>
                 <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
                   {byArea[area].map((name) => (
@@ -209,10 +209,10 @@ export default function SwcuDashboardPage() {
                         <span style={{ fontWeight: 700, color: met ? '#16a34a' : 'inherit' }}>
                           {fmt(ind.actual, unitOf[name])}
                         </span>
-                        {normTarget != null && <span className="muted" style={{ fontSize: 11, display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
+                        {normTarget != null && <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
                         {ind.verifyResult && (
-                          <span className="muted" style={{ fontSize: 11, display: 'block' }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 10 }}>{ind.verifyResult}</span>
+                          <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
+                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{ind.verifyResult}</span>
                           </span>
                         )}
                       </td>
@@ -223,7 +223,7 @@ export default function SwcuDashboardPage() {
             </tbody>
           </table>
         </div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>지표명을 클릭하면 연도별 추이와 산출 근거를 볼 수 있습니다. 초록=목표 달성(교원 1인당 학생수처럼 낮을수록 좋은 지표는 목표 이하면 달성). 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
+        <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 8 }}>지표명을 클릭하면 연도별 추이와 산출 근거를 볼 수 있습니다. 초록=목표 달성(교원 1인당 학생수처럼 낮을수록 좋은 지표는 목표 이하면 달성). 'KMAC 검증'은 평가기관(KMAC) 검증 결과로, O=통과·X=보완 요청을 뜻합니다 (2025년부터).</div>
       </div>
 
       <div className="card">
@@ -249,10 +249,10 @@ export default function SwcuDashboardPage() {
               }
               return groups.map((g) => (
                 <div key={g.key} style={{ marginBottom: 16 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--slate-700)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--slate-700)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span className="tag tag-indigo">{g.scope}</span>
                     {g.category || '기타'}
-                    <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>({g.items.length})</span>
+                    <span className="muted" style={{ fontWeight: 400, fontSize: 'calc(12px * var(--fs, 1))' }}>({g.items.length})</span>
                   </div>
                   {(() => {
                     const isSum = (label: string) => { const n = label.replace(/\s+/g, ''); return n === '계' || /^계\(/.test(n); };
@@ -277,7 +277,7 @@ export default function SwcuDashboardPage() {
                                   onKeyDown={clickKeys(() => setRawSel(r))}
                                   title="클릭하면 연도별 추이" style={{
                                   display: 'flex', justifyContent: 'space-between', gap: 8,
-                                  padding: '5px 10px', fontSize: 13, cursor: 'pointer',
+                                  padding: '5px 10px', fontSize: 'calc(13px * var(--fs, 1))', cursor: 'pointer',
                                   background: sum ? 'var(--slate-50)' : '#fff',
                                   borderTop: sum ? '1px solid var(--slate-200)' : 'none',
                                   fontWeight: sum ? 700 : 400,
@@ -310,8 +310,8 @@ export default function SwcuDashboardPage() {
             <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 24, width: 440, maxWidth: '92vw' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>{rawSel.label.replace(/\s+/g, ' ').trim()}</div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{rawSel.scope} · {rawSel.category || '기타'} · 연도별 추이</div>
+                  <div style={{ fontWeight: 700, fontSize: 'calc(16px * var(--fs, 1))' }}>{rawSel.label.replace(/\s+/g, ' ').trim()}</div>
+                  <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 2 }}>{rawSel.scope} · {rawSel.category || '기타'} · 연도별 추이</div>
                 </div>
                 <button className="btn btn-sm" onClick={() => setRawSel(null)}>닫기</button>
               </div>
@@ -329,25 +329,25 @@ export default function SwcuDashboardPage() {
           <div onClick={() => setExpanded(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
             <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 20, width: 480, maxWidth: '92vw', maxHeight: '88vh', overflow: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{name}{unitOf[name] ? <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}> ({unitOf[name]})</span> : ''}</div>
+                <div style={{ fontWeight: 700, fontSize: 'calc(16px * var(--fs, 1))' }}>{name}{unitOf[name] ? <span className="muted" style={{ fontWeight: 400, fontSize: 'calc(13px * var(--fs, 1))' }}> ({unitOf[name]})</span> : ''}</div>
                 <button className="btn btn-sm" onClick={() => setExpanded(null)}>닫기</button>
               </div>
               <KpiTrend title="연도별 추이" years={years} indicatorName={name} />
               <div style={{ marginTop: 12, borderTop: '1px solid var(--slate-100)', paddingTop: 12 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>산출 근거</div>
+                <div style={{ fontWeight: 600, fontSize: 'calc(13px * var(--fs, 1))', marginBottom: 6 }}>산출 근거</div>
                 {hasBasis ? years.map((y) => {
                   const ind = valOf(y, name);
                   if (!ind || (!ind.formula && ind.numValue == null)) return null;
                   return (
-                    <div key={y.year} style={{ marginBottom: 8, fontSize: 13 }}>
+                    <div key={y.year} style={{ marginBottom: 8, fontSize: 'calc(13px * var(--fs, 1))' }}>
                       <strong>{y.year}</strong>
                       {ind.numValue != null && (
                         <span className="muted"> · 분자 {norm(ind.numLabel)} = {ind.numValue} / 분모 {norm(ind.denLabel)} = {ind.denValue}</span>
                       )}
-                      {ind.formula && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{norm(ind.formula)}</div>}
+                      {ind.formula && <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 2 }}>{norm(ind.formula)}</div>}
                     </div>
                   );
-                }) : <div className="muted" style={{ fontSize: 12 }}>산출 근거 정보가 없습니다.</div>}
+                }) : <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>산출 근거 정보가 없습니다.</div>}
               </div>
             </div>
           </div>

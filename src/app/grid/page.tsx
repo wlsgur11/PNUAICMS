@@ -127,7 +127,7 @@ export default function GridPage() {
           return (
             <button
               className="btn btn-danger"
-              style={{ padding: '2px 10px', fontSize: 12 }}
+              style={{ padding: '2px 10px', fontSize: 'calc(12px * var(--fs, 1))' }}
               disabled={busy}
               onClick={() => deleteRow(row)}
             >
@@ -277,7 +277,7 @@ export default function GridPage() {
             {autofilling ? '자동 채움 중…' : '등록된 모든 기업에 자동 채움'}
           </button>
         </div>
-        <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
+        <p className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 10 }}>
           {isEditing && (
             <span style={{ color: 'var(--red-600)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
               ※ 편집 모드 중에는 엑셀 업로드와 자동 채움을 사용할 수 없습니다. 먼저 저장을 완료하거나 편집을 취소해 주세요.

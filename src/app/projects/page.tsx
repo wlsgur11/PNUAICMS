@@ -87,7 +87,7 @@ function ProjectsPageInner() {
       </form>
 
       {rows && (
-        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
+        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
           검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
@@ -121,7 +121,7 @@ function ProjectsPageInner() {
                   <td className="center" style={{ whiteSpace: 'nowrap' }}>{r.dept || '-'}</td>
                   <td>
                     {r.professorName || '-'}
-                    {r.labName ? <><br /><span className="muted" style={{ fontSize: 12 }}>{r.labName}</span></> : null}
+                    {r.labName ? <><br /><span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>{r.labName}</span></> : null}
                   </td>
                   <td><span className="ellipsis" style={{ maxWidth: 280 }}>{r.title || '-'}</span></td>
                   <td>
@@ -137,7 +137,7 @@ function ProjectsPageInner() {
         </table>
       </div>
       </FadeContent>
-      <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 행을 클릭하면 프로젝트 상세를 볼 수 있습니다. 참여학생 이름은 마스킹 표시됩니다.</p>
+      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 행을 클릭하면 프로젝트 상세를 볼 수 있습니다. 참여학생 이름은 마스킹 표시됩니다.</p>
 
       {selected && (
         <div className="modal-root">

@@ -158,7 +158,7 @@ export default function CompanyDetailPage() {
               {showSummary && <p className="muted" style={{ marginTop: 10, lineHeight: 1.7 }}>{c.summary}</p>}
             </div>
           ) : null}
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--slate-100)', fontSize: 12, color: 'var(--slate-400)', lineHeight: 1.7 }}>
+          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--slate-100)', fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--slate-400)', lineHeight: 1.7 }}>
             <div>최초등록 {c.createdAt?.slice(0, 10) || '-'}{c.createdBy ? ` · ${c.createdBy}` : ''}</div>
             <div>최근수정 {c.updatedAt?.slice(0, 10) || '-'}{c.updatedBy ? ` · ${c.updatedBy}` : ''}</div>
           </div>
@@ -258,7 +258,7 @@ export default function CompanyDetailPage() {
               </tbody>
             </table>
           )}
-          <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 행을 클릭하면 전체 내용을 보거나 수정·삭제할 수 있습니다.</p>
+          <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 행을 클릭하면 전체 내용을 보거나 수정·삭제할 수 있습니다.</p>
         </div>
 
         {/* 참여 학생 (연결 A) */}
@@ -282,7 +282,7 @@ export default function CompanyDetailPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {groups.map((g) => (
                         <div key={g.year} style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                          <span style={{ minWidth: 52, fontWeight: 600, color: 'var(--slate-600)', fontSize: 13 }}>
+                          <span style={{ minWidth: 52, fontWeight: 600, color: 'var(--slate-600)', fontSize: 'calc(13px * var(--fs, 1))' }}>
                             {g.year > 0 ? `${g.year}년` : '연도미상'}
                           </span>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

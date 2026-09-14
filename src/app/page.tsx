@@ -40,7 +40,7 @@ export default function DashboardPage() {
         title="산학협력 성과"
         extra={data.years.length > 1 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span className="muted" style={{ fontSize: 12 }}>연도</span>
+            <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>연도</span>
             {data.years.map((y) => (
               <button key={y} type="button"
                       className={`btn btn-sm${y === data.year ? ' btn-primary' : ''}`}
@@ -55,7 +55,7 @@ export default function DashboardPage() {
       {isGeneral && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-title"><span className="accent-bar" />접근 권한 대기 중</div>
-          <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, marginTop: 6 }}>
+          <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', lineHeight: 1.6, marginTop: 6 }}>
             현재 일반 계정입니다. 관리자(슈퍼관리자)가 권한을 부여하면 기업, 학생, 실적 데이터에 접근할 수 있습니다.
           </div>
         </div>
