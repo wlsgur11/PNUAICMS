@@ -59,8 +59,9 @@ function MetTrend({ trend, year }: { trend: SwcuTrendPoint[]; year: number }) {
       {active && (
         <div
           style={{
-            position: 'absolute', left: `${((hoverIdx + 0.5) / trend.length) * 100}%`, top: 2,
-            transform: `translateX(${hoverIdx === 0 ? '-10%' : hoverIdx === trend.length - 1 ? '-90%' : '-50%'})`,
+            // 기둥 위에 얹는다. 안쪽에 두면 가리킨 기둥을 스스로 가린다
+            position: 'absolute', left: `${((hoverIdx + 0.5) / trend.length) * 100}%`, top: -6,
+            transform: `translate(${hoverIdx === 0 ? '-10%' : hoverIdx === trend.length - 1 ? '-90%' : '-50%'}, -100%)`,
             background: 'var(--slate-900)', color: 'var(--surface)',
             borderRadius: 'var(--radius-sm)', padding: '7px 10px',
             fontSize: 11, lineHeight: 1.6, whiteSpace: 'nowrap',
