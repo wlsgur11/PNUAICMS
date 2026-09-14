@@ -37,10 +37,10 @@ function Axis({ label, items }: { label: string; items: { key: string; count: nu
   if (total === 0) return null;
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-      <span style={{ fontSize: 12, color: 'var(--text-3)', flex: '0 0 56px' }}>{label}</span>
+      <span style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)', flex: '0 0 56px' }}>{label}</span>
       <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
         {items.map((x) => (
-          <span key={x.key} style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          <span key={x.key} style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-2)' }}>
             {x.key} <span className="dash-num" style={{ color: 'var(--text-1)', fontWeight: 500 }}>{x.count}</span>
             <span style={{ color: 'var(--text-3)' }}> · {((x.count / total) * 100).toFixed(0)}%</span>
           </span>

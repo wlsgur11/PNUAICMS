@@ -23,14 +23,14 @@ export default function LabRankCard({ labs }: {
       </div>
 
       {labs.top.length === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>연구실이 연결된 과제가 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>연구실이 연결된 과제가 없습니다.</div>
       ) : (
         <>
           {labs.top.map((l) => (
             <Link key={`${l.professor}|${l.lab ?? ''}`} href={`/projects?q=${encodeURIComponent(l.professor)}`} className="dash-list-row">
               <span className="name">
                 {l.professor}
-                {l.lab && <span style={{ color: 'var(--text-3)', fontSize: 12 }}> · {l.lab}</span>}
+                {l.lab && <span style={{ color: 'var(--text-3)', fontSize: 'calc(12px * var(--fs, 1))' }}> · {l.lab}</span>}
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span className="dash-bar" style={{ '--bar-w': '70px' } as React.CSSProperties}>

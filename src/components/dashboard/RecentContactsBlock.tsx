@@ -19,7 +19,7 @@ export default function RecentContactsBlock({ rows }: { rows: Row[] }) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>컨택 이력이 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>컨택 이력이 없습니다.</div>
       ) : (
         <div className="table-wrap" style={{ boxShadow: 'none', border: '1px solid var(--border)' }}>
           <table className="data-table">

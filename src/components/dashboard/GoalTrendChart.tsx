@@ -24,7 +24,7 @@ const pick = (d: GoalTrendPoint, k: 'industry' | 'internship') =>
 export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
   const series = [...(data ?? [])].sort((a, b) => a.year - b.year);
   if (series.length === 0) {
-    return <div className="muted" style={{ fontSize: 12, padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
+    return <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
   }
 
   const all = series.flatMap((d) => SERIES.flatMap((s) => {
@@ -49,7 +49,7 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
           {ticks.map((t) => (
             <span key={t} style={{
               position: 'absolute', right: 0, bottom: `${(t / max) * 100}%`,
-              transform: 'translateY(50%)', fontSize: 10, color: 'var(--text-3)', whiteSpace: 'nowrap',
+              transform: 'translateY(50%)', fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)', whiteSpace: 'nowrap',
             }}>{pct(t)}</span>
           ))}
         </div>
@@ -110,10 +110,10 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
       {/* 연도 라벨은 Y축 폭(34) 과 간격(8) 만큼 밀어 막대와 세로를 맞춘다 */}
       <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 42 }}>
         {series.map((d) => (
-          <div key={d.year} style={{ flex: 1, textAlign: 'center', fontSize: 10, color: 'var(--text-3)' }}>{d.year}</div>
+          <div key={d.year} style={{ flex: 1, textAlign: 'center', fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)' }}>{d.year}</div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
+      <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
         {SERIES.map((s) => (
           <span key={s.key}>
             <span style={{ display: 'inline-block', width: 8, height: 8, background: s.color, borderRadius: 1, marginRight: 4 }} />

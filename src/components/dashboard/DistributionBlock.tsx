@@ -89,7 +89,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
       </div>
 
       {total === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>이 조건에 해당하는 데이터가 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>이 조건에 해당하는 데이터가 없습니다.</div>
       ) : (
         <>
           <div style={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', marginBottom: 18 }}>
@@ -129,7 +129,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
                   </span>
                   <span className="num">
                     {x.count}
-                    <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}> · {((x.count / total) * 100).toFixed(0)}%</span>
+                    <span style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)', fontWeight: 400 }}> · {((x.count / total) * 100).toFixed(0)}%</span>
                   </span>
                 </>
               );

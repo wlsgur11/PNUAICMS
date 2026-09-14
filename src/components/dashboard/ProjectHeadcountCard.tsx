@@ -33,7 +33,7 @@ export default function ProjectHeadcountCard({ year, data }: {
       </div>
 
       {p.projects === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>{year}년 산학 과제가 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{year}년 산학 과제가 없습니다.</div>
       ) : (
         <>
           <div className="dash-metrics" style={{ marginBottom: 18 }}>
@@ -52,10 +52,10 @@ export default function ProjectHeadcountCard({ year, data }: {
             return (
               <div key={key} style={{ padding: '9px 0', borderBottom: '1px solid var(--slate-100)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{label}</span>
-                  <span className="dash-num" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-1)' }}>
+                  <span style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{label}</span>
+                  <span className="dash-num" style={{ fontSize: 'calc(13px * var(--fs, 1))', fontWeight: 500, color: 'var(--text-1)' }}>
                     {d.sum}명
-                    <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>
+                    <span style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)', fontWeight: 400 }}>
                       {d.filled === 0
                         ? ' (기재된 과제 없음)'
                         : ` (${d.filled}/${p.projects}건 기재)`}

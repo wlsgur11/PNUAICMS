@@ -132,7 +132,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
         </button>
       </div>
 
-      <p className="muted" style={{ fontSize: 12, margin: '0 0 14px', lineHeight: 1.6 }}>
+      <p className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', margin: '0 0 14px', lineHeight: 1.6 }}>
         ※ <strong>이름으로 자동 채움</strong>: 기업명으로 네이버(소재지·홈페이지), DART(대표자·업종·설립일·매출규모), 공개 임금데이터(연봉)를 조회해 <strong>비어 있는 칸만</strong> 채웁니다. (서버에 API 키가 설정된 항목만 동작)
       </p>
 

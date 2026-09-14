@@ -28,7 +28,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
   const series = [...(data ?? [])].sort((a, b) => a.year - b.year);
 
   if (series.length === 0) {
-    return <div className="muted" style={{ fontSize: 12, padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
+    return <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
   }
 
   const W = 480, H = 150, padL = 28, padR = 8, padT = 10, padB = 20;
@@ -67,7 +67,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 14, marginBottom: 6, fontSize: 11, color: 'var(--text-3)' }}>
+      <div style={{ display: 'flex', gap: 14, marginBottom: 6, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
         {SERIES.map((s) => (
           <span key={s.key}>
             <span style={{ display: 'inline-block', width: 8, height: 8, background: s.color, borderRadius: 1, marginRight: 5 }} />
@@ -155,7 +155,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
             transform: `translate(${hoverIdx === 0 ? '-10%' : hoverIdx === series.length - 1 ? '-90%' : '-50%'}, -100%)`,
             background: 'var(--slate-900)', color: 'var(--surface)',
             borderRadius: 'var(--radius-sm)', padding: '7px 10px',
-            fontSize: 11, lineHeight: 1.6, whiteSpace: 'nowrap',
+            fontSize: 'calc(11px * var(--fs, 1))', lineHeight: 1.6, whiteSpace: 'nowrap',
             pointerEvents: 'none', boxShadow: 'var(--shadow-md)', zIndex: 1,
           }}
         >

@@ -36,7 +36,7 @@ export default function FollowUpBlock({ data }: { data: FollowUp }) {
       </div>
 
       {data.total === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>후속 조치가 남은 기업이 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>후속 조치가 남은 기업이 없습니다.</div>
       ) : (
         <>
           <div className="dash-metrics" style={{ marginBottom: 18 }}>
@@ -59,10 +59,10 @@ export default function FollowUpBlock({ data }: { data: FollowUp }) {
               <span className="name">
                 {c.name}
                 {c.priority && (
-                  <span className="badge" style={{ marginLeft: 6, fontSize: 11 }}>{c.priority}</span>
+                  <span className="badge" style={{ marginLeft: 6, fontSize: 'calc(11px * var(--fs, 1))' }}>{c.priority}</span>
                 )}
               </span>
-              <span style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'right' }}>
+              <span style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)', textAlign: 'right' }}>
                 {c.status}
                 <br />
                 {sinceLabel(c.lastContact)}

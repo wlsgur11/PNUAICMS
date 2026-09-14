@@ -96,7 +96,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {s.counselings.map((c, i) => (
               <div key={c.id || i} className="soft-card" style={{ padding: 12 }}>
-                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>상담 {i + 1} · {c.counselDate || '-'} · {c.counselor || '-'}</div>
+                <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginBottom: 4 }}>상담 {i + 1} · {c.counselDate || '-'} · {c.counselor || '-'}</div>
                 <div style={{ whiteSpace: 'pre-wrap' }}>{c.content || '-'}</div>
               </div>
             ))}

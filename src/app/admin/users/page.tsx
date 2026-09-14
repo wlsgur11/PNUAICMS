@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
     <>
       <PageHeader title="사용자 관리" />
       <div className="card">
-        <div className="muted" style={{ fontSize: 13, marginBottom: 12, lineHeight: 1.6 }}>
+        <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', marginBottom: 12, lineHeight: 1.6 }}>
           역할을 바꾸거나 스위치를 누르면 <strong>즉시 저장</strong>됩니다. <strong>일반</strong>=대시보드만 / <strong>관리자</strong>=데이터 전권 / <strong>슈퍼관리자</strong>=관리자 + 사용자 관리.
           접근 스위치를 <strong>끄면(차단)</strong> 로그인해도 들어올 수 없습니다. 본인 계정은 변경할 수 없습니다(잠김 방지).
         </div>
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
                     <tr key={u.id} className={u.active ? undefined : 'row-inactive'}>
                       <td style={{ fontWeight: 600 }}>
                         {u.email}
-                        {self && <span className="muted" style={{ marginLeft: 6, fontSize: 12 }}>(나)</span>}
+                        {self && <span className="muted" style={{ marginLeft: 6, fontSize: 'calc(12px * var(--fs, 1))' }}>(나)</span>}
                       </td>
                       <td>{u.name || '-'}</td>
                       <td>

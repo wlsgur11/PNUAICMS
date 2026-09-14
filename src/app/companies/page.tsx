@@ -123,7 +123,7 @@ function CompaniesInner() {
 
         {/* 2행: 협력 항목 체크박스 (선택한 모든 항목을 만족하는 기업만) */}
         <div className="filter-bar" style={{ marginTop: 12 }}>
-          <span className="muted" style={{ fontSize: 13, fontWeight: 600 }}>협력 항목:</span>
+          <span className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', fontWeight: 600 }}>협력 항목:</span>
           {COLLAB_FIELDS.map((cf) => (
             <label key={cf.key} className="collab-toggle">
               <input
@@ -134,12 +134,12 @@ function CompaniesInner() {
               {cf.label}
             </label>
           ))}
-          <span className="muted" style={{ fontSize: 12 }}>※ 선택한 항목을 모두 만족하는 기업만 표시</span>
+          <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>※ 선택한 항목을 모두 만족하는 기업만 표시</span>
         </div>
       </form>
 
       {rows && (
-        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
+        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
           검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
@@ -168,7 +168,7 @@ function CompaniesInner() {
                     style={r.isActive === false ? { opacity: 0.5 } : { animationDelay: `${Math.min(i, 15) * 0.035}s` }}>
                   <td>
                     <span className="link">{r.name}</span>
-                    {r.isActive === false && <span className="muted" style={{ marginLeft: 6, fontSize: 12 }}>(비활성)</span>}
+                    {r.isActive === false && <span className="muted" style={{ marginLeft: 6, fontSize: 'calc(12px * var(--fs, 1))' }}>(비활성)</span>}
                   </td>
                   <td>{r.professor || '-'}</td>
                   <td className="center">
