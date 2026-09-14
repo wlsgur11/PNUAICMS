@@ -60,7 +60,7 @@ function BaselineStrip({ h }: { h: HeadcountBaseline }) {
   return (
     <div style={{ display: 'flex', gap: '8px 28px', flexWrap: 'wrap', marginTop: 20 }}>
       {rows.map((r) => (
-        <span key={r.label} style={{ fontSize: 12, color: 'var(--text-3)' }}>
+        <span key={r.label} style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)' }}>
           {r.label}{' '}
           <span className="dash-num" style={{ color: 'var(--text-1)', fontWeight: 500 }}>
             정컴 {r.cse ?? '-'}
@@ -97,7 +97,7 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
         <div>
           <div className="dash-metric-label">SW중심대학 지표</div>
           <div className="dash-metric-value">
-            {swcu.met}<span style={{ fontSize: 15, color: 'var(--text-3)' }}> / {swcu.total}</span>
+            {swcu.met}<span style={{ fontSize: 'calc(15px * var(--fs, 1))', color: 'var(--text-3)' }}> / {swcu.total}</span>
           </div>
           {/* 지표 하나당 눈금 하나. 개수와 달성 여부만 읽히면 되므로 얇게 둔다 */}
           <div style={{ display: 'flex', gap: 2, marginTop: 10, height: 4 }}>

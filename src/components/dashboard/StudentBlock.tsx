@@ -25,7 +25,7 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
       </div>
 
       {s.total === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>등록된 학생이 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>등록된 학생이 없습니다.</div>
       ) : (
         <>
           <div className="dash-metrics" style={{ marginBottom: 22 }}>
@@ -61,7 +61,7 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
                 <div className="dash-bar" style={{ marginBottom: 6 }}>
                   <span style={{ width: `${(g.count / maxGrade) * 100}%` }} />
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
                   <span>{g.grade}학년</span>
                   <span className="dash-num" style={{ color: 'var(--text-1)' }}>{g.count}</span>
                 </div>

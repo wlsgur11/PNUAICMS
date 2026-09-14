@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Role } from '@prisma/client';
 import ThemeToggle from './ThemeToggle';
+import UiScale from './UiScale';
 import { Icon, type IconName } from './icons';
 
 type Item = { href: string; label: string };
@@ -207,6 +208,7 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
       </div>
 
       <div className="sidebar-bottom">
+        <UiScale />
         <ThemeToggle />
         {userEmail && (
           <div className="sidebar-user">

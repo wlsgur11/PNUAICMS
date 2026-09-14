@@ -29,7 +29,7 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
       </div>
 
       {areas.length === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>
           {year}년 성과지표가 아직 등록되지 않았습니다. 위쪽 연도 버튼에서 다른 연도를 선택하세요.
         </div>
       ) : (
@@ -37,8 +37,8 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
           {areas.map((a) => (
             <div key={a.area} style={{ padding: '10px 0', borderBottom: '1px solid var(--slate-100)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 7 }}>
-                <span style={{ fontSize: 13, color: 'var(--text-2)' }}>{a.area}</span>
-                <span className="dash-num" style={{ fontSize: 13, color: 'var(--text-1)', fontWeight: 500 }}>
+                <span style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{a.area}</span>
+                <span className="dash-num" style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-1)', fontWeight: 500 }}>
                   {a.met}
                   <span style={{ color: 'var(--text-3)', fontWeight: 400 }}> / {a.total}</span>
                   {a.unmet > 0 && <span style={{ color: 'var(--red-600)' }}> · 미달 {a.unmet}</span>}

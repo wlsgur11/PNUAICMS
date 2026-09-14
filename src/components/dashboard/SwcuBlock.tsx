@@ -64,7 +64,7 @@ function MetTrend({ trend, year }: { trend: SwcuTrendPoint[]; year: number }) {
             transform: `translate(${hoverIdx === 0 ? '-10%' : hoverIdx === trend.length - 1 ? '-90%' : '-50%'}, -100%)`,
             background: 'var(--slate-900)', color: 'var(--surface)',
             borderRadius: 'var(--radius-sm)', padding: '7px 10px',
-            fontSize: 11, lineHeight: 1.6, whiteSpace: 'nowrap',
+            fontSize: 'calc(11px * var(--fs, 1))', lineHeight: 1.6, whiteSpace: 'nowrap',
             pointerEvents: 'none', boxShadow: 'var(--shadow-md)', zIndex: 1,
           }}
         >
@@ -91,13 +91,13 @@ function MetTrend({ trend, year }: { trend: SwcuTrendPoint[]; year: number }) {
             style={{ flex: 1, textAlign: 'center' }}
           >
             <div style={{
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--fs, 1))',
               color: t.year === year ? 'var(--text-1)' : 'var(--text-2)',
               fontWeight: t.year === year ? 500 : 400,
             }}>
               {t.met}<span style={{ color: 'var(--text-3)', fontWeight: 400 }}>/{t.total}</span>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{t.year}</div>
+            <div style={{ fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)' }}>{t.year}</div>
           </div>
         ))}
       </div>
@@ -122,7 +122,7 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
 
       {swcu.total === 0 ? (
         <>
-          <div className="empty" style={{ fontSize: 13 }}>
+          <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>
             {year}년 성과지표가 아직 등록되지 않았습니다. 위쪽 연도 버튼에서 다른 연도를 선택하세요.
           </div>
           {/* 선택 연도에 지표가 없어도 다른 해의 추이는 보여 준다. 카드가 통째로
@@ -134,7 +134,7 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
           <div className="dash-metrics" style={{ marginBottom: 20 }}>
             <div>
               <div className="dash-metric-label">달성</div>
-              <div className="dash-metric-value met">{swcu.met}<span style={{ fontSize: 15, color: 'var(--text-3)' }}> / {swcu.total}</span></div>
+              <div className="dash-metric-value met">{swcu.met}<span style={{ fontSize: 'calc(15px * var(--fs, 1))', color: 'var(--text-3)' }}> / {swcu.total}</span></div>
             </div>
             <div>
               <div className="dash-metric-label">미달</div>
@@ -155,7 +155,7 @@ export default function SwcuBlock({ swcu, year }: { swcu: SwcuSummary; year: num
                     '0.01818181818181818 / 0.05%' 가 나온다 */}
                 <span className="num" style={{ color: 'var(--red-600)' }}>
                   {formatSwcuValue(u.actual, u.unit)}
-                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  <span style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)' }}>
                     {' / '}{formatSwcuValue(u.target, u.unit)}{u.unit === '%' ? '' : (u.unit ?? '')}
                   </span>
                 </span>

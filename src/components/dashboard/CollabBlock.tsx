@@ -37,7 +37,7 @@ export default function CollabBlock({ items, region }: {
       </div>
 
       {items.length === 0 ? (
-        <div className="empty" style={{ fontSize: 13 }}>협력 항목이 표시된 기업이 없습니다.</div>
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>협력 항목이 표시된 기업이 없습니다.</div>
       ) : (
         items.map((x) => {
           const q = QUERY_KEY[x.key];
@@ -66,7 +66,7 @@ export default function CollabBlock({ items, region }: {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px' }}>
             {region.map((r) => (
               <Link key={r.key} href={`/companies?region=${encodeURIComponent(r.key)}`}
-                    style={{ fontSize: 12, color: 'var(--text-2)', textDecoration: 'none' }}>
+                    style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-2)', textDecoration: 'none' }}>
                 {r.key} <span className="dash-num" style={{ color: 'var(--text-1)', fontWeight: 500 }}>{r.count}</span>
                 {/* 위 협력 항목과 같은 기업 수라 단위를 맞춘다 */}
                 곳<span style={{ color: 'var(--text-3)' }}> · {((r.count / regionTotal) * 100).toFixed(0)}%</span>

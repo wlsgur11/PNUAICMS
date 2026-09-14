@@ -57,7 +57,7 @@ function StudentsPageInner() {
       </form>
 
       {rows && (
-        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
+        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
           검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>명
         </div>
       )}
@@ -102,7 +102,7 @@ function StudentsPageInner() {
         </table>
       </div>
       </FadeContent>
-      <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ 이름은 마스킹 표시되며, 행을 클릭하면 학생 상세에서 실명과 전체 정보를 볼 수 있습니다.</p>
+      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 이름은 마스킹 표시되며, 행을 클릭하면 학생 상세에서 실명과 전체 정보를 볼 수 있습니다.</p>
     </>
   );
 }

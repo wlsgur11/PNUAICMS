@@ -38,9 +38,9 @@ function DiffFile({ d, kind, open, onToggle }: {
     <div className="diff-file" id={anchorOf(kind, d.year)}>
       <button type="button" className="diff-file-head" onClick={onToggle}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ color: 'var(--text-3)', fontSize: 11 }}>{open ? '▾' : '▸'}</span>
+          <span style={{ color: 'var(--text-3)', fontSize: 'calc(11px * var(--fs, 1))' }}>{open ? '▾' : '▸'}</span>
           {d.year === '미기재' ? '연도 미기재' : `${d.year}년`}
-          <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>{before} → {after}건</span>
+          <span className="muted" style={{ fontWeight: 400, fontSize: 'calc(12px * var(--fs, 1))' }}>{before} → {after}건</span>
         </span>
         <span className="diff-file-stat">
           {d.addedTotal > 0 && <span className="add">+{d.addedTotal}</span>}
@@ -162,7 +162,7 @@ function PreviewTable({ p }: { p: RecordsPreview }) {
           </div>
         ))}
 
-        <p className="muted" style={{ fontSize: 12, lineHeight: 1.7 }}>
+        <p className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', lineHeight: 1.7 }}>
           엑셀에 든 연도별 현황판: {p.yearStats.join(', ') || '없음'}
           <br />
           기업, 컨택 이력, 학생은 지워지지 않습니다. 학생은 추가와 이름 보완만 됩니다.
@@ -240,13 +240,13 @@ export default function RecordsImportPage() {
         </p>
         <input type="file" accept=".xlsx" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
 
-        {busy && !preview && <div className="muted" style={{ fontSize: 13, marginTop: 12 }}>파일을 읽는 중…</div>}
+        {busy && !preview && <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', marginTop: 12 }}>파일을 읽는 중…</div>}
 
         {preview && preview.lostYears.length > 0 && (
           <label style={{
             display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 14,
             padding: '10px 12px', background: 'var(--danger-soft-bg)',
-            color: 'var(--danger-soft-text)', borderRadius: 'var(--radius)', fontSize: 13, lineHeight: 1.6,
+            color: 'var(--danger-soft-text)', borderRadius: 'var(--radius)', fontSize: 'calc(13px * var(--fs, 1))', lineHeight: 1.6,
           }}>
             <input type="checkbox" checked={acceptLoss} onChange={(e) => setAcceptLoss(e.target.checked)}
                    style={{ marginTop: 3 }} />
@@ -262,7 +262,7 @@ export default function RecordsImportPage() {
                   disabled={busy || !preview || (preview.lostYears.length > 0 && !acceptLoss)}>
             {busy && preview ? '적재 중…' : '적용'}
           </button>
-          {!preview && <span className="muted" style={{ fontSize: 12 }}>파일을 고르면 바뀌는 내용을 먼저 보여 드립니다.</span>}
+          {!preview && <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>파일을 고르면 바뀌는 내용을 먼저 보여 드립니다.</span>}
           {preview && (
             <button className="btn btn-sm" onClick={() => pick(null)} disabled={busy}>취소</button>
           )}
@@ -272,7 +272,7 @@ export default function RecordsImportPage() {
           <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--slate-100)' }}>
             <div className="info-label" style={{ marginBottom: 6 }}>최근 업로드 원본</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span className="muted" style={{ fontSize: 13 }}>
+              <span className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>
                 {original.filename} · {Math.max(1, Math.round(original.size / 1024)).toLocaleString()}KB · {new Date(original.createdAt).toLocaleString('ko-KR')}
               </span>
               <a className="btn btn-sm" href="/api/records/original" download>원본 내려받기</a>
@@ -301,10 +301,10 @@ export default function RecordsImportPage() {
           {result.unmatchedCompanies.length > 0 && (
             <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--slate-100)' }}>
               <div className="info-label" style={{ marginBottom: 6 }}>CMS에 없는 기업 (원본 이름으로 보존됨)</div>
-              <div className="muted" style={{ fontSize: 13, lineHeight: 1.9, maxHeight: 260, overflow: 'auto' }}>
+              <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', lineHeight: 1.9, maxHeight: 260, overflow: 'auto' }}>
                 {result.unmatchedCompanies.join(', ')}
               </div>
-              <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+              <p className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 8 }}>
                 ※ 이 기업들을 CMS에 등록하면 해당 실적이 자동으로 연결됩니다.
               </p>
             </div>

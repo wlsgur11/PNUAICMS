@@ -79,7 +79,7 @@ function InternshipsPageInner() {
       </form>
 
       {rows && (
-        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 13 }}>
+        <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
           검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
         </div>
       )}
@@ -126,7 +126,7 @@ function InternshipsPageInner() {
         </table>
       </div>
       </FadeContent>
-      <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>※ CMS에 등록된 기업은 행을 클릭하면 기업 상세로 이동합니다. 회색 기업명은 아직 미등록(이름만 보존)입니다.</p>
+      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ CMS에 등록된 기업은 행을 클릭하면 기업 상세로 이동합니다. 회색 기업명은 아직 미등록(이름만 보존)입니다.</p>
     </>
   );
 }

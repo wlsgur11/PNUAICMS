@@ -64,7 +64,7 @@ export default function SwcuImportPage() {
         <div className="card" style={{ marginTop: 16 }}>
           <div className="card-head">
             <div className="card-title"><span className="accent-bar" />{preview.year}년 미리보기</div>
-            <span className="muted" style={{ fontSize: 13 }}>지표 {preview.indicators.length} · 원시값 {preview.rawCount}</span>
+            <span className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>지표 {preview.indicators.length} · 원시값 {preview.rawCount}</span>
           </div>
           <div className="table-wrap" style={{ boxShadow: 'none', border: '1px solid var(--slate-200)' }}>
             <table className="data-table">
@@ -79,7 +79,7 @@ export default function SwcuImportPage() {
                     <td className="center" style={{ fontWeight: 700 }}>{fmt(i.actual, i.unit)}</td>
                     <td className="center">
                       {i.verifyResult ? <span className={`tag ${i.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`}>{i.verifyResult}</span> : '-'}
-                      {i.verifiedActual != null && <span className="muted" style={{ marginLeft: 6, fontSize: 12 }}>{fmt(i.verifiedActual, i.unit)}</span>}
+                      {i.verifiedActual != null && <span className="muted" style={{ marginLeft: 6, fontSize: 'calc(12px * var(--fs, 1))' }}>{fmt(i.verifiedActual, i.unit)}</span>}
                     </td>
                   </tr>
                 ))}
