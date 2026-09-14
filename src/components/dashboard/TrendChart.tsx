@@ -148,9 +148,11 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
       {active && (
         <div
           style={{
-            position: 'absolute', left: `${tipLeft}%`, top: 2,
+            // 그리기 영역 위에 얹는다. 안쪽에 두면 키 큰 막대를 가려서
+            // 정작 읽으려는 해의 막대가 안 보인다
+            position: 'absolute', left: `${tipLeft}%`, top: -6,
             // 양끝 해는 가운데 정렬하면 카드 밖으로 잘린다
-            transform: `translateX(${hoverIdx === 0 ? '-10%' : hoverIdx === series.length - 1 ? '-90%' : '-50%'})`,
+            transform: `translate(${hoverIdx === 0 ? '-10%' : hoverIdx === series.length - 1 ? '-90%' : '-50%'}, -100%)`,
             background: 'var(--slate-900)', color: 'var(--surface)',
             borderRadius: 'var(--radius-sm)', padding: '7px 10px',
             fontSize: 11, lineHeight: 1.6, whiteSpace: 'nowrap',
