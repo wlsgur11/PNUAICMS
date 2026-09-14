@@ -16,7 +16,9 @@ export const metadata: Metadata = {
   description: 'AI기업 인턴십·취업연계·산학협력 관리',
 };
 
-const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('theme');d.setAttribute('data-theme',(t==='dark'||t==='light')?t:'light');d.setAttribute('data-sidebar',localStorage.getItem('sidebarCollapsed')==='1'?'collapsed':'expanded');}catch(e){d.setAttribute('data-theme','light');d.setAttribute('data-sidebar','expanded');}})();`;
+// 첫 그림 전에 테마와 배율을 정한다. 나중에 적용하면 기본값으로 한 번 그렸다가
+// 바뀌어서 화면이 튄다. 배율은 정해 둔 단계만 받아들인다
+const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('theme');d.setAttribute('data-theme',(t==='dark'||t==='light')?t:'light');d.setAttribute('data-sidebar',localStorage.getItem('sidebarCollapsed')==='1'?'collapsed':'expanded');var s=Number(localStorage.getItem('uiScale'));if([90,100,110,125,150,175].indexOf(s)>=0&&s!==100){d.style.setProperty('--ui-scale',String(s/100));}}catch(e){d.setAttribute('data-theme','light');d.setAttribute('data-sidebar','expanded');}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

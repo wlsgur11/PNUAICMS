@@ -170,10 +170,34 @@ a {
 }
 
 /* ── 레이아웃 ── */
+/* 화면 배율. 글씨만 키우면 px 로 고정된 차트 높이와 카드 여백 안에서 글이
+   넘치고 잘린다. 글씨와 간격을 같이 키워야 레이아웃이 버틴다.
+   min-height 는 배율로 나눈다. 100vh 에 배율이 곱해지면 내용이 없어도
+   화면보다 길어져 스크롤바가 생긴다 */
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  zoom: var(--ui-scale, 1);
+  min-height: calc(100vh / var(--ui-scale, 1));
 }
+
+/* 사이드바 하단의 −  100%  + */
+.ui-scale {
+  display: flex; align-items: center; gap: 2px;
+  margin-bottom: 8px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.ui-scale button {
+  flex: 0 0 auto; background: none; border: 0; cursor: pointer;
+  color: var(--text-2); font-family: inherit; font-size: 13px;
+  padding: 5px 9px; line-height: 1.4;
+}
+.ui-scale button.val { flex: 1; font-size: 12px; font-variant-numeric: tabular-nums; }
+.ui-scale button:hover:not(:disabled) { background: var(--slate-100); color: var(--text-1); }
+.ui-scale button:disabled { opacity: 0.4; cursor: default; }
+
+:root[data-sidebar="collapsed"] .ui-scale { display: none; }
 
 /* ── 사이드바 ── */
 .sidebar {
