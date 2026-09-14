@@ -1,5 +1,10 @@
 /**
  * POST /api/records/import — 실적 엑셀(.xlsx) 업로드 → Project/Internship 전체 교체 적재.
+ *
+ * form 에 dryRun 이 있으면 적재하지 않고 무엇이 어떻게 바뀌는지만 돌려준다.
+ * 적재는 조건 없이 전부 지우고 다시 만드는 방식이라, 엑셀이 일부 연도만 담고
+ * 있으면 나머지 연도가 사라진다. 누르기 전에 그것을 볼 수 있어야 한다.
+ * 미리보기와 실제 적재가 같은 파서를 타야 숫자가 어긋나지 않는다.
  */
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -10,6 +15,7 @@ import { prisma } from '@/lib/db';
 import { readSheets } from '@/lib/records-xlsx';
 import { parseSheets } from '@/lib/records-parse';
 import { importRecords } from '@/lib/records-import';
+import { buildRecordsPreview } from '@/lib/records-preview';
 
 export async function POST(req: Request) {
   return handle(async () => {
@@ -30,6 +36,15 @@ export async function POST(req: Request) {
     if (parsed.projects.length === 0 && parsed.internships.length === 0) {
       return fail('적재할 데이터를 찾지 못했습니다. 시트 구조를 확인하세요.', 400);
     }
+
+    if (form.get('dryRun')) {
+      const [curProjects, curInternships] = await Promise.all([
+        prisma.project.findMany({ select: { year: true } }),
+        prisma.internship.findMany({ select: { year: true } }),
+      ]);
+      return ok(buildRecordsPreview(parsed, curProjects, curInternships));
+    }
+
     const summary = await importRecords(parsed);
 
     // 원본 xlsx 보관(kind별 최신 1건 유지) — 재다운로드용. 실패해도 적재 결과는 유지한다.
