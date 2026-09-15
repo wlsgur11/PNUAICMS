@@ -30,6 +30,9 @@ model Company {
   // 표시용 사람이 읽는 코드(C-001 ...). 화면·검색용. 채번은 애플리케이션에서.
   code           String  @unique
   name           String  @unique // 기관명 (중복 등록 방지)
+  // 실적 엑셀에 이 기업이 다르게 적혀 오는 이름들. 매칭에만 쓰고 화면 표기는 name 이다.
+  // 엑셀을 고칠 수 없어서 CMS 쪽에서 흡수한다. 예: 'Bear Robotics', '에이비일팔공'
+  aliases        String[] @default([])
   joinYear       Int? // 사업참여연도
   region         String? // 지역구분: 부산/울산/경남/수도권/기타
   addressDetail  String? // 소재지(상세)

@@ -8,7 +8,7 @@
 import { randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from './db';
-import { normCompany } from './normalize';
+import { companyKeys, normCompany } from './normalize';
 import type { ParseResult } from './records-parse';
 
 /** 이름 마스킹: 2글자→끝, 3글자+→가운데 */
@@ -24,9 +24,11 @@ export type ImportSummary = {
 };
 
 export async function importRecords(parsed: ParseResult): Promise<ImportSummary> {
-  const companies = await prisma.company.findMany({ select: { id: true, name: true } });
+  const companies = await prisma.company.findMany({ select: { id: true, name: true, aliases: true } });
   const byNorm = new Map<string, string>();
+  // 이름이 먼저다. 별칭이 다른 기업의 이름과 겹쳐도 이름 쪽이 이긴다
   for (const c of companies) byNorm.set(normCompany(c.name), c.id);
+  for (const c of companies) for (const k of companyKeys(c)) if (!byNorm.has(k)) byNorm.set(k, c.id);
   const matchCompany = (raw: string | null): string | null =>
     raw ? (byNorm.get(normCompany(raw)) ?? null) : null;
   // 미매칭은 정규화 키로 모아 표기 중복 제거(대표 원본명 1개만 노출)

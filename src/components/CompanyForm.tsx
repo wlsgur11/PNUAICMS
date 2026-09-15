@@ -33,6 +33,7 @@ export type CompanyFormData = {
   priority?: string | null;
   status?: string | null;
   summary?: string | null;
+  aliases?: string[] | null;
 };
 
 const EMPTY: CompanyFormData = { name: '', mou: false, status: '미접촉', priority: 'B', region: '부산' };
@@ -211,6 +212,21 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
         <div className="form-field full">
           <label>특이사항</label>
           <textarea value={f.summary ?? ''} onChange={(e) => set('summary', e.target.value)} placeholder="컨택 시 참고할 특이사항을 적어두세요. 예: 접촉 시 주의할 점, 다른 교수님과 연관된 기업, 과거 협력 이력 등" />
+        </div>
+        <div className="form-field full">
+          <label>다른 표기 <span className="hint">(실적 엑셀 매칭용, 한 줄에 하나)</span></label>
+          {/* 줄 단위로 받는다. 쉼표로 받으면 'M&D(부산, 기장)' 같은 이름이 잘린다 */}
+          <textarea
+            value={(f.aliases ?? []).join('\n')}
+            onChange={(e) => set('aliases', e.target.value.split('\n'))}
+            onBlur={(e) => set('aliases', e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
+            rows={3}
+            placeholder={'Bear Robotics\n에이비일팔공'}
+          />
+          <span className="hint">
+            실적 엑셀에 이 기업이 다르게 적혀 올 때 적어 두면 그 이름의 실적도 이 기업에 붙습니다.
+            화면에 보이는 이름은 위의 기업명 그대로입니다.
+          </span>
         </div>
       </div>
 
