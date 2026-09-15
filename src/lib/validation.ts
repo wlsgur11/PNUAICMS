@@ -11,6 +11,9 @@ const optStr = z.string().trim().optional().nullable();
 
 export const companyCreateSchema = z.object({
   name: z.string().trim().min(1, '기관명은 필수입니다.'),
+  // 실적 엑셀에 다르게 적혀 오는 이름들(매칭 전용). 공백·빈 줄·중복은 여기서 턴다
+  aliases: z.array(z.string()).optional()
+    .transform((a) => (a ? [...new Set(a.map((s) => s.trim()).filter(Boolean))] : undefined)),
   joinYear: z.coerce.number().int().optional().nullable(),
   region: z.enum(ENUMS.REGION as unknown as [string, ...string[]]).optional().nullable(),
   addressDetail: optStr,

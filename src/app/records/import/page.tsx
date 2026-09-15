@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 import PageHeader from '@/components/PageHeader';
 import { toast } from '@/components/Toaster';
+import { api } from '@/lib/client';
 import type { RecordsPreview, SideDiff, YearDiff } from '@/lib/records-preview';
 
 type Summary = {
@@ -176,6 +177,89 @@ function PreviewTable({ p }: { p: RecordsPreview }) {
   );
 }
 
+type UnmatchedRow = { name: string; projects: number; internships: number };
+
+/**
+ * 아직 기업에 안 붙은 실적.
+ *
+ * 실적 엑셀은 우리가 못 고친다. 담당자가 '(쭈)폭씨', 'Bear Robotics' 처럼 적어 보내도
+ * 여기서 한 번 기업에 붙여 두면 그 표기가 그 기업의 '다른 표기' 로 남아 다음 업로드부터
+ * 자동으로 붙는다. 업로드 직후에만 뜨던 미매칭 목록과 달리 이 칸은 항상 지금 상태를 보여 준다.
+ */
+function UnmatchedCard() {
+  const { data, mutate } = useSWR<{ total: number; rows: UnmatchedRow[] }>('/api/records/unmatched');
+  const { data: companies } = useSWR<{ id: string; name: string }[]>('/api/companies');
+  const [pickName, setPickName] = useState<Record<string, string>>({});
+  const [linking, setLinking] = useState<string | null>(null);
+
+  if (!data) return null;
+
+  async function link(raw: string) {
+    const typed = (pickName[raw] || '').trim();
+    const target = companies?.find((c) => c.name === typed);
+    if (!target) { toast('목록에 있는 기업명을 정확히 고르세요.', 'error'); return; }
+    setLinking(raw);
+    try {
+      const r = await api<{ companyName: string; alias: string | null; linked: number }>(
+        '/api/records/unmatched',
+        { method: 'POST', body: JSON.stringify({ raw, companyId: target.id }) },
+      );
+      toast(`${r.companyName}에 실적 ${r.linked}건을 붙였습니다.`, 'success');
+      setPickName((p) => ({ ...p, [raw]: '' }));
+      mutate();
+    } catch (e) { toast((e as Error).message, 'error'); } finally { setLinking(null); }
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 720, marginTop: 16 }}>
+      <div className="card-head">
+        <div className="card-title"><span className="accent-bar" />아직 기업에 안 붙은 실적 {data.total}건</div>
+      </div>
+
+      {data.total === 0 ? (
+        <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>모든 실적이 기업에 연결되어 있습니다.</div>
+      ) : (
+        <>
+          <p className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', lineHeight: 1.7, margin: '0 0 14px' }}>
+            엑셀에 적힌 이름이 CMS 기업과 달라 안 붙은 것들입니다. 같은 기업이면 오른쪽에서
+            골라 연결하세요. 그 표기가 해당 기업의 <b>다른 표기</b>로 저장돼 다음 업로드부터 자동으로 붙습니다.
+            CMS에 아예 없는 기업이면 먼저 <a className="text-link" href="/companies/new">기업으로 등록</a>하세요.
+          </p>
+
+          {/* 기업이 100곳 넘는다. select 로 펼치면 찾기 어려워 입력하며 좁히는 datalist 를 쓴다 */}
+          <datalist id="cms-companies">
+            {(companies ?? []).map((c) => <option key={c.id} value={c.name} />)}
+          </datalist>
+
+          {data.rows.map((r) => (
+            <div key={r.name} style={{
+              display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+              padding: '9px 0', borderTop: '1px solid var(--slate-100)',
+            }}>
+              <span style={{ flex: '1 1 180px', minWidth: 0 }}>
+                <b style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{r.name}</b>
+                <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginLeft: 8 }}>
+                  {[r.projects && `과제 ${r.projects}`, r.internships && `인턴십 ${r.internships}`].filter(Boolean).join(' · ')}
+                </span>
+              </span>
+              <input
+                list="cms-companies" placeholder="연결할 기업"
+                value={pickName[r.name] ?? ''}
+                onChange={(e) => setPickName((p) => ({ ...p, [r.name]: e.target.value }))}
+                style={{ flex: '0 1 200px' }}
+              />
+              <button className="btn btn-sm" onClick={() => link(r.name)}
+                      disabled={linking === r.name || !(pickName[r.name] || '').trim()}>
+                {linking === r.name ? '연결 중…' : '연결'}
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function RecordsImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -225,6 +309,7 @@ export default function RecordsImportPage() {
       setResult(await send(false) as Summary);
       setPreview(null); setFile(null); setAcceptLoss(false);
       mutateOriginal();
+      globalMutate('/api/records/unmatched'); // 적재로 미매칭 목록이 통째로 바뀐다
       toast('적재 완료', 'success');
     } catch (e) { toast((e as Error).message, 'error'); } finally { setBusy(false); }
   }
@@ -305,12 +390,14 @@ export default function RecordsImportPage() {
                 {result.unmatchedCompanies.join(', ')}
               </div>
               <p className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 8 }}>
-                ※ 이 기업들을 CMS에 등록하면 해당 실적이 자동으로 연결됩니다.
+                ※ 아래 <b>아직 기업에 안 붙은 실적</b>에서 기존 기업에 바로 연결할 수 있습니다.
               </p>
             </div>
           )}
         </div>
       )}
+
+      <UnmatchedCard />
     </>
   );
 }
