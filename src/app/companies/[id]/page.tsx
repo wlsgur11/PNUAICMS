@@ -35,7 +35,7 @@ type Collab = Record<string, boolean | string | number | null> & { version: numb
 type Full = {
   id: string; code: string; name: string; region?: string; aiField?: string; homepage?: string;
   professor1?: string; professor2?: string; mou: boolean; priority?: string; status: string;
-  addressDetail?: string; mainIndustry?: string; summary?: string;
+  addressDetail?: string; mainIndustry?: string; summary?: string; aliases?: string[];
   isActive: boolean; version: number;
   createdAt?: string; updatedAt?: string; createdBy?: string | null; updatedBy?: string | null;
   collaboration: Collab | null; persons: Person[]; histories: History[];
@@ -149,6 +149,13 @@ export default function CompanyDetailPage() {
             <div className="info-row"><span className="info-label">진행상태</span><span className="info-value"><span className="tag tag-indigo">{c.status}</span></span></div>
             <div className="info-row"><span className="info-label">홈페이지</span><span className="info-value">{c.homepage ? <a href={c.homepage} target="_blank" style={{ color: 'var(--indigo-600)' }}>{c.homepage}</a> : '-'}</span></div>
             <div className="info-row"><span className="info-label">소재지</span><span className="info-value">{c.addressDetail || '-'}</span></div>
+            {/* 별칭이 없는 기업이 대부분이라 있을 때만 보인다 */}
+            {c.aliases && c.aliases.length > 0 && (
+              <div className="info-row">
+                <span className="info-label">다른 표기</span>
+                <span className="info-value">{c.aliases.join(', ')}</span>
+              </div>
+            )}
           </div>
           {c.summary ? (
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--slate-100)' }}>

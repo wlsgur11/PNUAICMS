@@ -8,7 +8,7 @@ import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { companyCreateSchema } from '@/lib/validation';
 import { lookupCompany } from '@/lib/lookup';
-import { autoLinkRecords } from '@/lib/company-autolink';
+import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
 
 export async function GET(req: Request) {
   return handle(async () => {
@@ -105,6 +105,11 @@ export async function POST(req: Request) {
       return fail(`이미 등록된 기관명입니다: ${input.name}`, 409);
     }
 
+    if (input.aliases?.length) {
+      const clash = await findAliasConflict(dup?.id ?? null, input.aliases);
+      if (clash) return fail(`별칭 '${clash.alias}' 은(는) 이미 '${clash.owner}' 이(가) 쓰고 있습니다.`, 409);
+    }
+
     // 자동조회 (이름 입력→자동 채움). 실패해도 등록은 진행.
     let auto = null as Awaited<ReturnType<typeof lookupCompany>> | null;
     if (input.autoLookup) {
@@ -136,6 +141,7 @@ export async function POST(req: Request) {
         priority: input.priority,
         status: input.status,
         summary: input.summary, // 특이사항: 수동 입력만 (자동조회 대상 아님)
+        aliases: input.aliases?.length ? input.aliases : null, // 빈 배열로 기존 별칭을 지우지 않는다
       };
       for (const [k, v] of Object.entries(overlay)) {
         if (v == null) continue;
@@ -146,7 +152,7 @@ export async function POST(req: Request) {
         where: { id: dup.id },
         data: { ...patch, updatedBy: user.email, version: { increment: 1 } },
       });
-      await autoLinkRecords(reactivated.id, reactivated.name);
+      await autoLinkRecords(reactivated.id, reactivated.name, reactivated.aliases);
       return ok({ id: reactivated.id, code: reactivated.code, reactivated: true, auto }, { status: 200 });
     }
 
@@ -161,6 +167,7 @@ export async function POST(req: Request) {
         data: {
           code,
           name: input.name,
+          aliases: input.aliases ?? [],
           joinYear: input.joinYear ?? null,
           region: input.region ?? auto?.region ?? null,
           addressDetail: input.addressDetail ?? auto?.addressDetail ?? null,
@@ -185,7 +192,7 @@ export async function POST(req: Request) {
       });
     });
 
-    await autoLinkRecords(company.id, company.name);
+    await autoLinkRecords(company.id, company.name, company.aliases);
     return ok({ id: company.id, code: company.code, auto }, { status: 201 });
   });
 }

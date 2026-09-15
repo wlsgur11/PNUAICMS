@@ -8,6 +8,7 @@ import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { companyUpdateSchema } from '@/lib/validation';
 import { maskName } from '@/lib/list-filters';
+import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
 
 type Ctx = { params: { id: string } };
 
@@ -72,6 +73,11 @@ export async function PUT(req: Request, { params }: Ctx) {
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '입력값 오류', 422);
     const { version, autoLookup: _ignore, ...data } = parsed.data;
 
+    if (data.aliases?.length) {
+      const clash = await findAliasConflict(params.id, data.aliases);
+      if (clash) return fail(`별칭 '${clash.alias}' 은(는) 이미 '${clash.owner}' 이(가) 쓰고 있습니다.`, 409);
+    }
+
     // 낙관적 락: 현재 version 과 일치할 때만 갱신 + version 증가
     const result = await prisma.company.updateMany({
       where: { id: params.id, version },
@@ -84,7 +90,11 @@ export async function PUT(req: Request, { params }: Ctx) {
       return fail('다른 사용자가 먼저 수정했습니다. 새로고침 후 다시 시도하세요.', 409);
     }
     const updated = await prisma.company.findUnique({ where: { id: params.id } });
-    return ok(updated);
+    // 별칭을 넣었으면 그 이름으로 남아 있던 미매칭 실적을 바로 끌어온다.
+    // 안 하면 저장은 됐는데 화면은 그대로라 "안 먹혔다" 로 보인다
+    let linked = 0;
+    if (updated && data.aliases !== undefined) linked = await autoLinkRecords(updated.id, updated.name, updated.aliases);
+    return ok({ ...updated, linked });
   });
 }
 

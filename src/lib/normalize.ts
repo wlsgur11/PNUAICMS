@@ -19,8 +19,21 @@ export function normName(s: string): string {
  */
 export function normCompany(s: string): string {
   return (s || '')
-    .replace(/[(（]\s*(주식회사|유한회사|주|유|재|사)\s*[)）]/g, '') // (주) (유) (재) (사) ...
+    // '쭈' 는 '주' 오타다(엑셀에 '(쭈)폭씨' 로 들어온다). 같은 자리의 한 글자라 흡수한다
+    .replace(/[(（]\s*(주식회사|유한회사|주|쭈|유|재|사)\s*[)）]/g, '') // (주) (유) (재) (사) ...
     .replace(/㈜|주식회사|유한회사|재단법인|사단법인/g, '')
     .replace(/[\s()（）　]/g, '')
     .toLowerCase();
+}
+
+/**
+ * 기업 하나가 가진 매칭 키(이름 + 별칭).
+ *
+ * 정규화로는 못 넘는 표기가 있다. 'Bear Robotics' 와 '베어로보틱스코리아', 'AB180' 과
+ * '에이비일팔공' 은 글자가 실제로 다르다. 엑셀을 고칠 수 없으니 기업 쪽에 "이렇게도
+ * 적혀 온다" 를 적어 두고 매칭 때 같이 본다.
+ */
+export function companyKeys(c: { name: string; aliases?: string[] | null }): string[] {
+  const keys = [c.name, ...(c.aliases ?? [])].map(normCompany).filter(Boolean);
+  return [...new Set(keys)];
 }

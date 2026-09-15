@@ -12,6 +12,7 @@ import { requireRole } from '@/lib/auth';
 import { ok, fail, handle, MAX_UPLOAD_BYTES } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { classifyHeader, toBool, cellText, type HeaderCat } from '@/lib/excel-import';
+import { autoLinkRecords } from '@/lib/company-autolink';
 
 type Parsed = {
   company: Record<string, unknown>;
@@ -170,7 +171,7 @@ export async function POST(req: Request) {
     }
 
     // ── DB 적재 ──
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, linked = 0;
     const errors: { name: string; error: string }[] = [];
 
     for (const rec of records) {
@@ -210,6 +211,9 @@ export async function POST(req: Request) {
           });
           companyId = newCompany.id;
           created++;
+          // 단건 등록과 같게. 이게 없으면 일괄 등록 뒤 실적이 계속 미매칭으로 남아
+          // 실적 엑셀을 다시 올려야 했다
+          linked += await autoLinkRecords(newCompany.id, newCompany.name);
         }
 
         // 2) 협업: 빈 값만 채우는 방식으로 upsert
@@ -249,7 +253,7 @@ export async function POST(req: Request) {
     }
 
     return ok({
-      total: records.length, created, updated, errors,
+      total: records.length, created, updated, linked, errors,
       headerRow, sheetName: ws.name,
       columnMapping,
       collabCounts,
