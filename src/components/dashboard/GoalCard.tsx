@@ -115,7 +115,9 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
           </div>
           <div className="dash-metric-sub">
             {swcu.total === 0 ? '해당 연도 지표 없음' : <>미달 {swcu.unmetCount}개</>}
-            {swcuDiff != null && swcu.prevTotal != null && (
+            {/* 그 해 지표가 아직 등록되지 않았으면 증감을 내지 않는다. 0 과 12 를
+                견주면 '12개 떨어졌다' 가 되는데, 지표가 없는 것과 못 채운 것은 다르다 */}
+            {swcu.total > 0 && swcuDiff != null && swcu.prevTotal != null && (
               <>
                 <br />
                 전년 {swcu.prevMet}/{swcu.prevTotal}에서{' '}

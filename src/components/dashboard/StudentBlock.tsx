@@ -21,7 +21,10 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
     <div className="card dash-card">
       <div className="dash-head">
         <h2>학생 관리 현황</h2>
-        <p>등록된 학생 수와 실적 참여 규모입니다. 상담 횟수가 적은 고학년은 따로 집계했습니다.</p>
+        <p>
+          실적 파일에서 모인 학번과 직접 등록한 학생을 합한 수입니다. 재학생 수와는 다릅니다.
+          상담 횟수가 적은 고학년은 따로 집계했습니다.
+        </p>
       </div>
 
       {s.total === 0 ? (
@@ -30,19 +33,22 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
         <>
           <div className="dash-metrics" style={{ marginBottom: 22 }}>
             <div>
-              <div className="dash-metric-label">전체 학생</div>
+              <div className="dash-metric-label">등록 학생</div>
               <div className="dash-metric-value"><CountUp end={s.total} /><span className="unit">명</span></div>
               <div className="dash-metric-sub">졸업 {s.graduated}명</div>
             </div>
             <div>
               <div className="dash-metric-label">산학 참여</div>
               <div className="dash-metric-value"><CountUp end={s.projectParticipants} /><span className="unit">명</span></div>
-              <div className="dash-metric-sub">전체의 {((s.projectParticipants / s.total) * 100).toFixed(0)}%</div>
+              {/* '전체의 몇 %' 를 적었다가 뺐다. 학생 행 대부분이 과제 명단에서
+                  만들어지므로 분모가 분자와 거의 같아, 늘 90% 대가 나오고 아무것도
+                  말해 주지 않는다. 재학생으로 나눈 참여율은 위 목표 대비 카드에 있다 */}
+              <div className="dash-metric-sub">과제 명단에 학번이 있는 학생</div>
             </div>
             <div>
               <div className="dash-metric-label">인턴십 참여</div>
               <div className="dash-metric-value"><CountUp end={s.internParticipants} /><span className="unit">명</span></div>
-              <div className="dash-metric-sub">전체의 {((s.internParticipants / s.total) * 100).toFixed(0)}%</div>
+              <div className="dash-metric-sub">인턴십 명단에 학번이 있는 학생</div>
             </div>
             <div>
               <div className="dash-metric-label">상담 관리 필요</div>
