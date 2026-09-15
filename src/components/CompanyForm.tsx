@@ -36,7 +36,8 @@ export type CompanyFormData = {
   aliases?: string[] | null;
 };
 
-const EMPTY: CompanyFormData = { name: '', mou: false, status: '미접촉', priority: 'B', region: '부산' };
+/** 신규 등록 기본값. 이름만 채워 넣고 싶을 때가 있어 밖에서도 쓴다 */
+export const EMPTY: CompanyFormData = { name: '', mou: false, status: '미접촉', priority: 'B', region: '부산' };
 
 export default function CompanyForm({ initial, mode }: { initial?: CompanyFormData; mode: 'create' | 'edit' }) {
   const router = useRouter();
