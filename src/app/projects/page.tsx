@@ -161,10 +161,12 @@ function ProjectsPageInner() {
             <div style={{ marginTop: 16 }}>
               <div className="info-label" style={{ marginBottom: 6 }}>참여학생 ({selected.students.length}명)</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {/* 학번이 있는 학생만 상세로 간다. 24, 25년 실적은 엑셀에 이름만 콤마로
+                    적혀 있어 학번이 없다. 그런 학생은 갈 곳이 없어 그냥 글자로 둔다 */}
                 {selected.students.length
                   ? selected.students.map((s, i) => (
                       s.studentNo
-                        ? <span key={i} className="tag tag-indigo" style={{ cursor: 'pointer' }} onClick={() => router.push(`/students/${s.studentNo}`)}>{s.nameMasked}</span>
+                        ? <Link key={i} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.nameMasked}</Link>
                         : <span key={i} className="tag tag-indigo">{s.nameMasked}</span>
                     ))
                   : <span className="muted">기록 없음</span>}
