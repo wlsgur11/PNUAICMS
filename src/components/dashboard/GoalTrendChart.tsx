@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { GoalTrendPoint } from '@/lib/dashboard-shape';
 
 /**
@@ -22,6 +23,8 @@ const pick = (d: GoalTrendPoint, k: 'industry' | 'internship') =>
     : { actual: d.internshipAchieved, target: d.internshipTarget };
 
 export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
+  // 건수 차트와 같은 방식. 막대마다 상시 라벨을 달면 여덟 개 숫자가 격자보다 먼저 읽힌다
+  const [hover, setHover] = useState<number | null>(null);
   const series = [...(data ?? [])].sort((a, b) => a.year - b.year);
   if (series.length === 0) {
     return <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', padding: '18px 0', textAlign: 'center' }}>추이를 그릴 연도 데이터가 없습니다.</div>;
@@ -34,7 +37,10 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
   // 축 최대값은 5%p 단위로 올린다. 17.3% 같은 값을 축 꼭대기에 두면 눈금이 안 읽힌다
   const max = Math.max(0.05, Math.ceil((Math.max(...all) * 1.15) / 0.05) * 0.05);
   const ticks = [0, max / 2, max];
+  // 축 눈금은 짧게(12.5%), 말풍선은 카드 위쪽 숫자와 같은 한 자리 소수로(15.0%).
+  // 축에 15.0% 를 쓰면 34px 폭을 넘고, 말풍선에 15% 를 쓰면 바로 위 '목표 15.0% 초과' 와 어긋난다
   const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
+  const pct1 = (v: number) => `${(v * 100).toFixed(1)}%`;
   const H = 92; // 그래프 높이. Y축 라벨과 막대가 같은 좌표계를 쓴다
   // 올해는 아직 안 끝난 해다. 막대에 사선을 얹어 확정 수치가 아님을 드러낸다.
   // 다른 해와 똑같이 칠하면 연중 실적이 전년 대비 급락한 것처럼 읽힌다
@@ -62,18 +68,20 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
             }} />
           ))}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10, height: '100%' }}>
-        {series.map((d) => (
-          <div key={d.year} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+        {series.map((d, di) => (
+          <div
+            key={d.year}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%', position: 'relative' }}
+            onMouseEnter={() => setHover(d.year)}
+            onMouseLeave={() => setHover(null)}
+          >
             {/* 막대 폭을 묶어 둔다. flex 로만 두면 연도가 셋일 때 한 막대가 90px 을 넘어
                 납작한 덩어리로 보인다 */}
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: '100%' }}>
               {SERIES.map((s) => {
                 const { actual, target } = pick(d, s.key);
-                const title = actual == null
-                  ? `${d.year} ${s.label} 값 없음`
-                  : `${d.year} ${s.label} ${(actual * 100).toFixed(1)}%${target != null ? ` (목표 ${(target * 100).toFixed(1)}%)` : ''}${d.year === nowYear ? ' · 진행중' : ''}`;
                 return (
-                  <div key={s.key} title={title} style={{ flex: 1, maxWidth: 26, position: 'relative', height: '100%' }}>
+                  <div key={s.key} style={{ flex: 1, maxWidth: 26, position: 'relative', height: '100%' }}>
                     {actual == null ? (
                       /* 값이 없는 해. 0% 막대로 보이면 미달성으로 읽히므로 점선만 둔다 */
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, borderTop: '1px dashed var(--chart-na)' }} />
@@ -89,6 +97,8 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
                           // 미달한 막대는 계열색을 지켜 어느 쪽이 산학이고 인턴십인지 남긴다
                           backgroundColor: target != null && actual >= target ? 'var(--chart-met)' : s.color,
                           borderRadius: '2px 2px 0 0',
+                          opacity: hover == null || hover === d.year ? 1 : 0.35,
+                          transition: 'opacity 160ms',
                         }}
                       />
                     )}
@@ -102,6 +112,38 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
                 );
               })}
             </div>
+
+            {/* 말풍선은 그리기 영역 위에 얹는다. 안쪽에 두면 키 큰 막대를 가린다.
+                양끝 해는 가운데 정렬하면 카드 밖으로 잘려서 좌우로 민다 */}
+            {hover === d.year && (
+              <div style={{
+                position: 'absolute', bottom: '100%', left: '50%', marginBottom: 6,
+                transform: `translateX(${di === 0 ? '-10%' : di === series.length - 1 ? '-90%' : '-50%'})`,
+                background: 'var(--slate-900)', color: 'var(--surface)',
+                borderRadius: 'var(--radius-sm)', padding: '7px 10px',
+                fontSize: 'calc(11px * var(--fs, 1))', lineHeight: 1.6, whiteSpace: 'nowrap',
+                pointerEvents: 'none', boxShadow: 'var(--shadow-md)', zIndex: 1,
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>
+                  {d.year}{d.year === nowYear ? ' (진행중)' : ''}
+                </div>
+                {SERIES.map((s) => {
+                  const { actual, target } = pick(d, s.key);
+                  return (
+                    <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{
+                        width: 6, height: 6, borderRadius: 1, flexShrink: 0,
+                        background: actual != null && target != null && actual >= target ? 'var(--chart-met)' : s.color,
+                      }} />
+                      {s.label}{' '}
+                      {actual == null
+                        ? '값 없음'
+                        : <>{pct1(actual)}{target != null && ` (목표 ${pct1(target)})`}</>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
           </div>
@@ -110,7 +152,10 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
       {/* 연도 라벨은 Y축 폭(34) 과 간격(8) 만큼 밀어 막대와 세로를 맞춘다 */}
       <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 42 }}>
         {series.map((d) => (
-          <div key={d.year} style={{ flex: 1, textAlign: 'center', fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)' }}>{d.year}</div>
+          <div key={d.year} style={{
+            flex: 1, textAlign: 'center', fontSize: 'calc(10px * var(--fs, 1))',
+            color: hover === d.year ? 'var(--text-1)' : 'var(--text-3)',
+          }}>{d.year}</div>
         ))}
       </div>
       <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
