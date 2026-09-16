@@ -221,9 +221,13 @@ function UnmatchedCard() {
       ) : (
         <>
           <p className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', lineHeight: 1.7, margin: '0 0 14px' }}>
-            엑셀에 적힌 이름이 CMS 기업과 달라 안 붙은 것들입니다. 같은 기업이면 오른쪽에서
-            골라 연결하세요. 그 표기가 해당 기업의 <b>다른 표기</b>로 저장돼 다음 업로드부터 자동으로 붙습니다.
-            CMS에 아예 없는 기업이면 먼저 <a className="text-link" href="/companies/new">기업으로 등록</a>하세요.
+            엑셀에 적힌 이름이 CMS 기업과 달라 안 붙은 것들입니다.
+            <br />
+            <b>이미 CMS에 있는 기업</b>이면 오른쪽에서 골라 <b>연결</b>하세요. 그 표기가 해당 기업의
+            <b> 다른 표기</b>로 저장돼 다음 업로드부터 자동으로 붙습니다.
+            <br />
+            <b>처음 들어오는 기업</b>이면 <b>새 기업</b>을 누르세요. 이름이 채워진 등록 화면이 열리고,
+            저장하면 이 실적이 바로 붙습니다.
           </p>
 
           {/* 기업이 100곳 넘는다. select 로 펼치면 찾기 어려워 입력하며 좁히는 datalist 를 쓴다 */}
@@ -252,6 +256,8 @@ function UnmatchedCard() {
                       disabled={linking === r.name || !(pickName[r.name] || '').trim()}>
                 {linking === r.name ? '연결 중…' : '연결'}
               </button>
+              {/* 엑셀 이름 그대로 등록하면 저장하는 순간 이 실적이 붙는다. 별칭도 필요 없다 */}
+              <a className="btn btn-sm" href={`/companies/new?name=${encodeURIComponent(r.name)}`}>새 기업</a>
             </div>
           ))}
         </>
