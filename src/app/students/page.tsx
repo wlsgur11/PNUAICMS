@@ -10,9 +10,19 @@ import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 import { clickKeys } from '@/lib/a11y';
 import type { StudentListRow } from '@/lib/student-shape';
 
-type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[] } };
-type Filters = { q: string; department: string; major: string; grade: string; status: string };
-const EMPTY: Filters = { q: '', department: '', major: '', grade: '', status: '' };
+type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[]; careerGoals: string[] } };
+type Filters = { q: string; department: string; major: string; grade: string; status: string; careerGoal: string; counsel: string; sort: string };
+const EMPTY: Filters = { q: '', department: '', major: '', grade: '', status: '', careerGoal: '', counsel: '', sort: '' };
+
+const SORTS: { value: string; label: string }[] = [
+  { value: '', label: '최근 수정순' },
+  { value: 'created_desc', label: '최근 등록순' },
+  { value: 'counsel_asc', label: '상담 적은 순' },
+  { value: 'counsel_desc', label: '상담 많은 순' },
+  { value: 'name_asc', label: '이름순' },
+  // 같은 이름이 여러 줄 보일 때 학번순으로 두면 중복이 나란히 붙는다
+  { value: 'no_asc', label: '학번순' },
+];
 
 function StudentsPageInner() {
   const router = useRouter();
@@ -46,7 +56,20 @@ function StudentsPageInner() {
             <option value="재학">재학</option>
             <option value="졸업">졸업</option>
           </select>
-          <input placeholder="이름·학번·연락처 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
+          <select value={filters.careerGoal} onChange={(e) => set('careerGoal', e.target.value)}>
+            <option value="">진로희망 전체</option>
+            {(facets?.careerGoals ?? []).map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+          {/* 상담이 주 업무다. 아직 한 번도 안 만난 학생을 뽑는 게 제일 잦다 */}
+          <select value={filters.counsel} onChange={(e) => set('counsel', e.target.value)}>
+            <option value="">상담 전체</option>
+            <option value="없음">상담 없음</option>
+            <option value="있음">상담 있음</option>
+          </select>
+          <select value={filters.sort} onChange={(e) => set('sort', e.target.value)}>
+            {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <input placeholder="이름·학번·연락처·이메일 검색..." value={filters.q} onChange={(e) => set('q', e.target.value)} style={{ flex: '1 1 220px' }} />
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
           {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
