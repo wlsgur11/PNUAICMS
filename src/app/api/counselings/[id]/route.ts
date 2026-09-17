@@ -21,6 +21,7 @@ export async function PUT(req: Request, { params }: Ctx) {
     const updated = await prisma.counseling.update({
       where: { id: params.id },
       data: {
+        type: parsed.data.type || null,
         counselDate: parsed.data.counselDate,
         counselor: parsed.data.counselor || null,
         content: parsed.data.content || null,

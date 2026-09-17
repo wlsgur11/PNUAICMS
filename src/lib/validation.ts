@@ -98,17 +98,9 @@ export const historyUpdateSchema = z.object({
 });
 
 // ── 학생 이력 ────────────────────────────────────────────
-const programMapSchema = z
-  .object({
-    program1: z.string().optional(),
-    program2: z.string().optional(),
-    program3: z.string().optional(),
-    program4: z.string().optional(),
-    program5: z.string().optional(),
-  })
-  .partial()
-  .optional()
-  .nullable();
+// 사업 참여. 갯수 제한 없이 이름만 받는다. 빈 줄과 중복은 여기서 턴다
+const programListSchema = z.array(z.string()).optional()
+  .transform((a) => (a ? [...new Set(a.map((s) => s.trim()).filter(Boolean))] : undefined));
 
 export const counselingItemSchema = z.object({
   id: z.string().optional(),
@@ -122,6 +114,7 @@ export const counselingItemSchema = z.object({
  * 건수 상한은 두지 않는다. 상담이 이 시스템의 주 업무라 만날 때마다 쌓인다.
  */
 export const counselingSchema = z.object({
+  type: z.enum(ENUMS.COUNSEL_TYPE as unknown as [string, ...string[]]).optional().nullable(),
   counselDate: z.string().trim().min(1, '상담일자는 필수입니다.'),
   counselor: optStr,
   content: optStr,
@@ -143,14 +136,18 @@ export const studentCreateSchema = z.object({
   grade: z.coerce.number().int().min(1).max(4).optional().nullable(),
   gpa: z.coerce.number().min(0).max(4.5).optional().nullable(),
   careerGoal: z.enum(ENUMS.CAREER_GOAL as unknown as [string, ...string[]]).optional().nullable(),
-  phone: optStr,
-  email: optStr,
+  // 신규 등록은 연락처를 받는다. 상담하면서 적어 두시려고 필수로 둔 칸이다.
+  // 수정에는 안 걸린다(studentUpdateSchema 가 partial). 실적 엑셀에서 들어온 학생은
+  // 연락처가 비어 있는데, 거기까지 막으면 학과·학년조차 못 고친다
+  phone: z.string({ required_error: '전화번호는 필수입니다.' }).trim().min(1, '전화번호는 필수입니다.'),
+  email: z.string({ required_error: '이메일은 필수입니다.' }).trim().min(1, '이메일은 필수입니다.'),
   certificates: z.array(z.string().trim()).optional().default([]),
   foreignLanguages: z.array(z.string().trim()).optional().default([]),
+  clubs: z.array(z.string().trim()).optional().default([]),
   graduationDate: optStr,
   employmentCompany: optStr,
-  swPrograms: programMapSchema,
-  bootcampPrograms: programMapSchema,
+  swPrograms: programListSchema,
+  bootcampPrograms: programListSchema,
   // 상담 건수 상한 없음. 예전엔 5건까지였는데 상담이 주 업무라 금방 막혔다
   counselings: z.array(counselingItemSchema).optional().default([]),
   internships: z.array(studentInternshipItemSchema).optional().default([]),
@@ -162,6 +159,9 @@ export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true, c
     .number({ invalid_type_error: '수정 요청에 버전 정보가 없습니다. 새로고침 후 다시 시도하세요.' })
     .int(),
   name: z.string().trim().min(1, '이름은 필수입니다.').optional(),
+  // 학번을 고칠 수 있게 한다. 교수님이 진짜 학번을 모르실 때 임의로 넣어 두시는데,
+  // 기본키라 한번 넣으면 못 고쳐서 지우고 다시 만드는 수밖에 없었다(상담도 함께 날아갔다)
+  studentNo: z.string().trim().min(1, '학번은 비울 수 없습니다.').optional(),
   // 상담은 학생 상세에서 따로 다룬다(/api/students/:no/counselings). 여기서 받으면
   // 수정 폼을 저장할 때마다 그동안 따로 넣은 상담이 통째로 덮인다
   internships: z.array(studentInternshipItemSchema).optional(),

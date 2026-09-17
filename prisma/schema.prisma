@@ -193,6 +193,7 @@ model Student {
   email             String? // 이메일
   certificates      String[] @default([]) // 자격증
   foreignLanguages  String[] @default([]) // 외국어
+  clubs             String[] @default([]) // 동아리 (한 학생이 여러 곳)
   graduationDate    String? // 졸업일자 (yyyy-MM-dd 텍스트)
   employmentCompany String? // 취업 기업명(자유입력)
   swPrograms        Json? // {program1..5} SW중심대학 사업참여
@@ -212,11 +213,12 @@ model Student {
   @@map("students")
 }
 
-// ── 진로지도 상담 (학생 1:N, 최대 5건은 앱에서 검증) ──────
+// ── 진로지도 상담 (학생 1:N) ─────────────────────────────
 model Counseling {
   id          String   @id @default(cuid())
   studentNo   String
   student     Student  @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+  type        String? // 상담 유형: 진로상담/창업상담
   counselDate String? // 상담일자 (yyyy-MM-dd)
   counselor   String? // 상담자 이름
   content     String? // 상담내역

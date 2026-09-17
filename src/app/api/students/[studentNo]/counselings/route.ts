@@ -24,6 +24,7 @@ export async function POST(req: Request, { params }: Ctx) {
     const c = await prisma.counseling.create({
       data: {
         studentNo: params.studentNo,
+        type: parsed.data.type || null,
         counselDate: parsed.data.counselDate,
         counselor: parsed.data.counselor || null,
         content: parsed.data.content || null,

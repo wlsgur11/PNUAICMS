@@ -1,7 +1,7 @@
 /**
  * src/lib/list-filters.ts
  * ---------------------------------------------------------
- * 인턴십·산학협력 목록/엑셀 라우트가 공유하는 필터(where) 빌더 + 이름 마스킹.
+ * 인턴십·산학협력·학생 목록/엑셀 라우트가 공유하는 필터(where)·정렬 빌더.
  * (route.ts 에서 직접 export 하면 Next.js 라우트 타입 제약에 걸려 lib 으로 분리)
  */
 import { Prisma } from '@prisma/client';
@@ -62,6 +62,13 @@ export function studentWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
   if (counsel === '없음') and.push({ counselings: { none: {} } });
   if (counsel === '있음') and.push({ counselings: { some: {} } });
 
+  // 신규 등록은 연락처가 필수지만, 실적 엑셀에서 들어온 학생은 비어 있다.
+  // 채워 넣을 대상을 뽑아 보는 칸이다
+  const contact = sp.get('contact'); // '없음' | '있음'
+  const blank = (f: 'phone' | 'email') => ({ OR: [{ [f]: null }, { [f]: '' }] } as Prisma.StudentWhereInput);
+  if (contact === '없음') and.push({ OR: [blank('phone'), blank('email')] });
+  if (contact === '있음') and.push({ AND: [{ phone: { not: null } }, { phone: { not: '' } }, { email: { not: null } }, { email: { not: '' } }] });
+
   // 이메일은 대소문자가 섞여 들어온다. 학번, 전화는 영향 없고 이름은 한글이라 무관
   const q = sp.get('q')?.trim();
   if (q) and.push({ OR: [
@@ -96,11 +103,3 @@ export function studentOrderBy(sp: URLSearchParams): Prisma.StudentOrderByWithRe
  * 아니라 옆 칸 값이 새어 들어온 것으로 본다. 목록 필터와 대시보드가 함께 쓴다.
  */
 export const isJunkValue = (s: string) => /^[\d.,%\s]+$/.test(s);
-
-/** 이름 마스킹: 2글자→끝, 3글자+→가운데 */
-export function maskName(name: string): string {
-  const n = (name || '').trim();
-  if (n.length <= 1) return n;
-  if (n.length === 2) return n[0] + '*';
-  return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1];
-}

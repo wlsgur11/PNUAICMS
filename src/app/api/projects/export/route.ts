@@ -1,13 +1,13 @@
 /**
  * GET /api/projects/export — 현재 필터 조건의 산학협력 프로젝트 목록을 .xlsx 로.
- *  쿼리 파라미터는 GET /api/projects 와 동일. 참여학생은 마스킹 이름.
+ *  쿼리 파라미터는 GET /api/projects 와 동일.
  */
 export const runtime = 'nodejs';
 
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { projectWhere, maskName } from '@/lib/list-filters';
+import { projectWhere } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     include: {
       company: { select: { name: true } },
       lab: { select: { professorName: true, labName: true } },
-      students: { include: { student: { select: { nameMasked: true } } } },
+      students: { include: { student: { select: { name: true, nameMasked: true } } } },
     },
   });
 
@@ -37,8 +37,8 @@ export async function GET(req: Request) {
     { header: '참여학생', key: 'students', width: 28 },
   ];
   for (const it of items) {
-    const named = it.students.map((s) => s.student.nameMasked).filter(Boolean);
-    const raws = it.studentNamesRaw ? it.studentNamesRaw.split(',').filter(Boolean).map(maskName) : [];
+    const named = it.students.map((s) => s.student.name || s.student.nameMasked).filter(Boolean);
+    const raws = it.studentNamesRaw ? it.studentNamesRaw.split(',').map((n) => n.trim()).filter(Boolean) : [];
     ws.addRow({
       year: it.year ?? '', category: it.category ?? '', dept: it.dept ?? '', type: it.type ?? '',
       prof: it.lab?.professorName ?? '', lab: it.lab?.labName ?? '', title: it.title ?? '',

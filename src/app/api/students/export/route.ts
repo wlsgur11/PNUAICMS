@@ -1,11 +1,11 @@
-/** GET /api/students/export — 학생 목록 엑셀 (마스킹). 쿼리는 /api/students 와 동일 의미. */
+/** GET /api/students/export — 학생 목록 엑셀. 쿼리는 /api/students 와 동일 의미. */
 export const runtime = 'nodejs';
 
 import ExcelJS from 'exceljs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { maskName, studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { studentWhere, studentOrderBy } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
@@ -26,17 +26,19 @@ export async function GET(req: Request) {
     { header: '전공', key: 'major', width: 16 },
     { header: '학년', key: 'grade', width: 8 },
     { header: '진로희망', key: 'career', width: 16 },
+    { header: '동아리', key: 'clubs', width: 20 },
     { header: '상담횟수', key: 'counsel', width: 10 },
     { header: '재학/졸업', key: 'status', width: 10 },
   ];
   for (const s of items) {
     ws.addRow({
       no: s.studentNo,
-      name: s.name ? maskName(s.name) : (s.nameMasked ?? ''),
+      name: s.name || s.nameMasked || '',
       dept: s.department ?? '',
       major: s.major ?? '',
       grade: s.grade ?? '',
       career: s.careerGoal ?? '',
+      clubs: s.clubs.join(', '),
       counsel: s._count.counselings,
       status: s.graduationDate ? '졸업' : '재학',
     });

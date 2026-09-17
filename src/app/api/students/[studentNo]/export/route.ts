@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { toProgramMap } from '@/lib/student-shape';
+import { toProgramList } from '@/lib/student-shape';
 
 type Ctx = { params: { studentNo: string } };
 
@@ -23,16 +23,16 @@ export async function GET(_req: Request, { params }: Ctx) {
   const wb = new ExcelJS.Workbook();
   wb.created = new Date();
   const ws = wb.addWorksheet('학생상세');
-  const sw = toProgramMap(s.swPrograms);
-  const bc = toProgramMap(s.bootcampPrograms);
+  const sw = toProgramList(s.swPrograms);
+  const bc = toProgramList(s.bootcampPrograms);
   const kv: [string, string | number][] = [
     ['학번', s.studentNo], ['이름', s.name ?? ''], ['학과', s.department ?? ''], ['전공', s.major ?? ''],
     ['학년', s.grade ?? ''], ['학점', s.gpa ?? ''], ['진로희망', s.careerGoal ?? ''],
     ['전화번호', s.phone ?? ''], ['이메일', s.email ?? ''],
     ['자격증', s.certificates.join(', ')], ['외국어', s.foreignLanguages.join(', ')],
     ['졸업일자', s.graduationDate ?? ''], ['취업기업', s.employmentCompany ?? ''],
-    ['SW사업', [sw.program1, sw.program2, sw.program3, sw.program4, sw.program5].filter(Boolean).join(' / ')],
-    ['부트캠프', [bc.program1, bc.program2, bc.program3, bc.program4, bc.program5].filter(Boolean).join(' / ')],
+    ['SW사업', sw.join(' / ')],
+    ['부트캠프', bc.join(' / ')],
   ];
   ws.addRow(['항목', '내용']);
   kv.forEach(([k, v]) => ws.addRow([k, v]));

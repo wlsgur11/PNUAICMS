@@ -7,7 +7,6 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { companyUpdateSchema } from '@/lib/validation';
-import { maskName } from '@/lib/list-filters';
 import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
 
 type Ctx = { params: { id: string } };
@@ -30,10 +29,10 @@ export async function GET(_req: Request, { params }: Ctx) {
     });
     if (!company) return fail('기업을 찾을 수 없습니다.', 404);
 
-    // 산학·인턴십 참여 학생 dedup (마스킹). 연결 A.
-    const seen = new Map<string, { studentNo: string; nameMasked: string }>();
+    // 산학·인턴십 참여 학생 dedup. 연결 A.
+    const seen = new Map<string, { studentNo: string; studentName: string }>();
     const add = (st: { studentNo: string; name: string | null; nameMasked: string | null }) => {
-      if (!seen.has(st.studentNo)) seen.set(st.studentNo, { studentNo: st.studentNo, nameMasked: st.name ? maskName(st.name) : (st.nameMasked || '-') });
+      if (!seen.has(st.studentNo)) seen.set(st.studentNo, { studentNo: st.studentNo, studentName: st.name || st.nameMasked || '-' });
     };
     for (const p of company.projects) for (const ps of p.students) add(ps.student);
     for (const it of company.internships) for (const is of it.students) add(is.student);
@@ -42,14 +41,14 @@ export async function GET(_req: Request, { params }: Ctx) {
     // 산학/인턴십 × 연도별 그룹 (연도 내림차순, 그룹 내 학번 중복 제거)
     type StRef = { student: { studentNo: string; name: string | null; nameMasked: string | null } };
     const groupByYear = (items: { year: number | null; students: StRef[] }[]) => {
-      const byYear = new Map<number, Map<string, { studentNo: string; nameMasked: string }>>();
+      const byYear = new Map<number, Map<string, { studentNo: string; studentName: string }>>();
       for (const it of items) {
         const y = it.year ?? 0;
         if (!byYear.has(y)) byYear.set(y, new Map());
         const m = byYear.get(y)!;
         for (const s of it.students) {
           const st = s.student;
-          if (!m.has(st.studentNo)) m.set(st.studentNo, { studentNo: st.studentNo, nameMasked: st.name ? maskName(st.name) : (st.nameMasked || '-') });
+          if (!m.has(st.studentNo)) m.set(st.studentNo, { studentNo: st.studentNo, studentName: st.name || st.nameMasked || '-' });
         }
       }
       return [...byYear.entries()].sort((a, b) => b[0] - a[0]).map(([year, m]) => ({ year, students: [...m.values()] }));

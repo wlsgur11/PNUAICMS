@@ -76,7 +76,7 @@ export default function StudentDashboardPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {data.needsAttention.map((s) => (
                 <Link key={s.studentNo} className="tag tag-amber" href={`/students/${s.studentNo}`}>
-                  {s.nameMasked} · {s.grade ?? '-'}학년 · 상담 {s.counselCount}회
+                  {s.studentName} · {s.grade ?? '-'}학년 · 상담 {s.counselCount}회
                 </Link>
               ))}
             </div>
@@ -98,7 +98,7 @@ export default function StudentDashboardPage() {
                       role="button" tabIndex={0}
                       onClick={() => router.push(`/students/${s.studentNo}`)}
                       onKeyDown={clickKeys(() => router.push(`/students/${s.studentNo}`))}>
-                    <td>{s.studentNo}</td><td>{s.nameMasked}</td><td>{s.department || '-'}</td><td className="center">{s.grade ?? '-'}</td><td>{s.updatedAt.slice(0, 10)}</td>
+                    <td>{s.studentNo}</td><td>{s.studentName}</td><td>{s.department || '-'}</td><td className="center">{s.grade ?? '-'}</td><td>{s.updatedAt.slice(0, 10)}</td>
                   </tr>
                 ))}
               </tbody>
