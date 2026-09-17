@@ -220,6 +220,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
           <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{s.email || '-'}</span></div>
           <div className="info-row"><span className="info-label">자격증</span><span className="info-value">{s.certificates.join(', ') || '-'}</span></div>
           <div className="info-row"><span className="info-label">외국어</span><span className="info-value">{s.foreignLanguages.join(', ') || '-'}</span></div>
+          <div className="info-row"><span className="info-label">동아리</span><span className="info-value">{(s.clubs ?? []).join(', ') || '-'}</span></div>
           <div className="info-row"><span className="info-label">졸업일자</span><span className="info-value">{s.graduationDate || '-'}</span></div>
           <div className="info-row"><span className="info-label">취업기업</span><span className="info-value">
             {s.employmentCompany

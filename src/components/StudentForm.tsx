@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
@@ -22,6 +22,7 @@ export type StudentFormData = {
   email: string;
   certificates: string; // 쉼표 입력
   foreignLanguages: string; // 쉼표 입력
+  clubs: string; // 쉼표 입력
   graduationDate: string;
   employmentCompany: string;
   swPrograms: ProgramMap;
@@ -33,11 +34,13 @@ const EMPTY_PROGRAMS: ProgramMap = { program1: '', program2: '', program3: '', p
 
 export const EMPTY_STUDENT: StudentFormData = {
   studentNo: '', name: '', department: '', major: '', grade: 1, gpa: '', careerGoal: '',
-  phone: '', email: '', certificates: '', foreignLanguages: '', graduationDate: '', employmentCompany: '',
+  phone: '', email: '', certificates: '', foreignLanguages: '', clubs: '', graduationDate: '', employmentCompany: '',
   swPrograms: { ...EMPTY_PROGRAMS }, bootcampPrograms: { ...EMPTY_PROGRAMS }, internships: [],
 };
 
 export default function StudentForm({ initial, mode }: { initial?: StudentFormData; mode: 'create' | 'edit' }) {
+  // 수정 중 학번을 고치면 입력값이 바뀐다. 요청 주소는 원래 학번이어야 해서 따로 잡아 둔다
+  const originalNo = useRef(initial?.studentNo ?? '');
   const router = useRouter();
   const [f, setF] = useState<StudentFormData>(initial ?? EMPTY_STUDENT);
   const [saving, setSaving] = useState(false);
@@ -53,9 +56,12 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!f.studentNo.trim() || !f.name.trim()) { toast('학번과 이름은 필수입니다.', 'error'); return; }
+    if (mode === 'create' && (!f.phone.trim() || !f.email.trim())) {
+      toast('전화번호와 이메일은 필수입니다.', 'error'); return;
+    }
 
     const payload = {
-      ...(mode === 'create' ? { studentNo: f.studentNo.trim() } : { version: f.version }),
+      ...(mode === 'create' ? { studentNo: f.studentNo.trim() } : { version: f.version, studentNo: f.studentNo.trim() }),
       name: f.name.trim(),
       department: f.department.trim() || null,
       major: f.major.trim() || null,
@@ -66,6 +72,7 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       email: f.email.trim() || null,
       certificates: f.certificates.split(',').map((v) => v.trim()).filter(Boolean),
       foreignLanguages: f.foreignLanguages.split(',').map((v) => v.trim()).filter(Boolean),
+      clubs: f.clubs.split(',').map((v) => v.trim()).filter(Boolean),
       graduationDate: f.graduationDate || null,
       employmentCompany: f.employmentCompany.trim() || null,
       swPrograms: f.swPrograms,
@@ -82,9 +89,9 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
         toast('등록되었습니다.', 'success');
         router.push(`/students/${f.studentNo.trim()}`);
       } else {
-        await api(`/api/students/${f.studentNo}`, { method: 'PUT', body: JSON.stringify(payload) });
+        await api(`/api/students/${originalNo.current}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast('수정되었습니다.', 'success');
-        router.push(`/students/${f.studentNo}`);
+        router.push(`/students/${f.studentNo.trim()}`);
       }
     } catch (e) {
       toast((e as Error).message, 'error');
@@ -99,7 +106,10 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       <div className="form-grid">
         <div className="form-field">
           <label>학번<span className="req">*</span></label>
-          <input value={f.studentNo} disabled={mode === 'edit'} onChange={(e) => set('studentNo', e.target.value)} placeholder="예: 20201234" />
+          <input value={f.studentNo} onChange={(e) => set('studentNo', e.target.value)} placeholder="예: 20201234" />
+          {mode === 'edit' && f.studentNo.trim() !== originalNo.current && (
+            <span className="hint">저장하면 {originalNo.current} 에 달린 상담과 실적이 새 학번으로 함께 옮겨집니다.</span>
+          )}
         </div>
         <div className="form-field">
           <label>이름<span className="req">*</span></label>
@@ -131,11 +141,11 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
           </select>
         </div>
         <div className="form-field">
-          <label>전화번호</label>
+          <label>전화번호{mode === 'create' && <span className="req">*</span>}</label>
           <input value={f.phone} onChange={(e) => set('phone', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>이메일</label>
+          <label>이메일{mode === 'create' && <span className="req">*</span>}</label>
           <input value={f.email} onChange={(e) => set('email', e.target.value)} />
         </div>
         <div className="form-field">
@@ -153,6 +163,10 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
         <div className="form-field full">
           <label>외국어 <span className="hint">(쉼표 구분)</span></label>
           <input value={f.foreignLanguages} onChange={(e) => set('foreignLanguages', e.target.value)} placeholder="예: TOEIC 850" />
+        </div>
+        <div className="form-field full">
+          <label>동아리 <span className="hint">(쉼표 구분)</span></label>
+          <input value={f.clubs} onChange={(e) => set('clubs', e.target.value)} placeholder="예: PULSE, 코딩동아리" />
         </div>
       </div>
 
