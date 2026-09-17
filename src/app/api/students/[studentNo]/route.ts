@@ -137,3 +137,37 @@ export async function PUT(req: Request, { params }: Ctx) {
     return ok({ studentNo: params.studentNo, version: after?.version });
   });
 }
+
+/**
+ * DELETE /api/students/:studentNo — 완전 삭제
+ *
+ * 학번이 기본키라 잘못 넣은 학번은 고칠 수가 없다. 임의 학번으로 만든 학생을
+ * 치우려면 지우는 수밖에 없어서 소프트 삭제가 아니라 실제 삭제로 둔다.
+ *
+ * 딸린 것은 스키마의 Cascade 로 같이 지워진다. 그중 상담과 수동 인턴십은 사람이
+ * 손으로 넣은 값이라 되살릴 길이 없고, 산학·인턴십 실적 연결은 실적 엑셀을 다시
+ * 올리면 돌아온다. 무엇이 사라지는지 세어서 돌려주고 화면에서 먼저 보여 준다.
+ */
+export async function DELETE(_req: Request, { params }: Ctx) {
+  return handle(async () => {
+    await requireRole('ADMIN');
+    const s = await prisma.student.findUnique({
+      where: { studentNo: params.studentNo },
+      select: {
+        name: true,
+        _count: { select: { counselings: true, manualInternships: true, projects: true, internships: true } },
+      },
+    });
+    if (!s) return fail('학생을 찾을 수 없습니다.', 404);
+
+    await prisma.student.delete({ where: { studentNo: params.studentNo } });
+    return ok({
+      deleted: true,
+      studentNo: params.studentNo,
+      name: s.name,
+      counselings: s._count.counselings,
+      internships: s._count.manualInternships,
+      projectLinks: s._count.projects + s._count.internships,
+    });
+  });
+}
