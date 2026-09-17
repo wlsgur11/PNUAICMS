@@ -63,6 +63,7 @@ export type StudentDetail = {
   email: string | null;
   certificates: string[];
   foreignLanguages: string[];
+  clubs: string[];
   graduationDate: string | null;
   employmentCompany: string | null;
   employmentCompanyId: string | null; // 취업기업명 정확일치 매칭 (연결 B)

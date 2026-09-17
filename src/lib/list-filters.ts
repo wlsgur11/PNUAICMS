@@ -62,6 +62,13 @@ export function studentWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
   if (counsel === '없음') and.push({ counselings: { none: {} } });
   if (counsel === '있음') and.push({ counselings: { some: {} } });
 
+  // 신규 등록은 연락처가 필수지만, 실적 엑셀에서 들어온 학생은 비어 있다.
+  // 채워 넣을 대상을 뽑아 보는 칸이다
+  const contact = sp.get('contact'); // '없음' | '있음'
+  const blank = (f: 'phone' | 'email') => ({ OR: [{ [f]: null }, { [f]: '' }] } as Prisma.StudentWhereInput);
+  if (contact === '없음') and.push({ OR: [blank('phone'), blank('email')] });
+  if (contact === '있음') and.push({ AND: [{ phone: { not: null } }, { phone: { not: '' } }, { email: { not: null } }, { email: { not: '' } }] });
+
   // 이메일은 대소문자가 섞여 들어온다. 학번, 전화는 영향 없고 이름은 한글이라 무관
   const q = sp.get('q')?.trim();
   if (q) and.push({ OR: [

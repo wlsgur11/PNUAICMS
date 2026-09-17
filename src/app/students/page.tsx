@@ -11,8 +11,8 @@ import { clickKeys } from '@/lib/a11y';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[]; careerGoals: string[] } };
-type Filters = { q: string; department: string; major: string; grade: string; status: string; careerGoal: string; counsel: string; sort: string };
-const EMPTY: Filters = { q: '', department: '', major: '', grade: '', status: '', careerGoal: '', counsel: '', sort: '' };
+type Filters = { q: string; department: string; major: string; grade: string; status: string; careerGoal: string; counsel: string; contact: string; sort: string };
+const EMPTY: Filters = { q: '', department: '', major: '', grade: '', status: '', careerGoal: '', counsel: '', contact: '', sort: '' };
 
 const SORTS: { value: string; label: string }[] = [
   { value: '', label: '최근 수정순' },
@@ -65,6 +65,12 @@ function StudentsPageInner() {
             <option value="">상담 전체</option>
             <option value="없음">상담 없음</option>
             <option value="있음">상담 있음</option>
+          </select>
+          {/* 신규 등록은 연락처가 필수다. 예전 학생은 비어 있어서 채울 대상을 뽑아 본다 */}
+          <select value={filters.contact} onChange={(e) => set('contact', e.target.value)}>
+            <option value="">연락처 전체</option>
+            <option value="없음">연락처 없음</option>
+            <option value="있음">연락처 있음</option>
           </select>
           <select value={filters.sort} onChange={(e) => set('sort', e.target.value)}>
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}

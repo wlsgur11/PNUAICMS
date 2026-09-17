@@ -50,6 +50,7 @@ export async function GET(_req: Request, { params }: Ctx) {
       email: s.email,
       certificates: s.certificates,
       foreignLanguages: s.foreignLanguages,
+      clubs: s.clubs,
       graduationDate: s.graduationDate,
       employmentCompany: s.employmentCompany,
       employmentCompanyId,
@@ -90,6 +91,20 @@ export async function PUT(req: Request, { params }: Ctx) {
     const exists = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { version: true } });
     if (!exists) return fail('학생을 찾을 수 없습니다.', 404);
 
+    // 학번 변경. 같은 학번이 이미 있으면 덮어쓸 수 없다. 그건 두 학생을 합치는
+    // 일이라 화면에서 옮기고 지우셔야 한다
+    const newNo = d.studentNo && d.studentNo !== params.studentNo ? d.studentNo : null;
+    if (newNo) {
+      const taken = await prisma.student.findUnique({ where: { studentNo: newNo }, select: { name: true } });
+      if (taken) {
+        return fail(
+          `학번 ${newNo} 은(는) 이미 ${taken.name ?? '다른 학생'} 이(가) 쓰고 있습니다. `
+          + '같은 학생이면 한쪽 내용을 옮긴 뒤 그 학생을 삭제해 주세요.',
+          409,
+        );
+      }
+    }
+
     const internships = d.internships === undefined ? undefined
       : d.internships.filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks != null);
 
@@ -109,6 +124,7 @@ export async function PUT(req: Request, { params }: Ctx) {
           ...(d.email !== undefined ? { email: d.email } : {}),
           ...(d.certificates !== undefined ? { certificates: d.certificates } : {}),
           ...(d.foreignLanguages !== undefined ? { foreignLanguages: d.foreignLanguages } : {}),
+          ...(d.clubs !== undefined ? { clubs: d.clubs } : {}),
           ...(d.graduationDate !== undefined ? { graduationDate: d.graduationDate } : {}),
           ...(d.employmentCompany !== undefined ? { employmentCompany: d.employmentCompany } : {}),
           ...(d.swPrograms !== undefined ? { swPrograms: d.swPrograms ? (d.swPrograms as Prisma.InputJsonValue) : Prisma.JsonNull } : {}),
@@ -118,6 +134,8 @@ export async function PUT(req: Request, { params }: Ctx) {
         },
       });
       if (upd.count === 0) throw new ConflictError('다른 사용자가 먼저 수정했습니다. 새로고침 후 다시 시도하세요.');
+      // 학번을 바꾸면 상담·인턴십·실적 연결이 따라온다(관계의 onUpdate 기본값이 Cascade)
+      if (newNo) await tx.student.update({ where: { studentNo: params.studentNo }, data: { studentNo: newNo } });
       // 상담은 여기서 건드리지 않는다. 학생 상세에서 한 건씩 넣고 고친다.
       // 예전처럼 통째로 지우고 다시 넣으면, 이 폼을 저장하는 순간 그 사이 따로 넣은 상담이 사라진다
       if (internships !== undefined) {
@@ -127,8 +145,9 @@ export async function PUT(req: Request, { params }: Ctx) {
         }
       }
     });
-    const after = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { version: true } });
-    return ok({ studentNo: params.studentNo, version: after?.version });
+    const finalNo = newNo ?? params.studentNo;
+    const after = await prisma.student.findUnique({ where: { studentNo: finalNo }, select: { version: true } });
+    return ok({ studentNo: finalNo, version: after?.version });
   });
 }
 

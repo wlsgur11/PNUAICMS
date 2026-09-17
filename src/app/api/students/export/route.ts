@@ -26,6 +26,7 @@ export async function GET(req: Request) {
     { header: '전공', key: 'major', width: 16 },
     { header: '학년', key: 'grade', width: 8 },
     { header: '진로희망', key: 'career', width: 16 },
+    { header: '동아리', key: 'clubs', width: 20 },
     { header: '상담횟수', key: 'counsel', width: 10 },
     { header: '재학/졸업', key: 'status', width: 10 },
   ];
@@ -37,6 +38,7 @@ export async function GET(req: Request) {
       major: s.major ?? '',
       grade: s.grade ?? '',
       career: s.careerGoal ?? '',
+      clubs: s.clubs.join(', '),
       counsel: s._count.counselings,
       status: s.graduationDate ? '졸업' : '재학',
     });

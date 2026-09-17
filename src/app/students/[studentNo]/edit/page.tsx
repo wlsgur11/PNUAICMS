@@ -23,6 +23,7 @@ export default function EditStudentPage({ params }: { params: { studentNo: strin
     email: s.email ?? '',
     certificates: s.certificates.join(', '),
     foreignLanguages: s.foreignLanguages.join(', '),
+    clubs: (s.clubs ?? []).join(', '),
     graduationDate: s.graduationDate ?? '',
     employmentCompany: s.employmentCompany ?? '',
     swPrograms: toMap(s.swPrograms),

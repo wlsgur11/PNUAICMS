@@ -90,6 +90,7 @@ export async function POST(req: Request) {
         email: d.email ?? null,
         certificates: d.certificates ?? [],
         foreignLanguages: d.foreignLanguages ?? [],
+        clubs: d.clubs ?? [],
         graduationDate: d.graduationDate ?? null,
         employmentCompany: d.employmentCompany ?? null,
         swPrograms: d.swPrograms ? (d.swPrograms as Prisma.InputJsonValue) : undefined,
