@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 import PageHeader from '@/components/PageHeader';
+import { api } from '@/lib/client';
+import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
 import type { StudentDetail, ProgramMap } from '@/lib/student-shape';
 
@@ -52,6 +54,32 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
   if (isLoading && !s) return <div className="loading">불러오는 중…</div>;
   if (!s) return <div className="empty">학생을 찾을 수 없습니다.</div>;
 
+  /**
+   * 학번이 기본키라 잘못 넣은 학번은 고칠 수가 없다. 임의 학번으로 만든 학생은
+   * 지우는 것이 유일한 정리 방법이다. 무엇이 함께 사라지는지 먼저 세어서 보여 준다.
+   */
+  async function remove() {
+    if (!s) return;
+    const lost = [
+      s.counselings.length && `상담 ${s.counselings.length}건`,
+      s.internships.length && `인턴십 ${s.internships.length}건`,
+    ].filter(Boolean).join(', ');
+    const who = `${s.name || s.nameMasked || ''}(${s.studentNo})`;
+    if (!confirm(
+      `"${who}" 학생을 삭제할까요?\n\n`
+      + (lost ? `${lost}도 함께 지워지며 되살릴 수 없습니다.\n` : '')
+      + (s.projects.length ? `산학 실적 연결 ${s.projects.length}건은 실적 엑셀을 다시 올리면 돌아옵니다.\n` : '')
+      + '\n다른 학번으로 같은 학생이 또 있다면, 옮길 내용을 먼저 그쪽에 적어 두세요.',
+    )) return;
+    if (!confirm(`마지막 확인 - "${who}" 을(를) 영구 삭제합니다.\n정말 진행할까요?`)) return;
+    try {
+      await api(`/api/students/${s.studentNo}`, { method: 'DELETE' });
+      toast('삭제되었습니다.', 'success');
+      globalMutate((k) => typeof k === 'string' && k.startsWith('/api/students'));
+      router.push('/students');
+    } catch (e) { toast((e as Error).message, 'error'); }
+  }
+
   return (
     <>
       <PageHeader
@@ -61,6 +89,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
             <button className="btn" onClick={() => router.push('/students')}>목록</button>
             <button className="btn" onClick={() => { window.location.href = `/api/students/${s.studentNo}/export`; }}>Excel</button>
             <button className="btn btn-primary" onClick={() => router.push(`/students/${s.studentNo}/edit`)}>정보 수정</button>
+            <button className="btn btn-danger" onClick={remove}>삭제</button>
           </div>
         }
       />

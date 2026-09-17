@@ -5,26 +5,14 @@ import ExcelJS from 'exceljs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { maskName } from '@/lib/list-filters';
-
-function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = {};
-  const dept = sp.get('department'); if (dept) where.department = dept;
-  const major = sp.get('major'); if (major) where.major = major;
-  const grade = sp.get('grade'); if (grade) where.grade = Number(grade);
-  const status = sp.get('status');
-  if (status === '졸업') where.graduationDate = { not: null };
-  const q = sp.get('q')?.trim();
-  if (q) where.OR = [{ name: { contains: q } }, { studentNo: { contains: q } }, { phone: { contains: q } }];
-  return where;
-}
+import { maskName, studentWhere, studentOrderBy } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
   const items = await prisma.student.findMany({
-    where: buildWhere(sp),
-    orderBy: { updatedAt: 'desc' },
+    where: studentWhere(sp),
+    orderBy: studentOrderBy(sp),
     include: { _count: { select: { counselings: true } } },
   });
 

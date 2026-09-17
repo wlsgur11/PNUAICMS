@@ -6,28 +6,9 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
-import { maskName } from '@/lib/list-filters';
+import { maskName, studentWhere, studentOrderBy } from '@/lib/list-filters';
 import { studentCreateSchema } from '@/lib/validation';
 import type { StudentListRow } from '@/lib/student-shape';
-
-function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = {};
-  const dept = sp.get('department'); if (dept) where.department = dept;
-  const major = sp.get('major'); if (major) where.major = major;
-  const grade = sp.get('grade'); if (grade) where.grade = Number(grade);
-  const status = sp.get('status'); // '재학' | '졸업'
-  if (status === '졸업') where.graduationDate = { not: null };
-  if (status === '재학') where.OR = [{ graduationDate: null }, { graduationDate: '' }];
-  const q = sp.get('q')?.trim();
-  if (q) {
-    where.AND = [{ OR: [
-      { name: { contains: q } },
-      { studentNo: { contains: q } },
-      { phone: { contains: q } },
-    ] }];
-  }
-  return where;
-}
 
 /**
  * 드롭다운 값은 전체 학생에서 뽑는다. 검색 결과에서 뽑으면 학과를 한 번 고른 순간
@@ -35,7 +16,7 @@ function buildWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
  * 산학협력, 인턴십 목록도 같은 방식으로 전체에서 뽑는다.
  */
 async function facets() {
-  const [depRows, majorRows] = await Promise.all([
+  const [depRows, majorRows, careerRows] = await Promise.all([
     prisma.student.findMany({
       where: { department: { not: null } },
       distinct: ['department'], select: { department: true }, orderBy: { department: 'asc' },
@@ -44,12 +25,17 @@ async function facets() {
       where: { major: { not: null } },
       distinct: ['major'], select: { major: true }, orderBy: { major: 'asc' },
     }),
+    prisma.student.findMany({
+      where: { careerGoal: { not: null } },
+      distinct: ['careerGoal'], select: { careerGoal: true }, orderBy: { careerGoal: 'asc' },
+    }),
   ]);
   const clean = (vals: (string | null)[]) =>
     [...new Set(vals.filter((v): v is string => !!v && v.trim().length > 0))];
   return {
     departments: clean(depRows.map((r) => r.department)),
     majors: clean(majorRows.map((r) => r.major)),
+    careerGoals: clean(careerRows.map((r) => r.careerGoal)),
   };
 }
 
@@ -58,8 +44,8 @@ export async function GET(req: Request) {
     await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
     const items = await prisma.student.findMany({
-      where: buildWhere(sp),
-      orderBy: { updatedAt: 'desc' },
+      where: studentWhere(sp),
+      orderBy: studentOrderBy(sp),
       include: { _count: { select: { counselings: true } } },
     });
     const rows: StudentListRow[] = items.map((s) => ({
