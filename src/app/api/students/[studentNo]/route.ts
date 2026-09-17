@@ -90,8 +90,6 @@ export async function PUT(req: Request, { params }: Ctx) {
     const exists = await prisma.student.findUnique({ where: { studentNo: params.studentNo }, select: { version: true } });
     if (!exists) return fail('학생을 찾을 수 없습니다.', 404);
 
-    const counselings = d.counselings === undefined ? undefined
-      : d.counselings.filter((c) => c.counselDate || c.counselor || c.content);
     const internships = d.internships === undefined ? undefined
       : d.internships.filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks != null);
 
@@ -120,12 +118,8 @@ export async function PUT(req: Request, { params }: Ctx) {
         },
       });
       if (upd.count === 0) throw new ConflictError('다른 사용자가 먼저 수정했습니다. 새로고침 후 다시 시도하세요.');
-      if (counselings !== undefined) {
-        await tx.counseling.deleteMany({ where: { studentNo: params.studentNo } });
-        if (counselings.length) {
-          await tx.counseling.createMany({ data: counselings.map((c) => ({ studentNo: params.studentNo, counselDate: c.counselDate || null, counselor: c.counselor || null, content: c.content || null, createdBy: user.email })) });
-        }
-      }
+      // 상담은 여기서 건드리지 않는다. 학생 상세에서 한 건씩 넣고 고친다.
+      // 예전처럼 통째로 지우고 다시 넣으면, 이 폼을 저장하는 순간 그 사이 따로 넣은 상담이 사라진다
       if (internships !== undefined) {
         await tx.studentInternship.deleteMany({ where: { studentNo: params.studentNo } });
         if (internships.length) {

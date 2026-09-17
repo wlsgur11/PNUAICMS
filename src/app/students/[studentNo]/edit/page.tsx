@@ -27,7 +27,6 @@ export default function EditStudentPage({ params }: { params: { studentNo: strin
     employmentCompany: s.employmentCompany ?? '',
     swPrograms: toMap(s.swPrograms),
     bootcampPrograms: toMap(s.bootcampPrograms),
-    counselings: s.counselings.map((c) => ({ counselDate: c.counselDate, counselor: c.counselor, content: c.content })),
     internships: s.internships.map((it) => ({ internshipType: it.internshipType, companyName: it.companyName, durationWeeks: it.durationWeeks == null ? '' : String(it.durationWeeks), activityDate: it.activityDate })),
   };
 

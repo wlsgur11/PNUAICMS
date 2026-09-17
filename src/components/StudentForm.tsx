@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { ENUMS } from '@/lib/enums';
-import type { CounselingItem, ProgramMap } from '@/lib/student-shape';
+import type { ProgramMap } from '@/lib/student-shape';
 
 export type FormInternship = { internshipType: string; companyName: string; durationWeeks: string; activityDate: string };
 
@@ -26,7 +26,6 @@ export type StudentFormData = {
   employmentCompany: string;
   swPrograms: ProgramMap;
   bootcampPrograms: ProgramMap;
-  counselings: CounselingItem[];
   internships: FormInternship[];
 };
 
@@ -35,7 +34,7 @@ const EMPTY_PROGRAMS: ProgramMap = { program1: '', program2: '', program3: '', p
 export const EMPTY_STUDENT: StudentFormData = {
   studentNo: '', name: '', department: '', major: '', grade: 1, gpa: '', careerGoal: '',
   phone: '', email: '', certificates: '', foreignLanguages: '', graduationDate: '', employmentCompany: '',
-  swPrograms: { ...EMPTY_PROGRAMS }, bootcampPrograms: { ...EMPTY_PROGRAMS }, counselings: [], internships: [],
+  swPrograms: { ...EMPTY_PROGRAMS }, bootcampPrograms: { ...EMPTY_PROGRAMS }, internships: [],
 };
 
 export default function StudentForm({ initial, mode }: { initial?: StudentFormData; mode: 'create' | 'edit' }) {
@@ -46,11 +45,6 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
   const setProgram = (group: 'swPrograms' | 'bootcampPrograms', key: keyof ProgramMap, v: string) =>
     setF((p) => ({ ...p, [group]: { ...p[group], [key]: v } }));
 
-  const addCounseling = () => setF((p) => (p.counselings.length >= 5 ? p : { ...p, counselings: [...p.counselings, { counselDate: '', counselor: '', content: '' }] }));
-  const setCounseling = (i: number, key: keyof CounselingItem, v: string) =>
-    setF((p) => ({ ...p, counselings: p.counselings.map((c, idx) => (idx === i ? { ...c, [key]: v } : c)) }));
-  const removeCounseling = (i: number) => setF((p) => ({ ...p, counselings: p.counselings.filter((_, idx) => idx !== i) }));
-
   const addInternship = () => setF((p) => ({ ...p, internships: [...p.internships, { internshipType: '', companyName: '', durationWeeks: '', activityDate: '' }] }));
   const setInternship = (i: number, key: keyof FormInternship, v: string) =>
     setF((p) => ({ ...p, internships: p.internships.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)) }));
@@ -59,8 +53,6 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!f.studentNo.trim() || !f.name.trim()) { toast('학번과 이름은 필수입니다.', 'error'); return; }
-    const bad = f.counselings.find((c) => (c.counselDate || c.counselor || c.content) && !(c.counselDate && c.counselor && c.content));
-    if (bad) { toast('상담은 일자·상담자·내용을 모두 입력해야 합니다.', 'error'); return; }
 
     const payload = {
       ...(mode === 'create' ? { studentNo: f.studentNo.trim() } : { version: f.version }),
@@ -78,7 +70,6 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       employmentCompany: f.employmentCompany.trim() || null,
       swPrograms: f.swPrograms,
       bootcampPrograms: f.bootcampPrograms,
-      counselings: f.counselings.filter((c) => c.counselDate || c.counselor || c.content),
       internships: f.internships
         .filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks)
         .map((i) => ({ internshipType: i.internshipType.trim(), companyName: i.companyName.trim(), durationWeeks: i.durationWeeks === '' ? null : Number(i.durationWeeks), activityDate: i.activityDate })),
@@ -163,26 +154,6 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
           <label>외국어 <span className="hint">(쉼표 구분)</span></label>
           <input value={f.foreignLanguages} onChange={(e) => set('foreignLanguages', e.target.value)} placeholder="예: TOEIC 850" />
         </div>
-      </div>
-
-      <div className="card-title" style={{ margin: '18px 0 10px' }}>진로지도 상담 <span className="muted" style={{ fontWeight: 400 }}>(최대 5)</span>
-        <button type="button" className="btn btn-sm" style={{ marginLeft: 10 }} disabled={f.counselings.length >= 5} onClick={addCounseling}>상담 추가</button>
-      </div>
-      {f.counselings.length === 0 && <div className="muted" style={{ marginBottom: 8 }}>상담 내역이 없습니다. ‘상담 추가’로 입력하세요.</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {f.counselings.map((c, i) => (
-          <div key={i} className="soft-card" style={{ padding: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <strong>상담 {i + 1}</strong>
-              <button type="button" className="text-link danger-text" onClick={() => removeCounseling(i)}>삭제</button>
-            </div>
-            <div className="form-grid">
-              <div className="form-field"><label>상담일자</label><input type="date" value={c.counselDate} onChange={(e) => setCounseling(i, 'counselDate', e.target.value)} /></div>
-              <div className="form-field"><label>상담자</label><input value={c.counselor} onChange={(e) => setCounseling(i, 'counselor', e.target.value)} /></div>
-              <div className="form-field full"><label>상담내역</label><textarea rows={3} value={c.content} onChange={(e) => setCounseling(i, 'content', e.target.value)} /></div>
-            </div>
-          </div>
-        ))}
       </div>
 
       <div className="card-title" style={{ margin: '18px 0 10px' }}>인턴십 이력
