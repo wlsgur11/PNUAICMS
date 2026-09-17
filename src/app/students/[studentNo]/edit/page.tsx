@@ -2,14 +2,13 @@
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import StudentForm, { type StudentFormData } from '@/components/StudentForm';
-import type { StudentDetail, ProgramMap } from '@/lib/student-shape';
+import type { StudentDetail } from '@/lib/student-shape';
 
 export default function EditStudentPage({ params }: { params: { studentNo: string } }) {
   const { data: s, isLoading } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
   if (isLoading && !s) return <div className="loading">불러오는 중…</div>;
   if (!s) return <div className="empty">학생을 찾을 수 없습니다.</div>;
 
-  const toMap = (m: ProgramMap): ProgramMap => ({ ...m });
   const initial: StudentFormData = {
     studentNo: s.studentNo,
     version: s.version,
@@ -26,8 +25,8 @@ export default function EditStudentPage({ params }: { params: { studentNo: strin
     clubs: (s.clubs ?? []).join(', '),
     graduationDate: s.graduationDate ?? '',
     employmentCompany: s.employmentCompany ?? '',
-    swPrograms: toMap(s.swPrograms),
-    bootcampPrograms: toMap(s.bootcampPrograms),
+    swPrograms: [...s.swPrograms],
+    bootcampPrograms: [...s.bootcampPrograms],
     internships: s.internships.map((it) => ({ internshipType: it.internshipType, companyName: it.companyName, durationWeeks: it.durationWeeks == null ? '' : String(it.durationWeeks), activityDate: it.activityDate })),
   };
 

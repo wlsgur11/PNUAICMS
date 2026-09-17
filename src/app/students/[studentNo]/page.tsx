@@ -9,7 +9,7 @@ import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
 import { ENUMS } from '@/lib/enums';
-import type { StudentDetail, ProgramMap, CounselingItem } from '@/lib/student-shape';
+import type { StudentDetail, CounselingItem } from '@/lib/student-shape';
 
 type ProjectDetail = {
   id: string;
@@ -27,19 +27,17 @@ type ProjectDetail = {
   students: { studentNo: string | null; studentName: string }[];
 };
 
-function ProgramGrid({ title, data }: { title: string; data: ProgramMap }) {
-  const entries = ['program1', 'program2', 'program3', 'program4', 'program5'] as (keyof ProgramMap)[];
+function ProgramGrid({ title, data }: { title: string; data: string[] }) {
   return (
     <div className="card">
-      <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />{title}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 8 }}>
-        {entries.map((k, i) => (
-          <div key={k} className="tag tag-slate" style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-            <span className="muted">사업{i + 1}</span>
-            <strong>{data[k] || '-'}</strong>
+      <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />{title} <span className="muted" style={{ fontWeight: 400 }}>({data.length}건)</span></div>
+      {data.length === 0
+        ? <div className="empty" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>참여한 사업이 없습니다.</div>
+        : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {data.map((v, i) => <span key={i} className="tag tag-slate">{v}</span>)}
           </div>
-        ))}
-      </div>
+        )}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { ENUMS } from '@/lib/enums';
-import type { ProgramMap } from '@/lib/student-shape';
 
 export type FormInternship = { internshipType: string; companyName: string; durationWeeks: string; activityDate: string };
 
@@ -25,17 +24,15 @@ export type StudentFormData = {
   clubs: string; // 쉼표 입력
   graduationDate: string;
   employmentCompany: string;
-  swPrograms: ProgramMap;
-  bootcampPrograms: ProgramMap;
+  swPrograms: string[];
+  bootcampPrograms: string[];
   internships: FormInternship[];
 };
-
-const EMPTY_PROGRAMS: ProgramMap = { program1: '', program2: '', program3: '', program4: '', program5: '' };
 
 export const EMPTY_STUDENT: StudentFormData = {
   studentNo: '', name: '', department: '', major: '', grade: 1, gpa: '', careerGoal: '',
   phone: '', email: '', certificates: '', foreignLanguages: '', clubs: '', graduationDate: '', employmentCompany: '',
-  swPrograms: { ...EMPTY_PROGRAMS }, bootcampPrograms: { ...EMPTY_PROGRAMS }, internships: [],
+  swPrograms: [], bootcampPrograms: [], internships: [],
 };
 
 export default function StudentForm({ initial, mode }: { initial?: StudentFormData; mode: 'create' | 'edit' }) {
@@ -45,8 +42,13 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
   const [f, setF] = useState<StudentFormData>(initial ?? EMPTY_STUDENT);
   const [saving, setSaving] = useState(false);
   const set = (k: keyof StudentFormData, v: unknown) => setF((p) => ({ ...p, [k]: v }));
-  const setProgram = (group: 'swPrograms' | 'bootcampPrograms', key: keyof ProgramMap, v: string) =>
-    setF((p) => ({ ...p, [group]: { ...p[group], [key]: v } }));
+  // 사업 참여는 갯수 제한이 없다. 필요한 만큼 줄을 늘린다
+  type ProgramGroup = 'swPrograms' | 'bootcampPrograms';
+  const addProgram = (g: ProgramGroup) => setF((p) => ({ ...p, [g]: [...p[g], ''] }));
+  const setProgram = (g: ProgramGroup, i: number, v: string) =>
+    setF((p) => ({ ...p, [g]: p[g].map((x, idx) => (idx === i ? v : x)) }));
+  const removeProgram = (g: ProgramGroup, i: number) =>
+    setF((p) => ({ ...p, [g]: p[g].filter((_, idx) => idx !== i) }));
 
   const addInternship = () => setF((p) => ({ ...p, internships: [...p.internships, { internshipType: '', companyName: '', durationWeeks: '', activityDate: '' }] }));
   const setInternship = (i: number, key: keyof FormInternship, v: string) =>
@@ -75,8 +77,8 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       clubs: f.clubs.split(',').map((v) => v.trim()).filter(Boolean),
       graduationDate: f.graduationDate || null,
       employmentCompany: f.employmentCompany.trim() || null,
-      swPrograms: f.swPrograms,
-      bootcampPrograms: f.bootcampPrograms,
+      swPrograms: f.swPrograms.map((v) => v.trim()).filter(Boolean),
+      bootcampPrograms: f.bootcampPrograms.map((v) => v.trim()).filter(Boolean),
       internships: f.internships
         .filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks)
         .map((i) => ({ internshipType: i.internshipType.trim(), companyName: i.companyName.trim(), durationWeeks: i.durationWeeks === '' ? null : Number(i.durationWeeks), activityDate: i.activityDate })),
@@ -200,9 +202,16 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 14, marginTop: 18 }}>
         {(['swPrograms', 'bootcampPrograms'] as const).map((group) => (
           <div key={group} className="soft-card" style={{ padding: 12 }}>
-            <div className="card-title" style={{ marginBottom: 8 }}>{group === 'swPrograms' ? 'SW중심대학 사업' : '부트캠프 사업'}</div>
-            {(['program1', 'program2', 'program3', 'program4', 'program5'] as (keyof ProgramMap)[]).map((k, i) => (
-              <div key={k} className="form-field"><label>사업{i + 1}</label><input value={f[group][k]} onChange={(e) => setProgram(group, k, e.target.value)} /></div>
+            <div className="card-head" style={{ marginBottom: 8 }}>
+              <div className="card-title">{group === 'swPrograms' ? 'SW중심대학 사업' : '부트캠프 사업'}</div>
+              <button type="button" className="btn btn-sm" onClick={() => addProgram(group)}>＋ 추가</button>
+            </div>
+            {f[group].length === 0 && <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>참여한 사업이 없습니다. ‘＋ 추가’로 입력하세요.</div>}
+            {f[group].map((v, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input value={v} onChange={(e) => setProgram(group, i, e.target.value)} placeholder="사업명" style={{ flex: 1 }} />
+                <button type="button" className="btn btn-sm" onClick={() => removeProgram(group, i)}>삭제</button>
+              </div>
             ))}
           </div>
         ))}
