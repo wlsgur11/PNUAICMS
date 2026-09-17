@@ -117,6 +117,16 @@ export const counselingItemSchema = z.object({
   content: z.string().trim().optional().default(''),
 });
 
+/**
+ * 상담 한 건. 학생 상세에서 바로 넣고 고친다.
+ * 건수 상한은 두지 않는다. 상담이 이 시스템의 주 업무라 만날 때마다 쌓인다.
+ */
+export const counselingSchema = z.object({
+  counselDate: z.string().trim().min(1, '상담일자는 필수입니다.'),
+  counselor: optStr,
+  content: optStr,
+});
+
 export const studentInternshipItemSchema = z.object({
   id: z.string().optional(),
   internshipType: z.string().trim().optional().default(''),
@@ -141,16 +151,18 @@ export const studentCreateSchema = z.object({
   employmentCompany: optStr,
   swPrograms: programMapSchema,
   bootcampPrograms: programMapSchema,
-  counselings: z.array(counselingItemSchema).max(5, '진로지도 상담은 최대 5건입니다.').optional().default([]),
+  // 상담 건수 상한 없음. 예전엔 5건까지였는데 상담이 주 업무라 금방 막혔다
+  counselings: z.array(counselingItemSchema).optional().default([]),
   internships: z.array(studentInternshipItemSchema).optional().default([]),
 });
 
 // 수정은 학번 변경 불가 → studentNo 제외. version 은 낙관적 락이라 필수.
-export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true }).partial().extend({
+export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true, counselings: true }).partial().extend({
   version: z.coerce
     .number({ invalid_type_error: '수정 요청에 버전 정보가 없습니다. 새로고침 후 다시 시도하세요.' })
     .int(),
   name: z.string().trim().min(1, '이름은 필수입니다.').optional(),
-  counselings: z.array(counselingItemSchema).max(5, '진로지도 상담은 최대 5건입니다.').optional(),
+  // 상담은 학생 상세에서 따로 다룬다(/api/students/:no/counselings). 여기서 받으면
+  // 수정 폼을 저장할 때마다 그동안 따로 넣은 상담이 통째로 덮인다
   internships: z.array(studentInternshipItemSchema).optional(),
 });
