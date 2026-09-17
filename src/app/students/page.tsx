@@ -117,7 +117,7 @@ function StudentsPageInner() {
                     onClick={() => router.push(`/students/${r.studentNo}`)}
                     onKeyDown={clickKeys(() => router.push(`/students/${r.studentNo}`))}>
                   <td>{r.studentNo}</td>
-                  <td>{r.nameMasked}</td>
+                  <td>{r.studentName}</td>
                   <td>{r.department || '-'}</td>
                   <td>{r.major || '-'}</td>
                   <td className="center">{r.grade ?? '-'}</td>
@@ -131,7 +131,7 @@ function StudentsPageInner() {
         </table>
       </div>
       </FadeContent>
-      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 이름은 마스킹 표시되며, 행을 클릭하면 학생 상세에서 실명과 전체 정보를 볼 수 있습니다.</p>
+      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 행을 클릭하면 학생 상세에서 전체 정보를 볼 수 있습니다.</p>
     </>
   );
 }

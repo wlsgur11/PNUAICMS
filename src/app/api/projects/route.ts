@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
-import { projectWhere, maskName, isJunkValue } from '@/lib/list-filters';
+import { projectWhere, isJunkValue } from '@/lib/list-filters';
 
 async function facet(field: 'type' | 'track'): Promise<string[]> {
   const rows = await prisma.project.findMany({
@@ -25,15 +25,15 @@ export async function GET(req: Request) {
       include: {
         company: { select: { id: true, name: true } },
         lab: { select: { professorName: true, labName: true } },
-        students: { include: { student: { select: { studentNo: true, nameMasked: true } } } },
+        students: { include: { student: { select: { studentNo: true, name: true, nameMasked: true } } } },
       },
     });
     const rows = items.map((it) => {
       const named = it.students
-        .filter((s) => !!s.student.nameMasked)
-        .map((s) => ({ studentNo: s.student.studentNo, nameMasked: s.student.nameMasked as string }));
+        .map((s) => ({ studentNo: s.student.studentNo, studentName: s.student.name || s.student.nameMasked || '' }))
+        .filter((s) => !!s.studentName);
       const raws = it.studentNamesRaw
-        ? it.studentNamesRaw.split(',').filter(Boolean).map((n) => ({ studentNo: null, nameMasked: maskName(n) }))
+        ? it.studentNamesRaw.split(',').filter(Boolean).map((n) => ({ studentNo: null, studentName: n.trim() }))
         : [];
       return {
         id: it.id, year: it.year, dept: it.dept, category: it.category, type: it.type,

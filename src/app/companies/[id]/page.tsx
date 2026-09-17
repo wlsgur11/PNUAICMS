@@ -39,10 +39,10 @@ type Full = {
   isActive: boolean; version: number;
   createdAt?: string; updatedAt?: string; createdBy?: string | null; updatedBy?: string | null;
   collaboration: Collab | null; persons: Person[]; histories: History[];
-  participatingStudents?: { studentNo: string; nameMasked: string }[];
+  participatingStudents?: { studentNo: string; studentName: string }[];
   participation?: {
-    projects: { year: number; students: { studentNo: string; nameMasked: string }[] }[];
-    internships: { year: number; students: { studentNo: string; nameMasked: string }[] }[];
+    projects: { year: number; students: { studentNo: string; studentName: string }[] }[];
+    internships: { year: number; students: { studentNo: string; studentName: string }[] }[];
   };
 };
 
@@ -294,7 +294,7 @@ export default function CompanyDetailPage() {
                           </span>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {g.students.map((s) => (
-                              <Link key={s.studentNo} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.nameMasked}</Link>
+                              <Link key={s.studentNo} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.studentName}</Link>
                             ))}
                           </div>
                         </div>

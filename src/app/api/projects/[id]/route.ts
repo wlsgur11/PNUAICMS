@@ -4,7 +4,6 @@
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
-import { maskName } from '@/lib/list-filters';
 
 type Ctx = { params: { id: string } };
 
@@ -16,16 +15,16 @@ export async function GET(_req: Request, { params }: Ctx) {
       include: {
         company: { select: { id: true, name: true } },
         lab: { select: { professorName: true, labName: true } },
-        students: { include: { student: { select: { studentNo: true, nameMasked: true } } } },
+        students: { include: { student: { select: { studentNo: true, name: true, nameMasked: true } } } },
       },
     });
     if (!it) return fail('프로젝트를 찾을 수 없습니다.', 404);
 
     const named = it.students
-      .filter((s) => !!s.student.nameMasked)
-      .map((s) => ({ studentNo: s.student.studentNo, nameMasked: s.student.nameMasked as string }));
+      .map((s) => ({ studentNo: s.student.studentNo, studentName: s.student.name || s.student.nameMasked || '' }))
+      .filter((s) => !!s.studentName);
     const raws = it.studentNamesRaw
-      ? it.studentNamesRaw.split(',').filter(Boolean).map((n) => ({ studentNo: null, nameMasked: maskName(n) }))
+      ? it.studentNamesRaw.split(',').map((n) => ({ studentNo: null, studentName: n.trim() })).filter((s) => !!s.studentName)
       : [];
 
     const row = {

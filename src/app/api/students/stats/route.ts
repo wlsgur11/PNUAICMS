@@ -4,7 +4,6 @@
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
-import { maskName } from '@/lib/list-filters';
 import { ENUMS } from '@/lib/enums';
 import type { StudentListRow } from '@/lib/student-shape';
 
@@ -22,7 +21,7 @@ export async function GET() {
     const isGraduated = (g: string | null) => !!(g && g.trim());
     const toRow = (s: (typeof students)[number]): StudentListRow => ({
       studentNo: s.studentNo,
-      nameMasked: s.name ? maskName(s.name) : (s.nameMasked || '-'),
+      studentName: s.name || s.nameMasked || '-',
       department: s.department,
       major: s.major,
       grade: s.grade,

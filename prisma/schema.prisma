@@ -218,6 +218,7 @@ model Counseling {
   id          String   @id @default(cuid())
   studentNo   String
   student     Student  @relation(fields: [studentNo], references: [studentNo], onDelete: Cascade)
+  type        String? // 상담 유형: 진로상담/창업상담
   counselDate String? // 상담일자 (yyyy-MM-dd)
   counselor   String? // 상담자 이름
   content     String? // 상담내역

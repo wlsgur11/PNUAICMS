@@ -7,7 +7,6 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle, ConflictError } from '@/lib/http';
 import { studentUpdateSchema } from '@/lib/validation';
-import { maskName } from '@/lib/list-filters';
 import { toProgramMap, type StudentDetail } from '@/lib/student-shape';
 
 type Ctx = { params: { studentNo: string } };
@@ -40,7 +39,6 @@ export async function GET(_req: Request, { params }: Ctx) {
       studentNo: s.studentNo,
       version: s.version,
       name: s.name,
-      nameMasked: s.name ? maskName(s.name) : s.nameMasked,
       department: s.department,
       major: s.major,
       grade: s.grade,
@@ -58,7 +56,7 @@ export async function GET(_req: Request, { params }: Ctx) {
       bootcampPrograms: toProgramMap(s.bootcampPrograms),
       updatedAt: s.updatedAt.toISOString(),
       updatedBy: s.updatedBy,
-      counselings: s.counselings.map((c) => ({ id: c.id, counselDate: c.counselDate ?? '', counselor: c.counselor ?? '', content: c.content ?? '' })),
+      counselings: s.counselings.map((c) => ({ id: c.id, type: c.type ?? '진로상담', counselDate: c.counselDate ?? '', counselor: c.counselor ?? '', content: c.content ?? '' })),
       projects: s.projects.map((ps) => ({
         id: ps.project.id,
         year: ps.project.year,
@@ -114,7 +112,7 @@ export async function PUT(req: Request, { params }: Ctx) {
       const upd = await tx.student.updateMany({
         where: { studentNo: params.studentNo, version: d.version },
         data: {
-          ...(d.name !== undefined ? { name: d.name, nameMasked: maskName(d.name) } : {}),
+          ...(d.name !== undefined ? { name: d.name } : {}),
           ...(d.department !== undefined ? { department: d.department } : {}),
           ...(d.major !== undefined ? { major: d.major } : {}),
           ...(d.grade !== undefined ? { grade: d.grade } : {}),

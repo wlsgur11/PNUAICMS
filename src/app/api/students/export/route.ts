@@ -1,11 +1,11 @@
-/** GET /api/students/export — 학생 목록 엑셀 (마스킹). 쿼리는 /api/students 와 동일 의미. */
+/** GET /api/students/export — 학생 목록 엑셀. 쿼리는 /api/students 와 동일 의미. */
 export const runtime = 'nodejs';
 
 import ExcelJS from 'exceljs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { maskName, studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { studentWhere, studentOrderBy } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   for (const s of items) {
     ws.addRow({
       no: s.studentNo,
-      name: s.name ? maskName(s.name) : (s.nameMasked ?? ''),
+      name: s.name || s.nameMasked || '',
       dept: s.department ?? '',
       major: s.major ?? '',
       grade: s.grade ?? '',

@@ -1,7 +1,7 @@
 /**
  * src/lib/list-filters.ts
  * ---------------------------------------------------------
- * 인턴십·산학협력 목록/엑셀 라우트가 공유하는 필터(where) 빌더 + 이름 마스킹.
+ * 인턴십·산학협력·학생 목록/엑셀 라우트가 공유하는 필터(where)·정렬 빌더.
  * (route.ts 에서 직접 export 하면 Next.js 라우트 타입 제약에 걸려 lib 으로 분리)
  */
 import { Prisma } from '@prisma/client';
@@ -103,11 +103,3 @@ export function studentOrderBy(sp: URLSearchParams): Prisma.StudentOrderByWithRe
  * 아니라 옆 칸 값이 새어 들어온 것으로 본다. 목록 필터와 대시보드가 함께 쓴다.
  */
 export const isJunkValue = (s: string) => /^[\d.,%\s]+$/.test(s);
-
-/** 이름 마스킹: 2글자→끝, 3글자+→가운데 */
-export function maskName(name: string): string {
-  const n = (name || '').trim();
-  if (n.length <= 1) return n;
-  if (n.length === 2) return n[0] + '*';
-  return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1];
-}
