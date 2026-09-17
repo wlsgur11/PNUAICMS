@@ -98,17 +98,9 @@ export const historyUpdateSchema = z.object({
 });
 
 // ── 학생 이력 ────────────────────────────────────────────
-const programMapSchema = z
-  .object({
-    program1: z.string().optional(),
-    program2: z.string().optional(),
-    program3: z.string().optional(),
-    program4: z.string().optional(),
-    program5: z.string().optional(),
-  })
-  .partial()
-  .optional()
-  .nullable();
+// 사업 참여. 갯수 제한 없이 이름만 받는다. 빈 줄과 중복은 여기서 턴다
+const programListSchema = z.array(z.string()).optional()
+  .transform((a) => (a ? [...new Set(a.map((s) => s.trim()).filter(Boolean))] : undefined));
 
 export const counselingItemSchema = z.object({
   id: z.string().optional(),
@@ -154,8 +146,8 @@ export const studentCreateSchema = z.object({
   clubs: z.array(z.string().trim()).optional().default([]),
   graduationDate: optStr,
   employmentCompany: optStr,
-  swPrograms: programMapSchema,
-  bootcampPrograms: programMapSchema,
+  swPrograms: programListSchema,
+  bootcampPrograms: programListSchema,
   // 상담 건수 상한 없음. 예전엔 5건까지였는데 상담이 주 업무라 금방 막혔다
   counselings: z.array(counselingItemSchema).optional().default([]),
   internships: z.array(studentInternshipItemSchema).optional().default([]),

@@ -8,15 +8,23 @@
  * 찾지 못해 오히려 업무를 방해했다.
  */
 
-export type ProgramMap = { program1: string; program2: string; program3: string; program4: string; program5: string };
-
-export const EMPTY_PROGRAMS: ProgramMap = { program1: '', program2: '', program3: '', program4: '', program5: '' };
-
-/** Json(any) → 안전한 ProgramMap */
-export function toProgramMap(v: unknown): ProgramMap {
-  const o = v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
-  const pick = (k: keyof ProgramMap) => (typeof o[k] === 'string' ? (o[k] as string) : '');
-  return { program1: pick('program1'), program2: pick('program2'), program3: pick('program3'), program4: pick('program4'), program5: pick('program5') };
+/**
+ * 사업 참여 목록. 전에는 program1~5 고정 다섯 칸이라 여섯 번째를 못 넣었고
+ * '사업1' 이라는 라벨도 아무 뜻이 없었다. 이제 갯수 제한 없는 목록이다.
+ *
+ * DB 컬럼은 Json 그대로 둔다(배열도 Json 이다). 컬럼 타입을 바꾸면 이미 들어 있는
+ * 값을 옮겨야 하는데, 배열로 저장하면 그럴 일이 없다.
+ * 옛 {program1:'A',program2:'B'} 형태도 여기서 목록으로 읽어 준다.
+ */
+export function toProgramList(v: unknown): string[] {
+  if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string' && !!x.trim()).map((x) => x.trim());
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return ['program1', 'program2', 'program3', 'program4', 'program5']
+      .map((k) => (typeof o[k] === 'string' ? (o[k] as string).trim() : ''))
+      .filter(Boolean);
+  }
+  return [];
 }
 
 export type CounselingItem = { id?: string; type: string; counselDate: string; counselor: string; content: string };
@@ -69,8 +77,8 @@ export type StudentDetail = {
   graduationDate: string | null;
   employmentCompany: string | null;
   employmentCompanyId: string | null; // 취업기업명 정확일치 매칭 (연결 B)
-  swPrograms: ProgramMap;
-  bootcampPrograms: ProgramMap;
+  swPrograms: string[];
+  bootcampPrograms: string[];
   updatedAt: string;
   updatedBy: string | null;
   counselings: Required<CounselingItem>[];

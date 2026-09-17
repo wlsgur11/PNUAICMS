@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle, ConflictError } from '@/lib/http';
 import { studentUpdateSchema } from '@/lib/validation';
-import { toProgramMap, type StudentDetail } from '@/lib/student-shape';
+import { toProgramList, type StudentDetail } from '@/lib/student-shape';
 
 type Ctx = { params: { studentNo: string } };
 
@@ -52,8 +52,8 @@ export async function GET(_req: Request, { params }: Ctx) {
       graduationDate: s.graduationDate,
       employmentCompany: s.employmentCompany,
       employmentCompanyId,
-      swPrograms: toProgramMap(s.swPrograms),
-      bootcampPrograms: toProgramMap(s.bootcampPrograms),
+      swPrograms: toProgramList(s.swPrograms),
+      bootcampPrograms: toProgramList(s.bootcampPrograms),
       updatedAt: s.updatedAt.toISOString(),
       updatedBy: s.updatedBy,
       counselings: s.counselings.map((c) => ({ id: c.id, type: c.type ?? '진로상담', counselDate: c.counselDate ?? '', counselor: c.counselor ?? '', content: c.content ?? '' })),
