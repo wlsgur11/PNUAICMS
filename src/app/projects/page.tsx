@@ -22,7 +22,7 @@ type Row = {
   labName: string | null;
   companyId: string | null;
   companyName: string;
-  students: { studentNo: string | null; nameMasked: string }[];
+  students: { studentNo: string | null; studentName: string }[];
 };
 
 type Facets = { type: string[]; track: string[]; years: number[] };
@@ -129,7 +129,7 @@ function ProjectsPageInner() {
                       ? <Link className="link" href={`/companies/${r.companyId}`} onClick={(e) => e.stopPropagation()}>{r.companyName}</Link>
                       : <span className="muted">{r.companyName}</span>}
                   </td>
-                  <td><span className="ellipsis" style={{ maxWidth: 180 }}>{r.students.length ? r.students.map((s) => s.nameMasked).join(', ') : '-'}</span></td>
+                  <td><span className="ellipsis" style={{ maxWidth: 180 }}>{r.students.length ? r.students.map((s) => s.studentName).join(', ') : '-'}</span></td>
                 </tr>
               ))
             )}
@@ -137,7 +137,7 @@ function ProjectsPageInner() {
         </table>
       </div>
       </FadeContent>
-      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 행을 클릭하면 프로젝트 상세를 볼 수 있습니다. 참여학생 이름은 마스킹 표시됩니다.</p>
+      <p className="muted" style={{ marginTop: 10, fontSize: 'calc(12px * var(--fs, 1))' }}>※ 행을 클릭하면 프로젝트 상세를 볼 수 있습니다.</p>
 
       {selected && (
         <div className="modal-root">
@@ -166,8 +166,8 @@ function ProjectsPageInner() {
                 {selected.students.length
                   ? selected.students.map((s, i) => (
                       s.studentNo
-                        ? <Link key={i} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.nameMasked}</Link>
-                        : <span key={i} className="tag tag-indigo">{s.nameMasked}</span>
+                        ? <Link key={i} className="tag tag-indigo" href={`/students/${s.studentNo}`}>{s.studentName}</Link>
+                        : <span key={i} className="tag tag-indigo">{s.studentName}</span>
                     ))
                   : <span className="muted">기록 없음</span>}
               </div>

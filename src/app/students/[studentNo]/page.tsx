@@ -8,6 +8,7 @@ import PageHeader from '@/components/PageHeader';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
+import { ENUMS } from '@/lib/enums';
 import type { StudentDetail, ProgramMap, CounselingItem } from '@/lib/student-shape';
 
 type ProjectDetail = {
@@ -23,7 +24,7 @@ type ProjectDetail = {
   labName: string | null;
   companyId: string | null;
   companyName: string;
-  students: { studentNo: string | null; nameMasked: string }[];
+  students: { studentNo: string | null; studentName: string }[];
 };
 
 function ProgramGrid({ title, data }: { title: string; data: ProgramMap }) {
@@ -59,16 +60,16 @@ function CounselingCard({ studentNo, rows, onChanged }: {
 }) {
   // null 이면 편집 중이 아니고, 'new' 면 새 상담, 그 외에는 고치고 있는 상담의 id
   const [editing, setEditing] = useState<string | null>(null);
-  const [form, setForm] = useState({ counselDate: '', counselor: '', content: '' });
+  const [form, setForm] = useState({ type: ENUMS.COUNSEL_TYPE[0] as string, counselDate: '', counselor: '', content: '' });
   const [saving, setSaving] = useState(false);
 
   const openNew = () => {
     // 상담은 보통 그날 적는다. 오늘 날짜를 넣어 두면 손이 한 번 덜 간다
-    setForm({ counselDate: new Date().toISOString().slice(0, 10), counselor: '', content: '' });
+    setForm({ type: ENUMS.COUNSEL_TYPE[0], counselDate: new Date().toISOString().slice(0, 10), counselor: '', content: '' });
     setEditing('new');
   };
   const openEdit = (c: Required<CounselingItem>) => {
-    setForm({ counselDate: c.counselDate || '', counselor: c.counselor || '', content: c.content || '' });
+    setForm({ type: c.type || ENUMS.COUNSEL_TYPE[0], counselDate: c.counselDate || '', counselor: c.counselor || '', content: c.content || '' });
     setEditing(c.id);
   };
 
@@ -100,6 +101,12 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   const editor = (
     <div className="soft-card" style={{ padding: 12 }}>
       <div className="form-grid">
+        <div className="form-field">
+          <label>상담 유형</label>
+          <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
+            {ENUMS.COUNSEL_TYPE.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
         <div className="form-field">
           <label>상담일자<span className="req">*</span></label>
           <input type="date" value={form.counselDate} onChange={(e) => setForm((p) => ({ ...p, counselDate: e.target.value }))} />
@@ -140,8 +147,10 @@ function CounselingCard({ studentNo, rows, onChanged }: {
           editing === c.id ? <div key={c.id}>{editor}</div> : (
             <div key={c.id} className="soft-card" style={{ padding: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-                <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginBottom: 4 }}>
-                  {c.counselDate || '-'} · {c.counselor || '상담자 미기재'}
+                <div style={{ fontSize: 'calc(12px * var(--fs, 1))', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* 창업 상담은 진로 상담과 성격이 달라 한눈에 갈려야 한다 */}
+                  <span className={`tag ${c.type === '창업상담' ? 'tag-amber' : 'tag-indigo'}`}>{c.type || '진로상담'}</span>
+                  <span className="muted">{c.counselDate || '-'} · {c.counselor || '상담자 미기재'}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                   <button type="button" className="text-link" onClick={() => openEdit(c)}>수정</button>
@@ -178,7 +187,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
       s.counselings.length && `상담 ${s.counselings.length}건`,
       s.internships.length && `인턴십 ${s.internships.length}건`,
     ].filter(Boolean).join(', ');
-    const who = `${s.name || s.nameMasked || ''}(${s.studentNo})`;
+    const who = `${s.name || ''}(${s.studentNo})`;
     if (!confirm(
       `"${who}" 학생을 삭제할까요?\n\n`
       + (lost ? `${lost}도 함께 지워지며 되살릴 수 없습니다.\n` : '')
@@ -197,7 +206,7 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
   return (
     <>
       <PageHeader
-        title={`${s.name || s.nameMasked || s.studentNo} 학생`}
+        title={`${s.name || s.studentNo} 학생`}
         right={
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn" onClick={() => router.push('/students')}>목록</button>
@@ -312,8 +321,8 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
                     {projectDetail.students.length
                       ? projectDetail.students.map((st, i) => (
                           st.studentNo
-                            ? <Link key={i} className="tag tag-indigo" href={`/students/${st.studentNo}`} onClick={() => setSelectedProjectId(null)}>{st.nameMasked}</Link>
-                            : <span key={i} className="tag tag-indigo">{st.nameMasked}</span>
+                            ? <Link key={i} className="tag tag-indigo" href={`/students/${st.studentNo}`} onClick={() => setSelectedProjectId(null)}>{st.studentName}</Link>
+                            : <span key={i} className="tag tag-indigo">{st.studentName}</span>
                         ))
                       : <span className="muted">기록 없음</span>}
                   </div>

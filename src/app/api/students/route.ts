@@ -1,12 +1,12 @@
 /**
- * GET  /api/students  — 학생 목록 (필터·검색, 마스킹)  쿼리: q, department, major, grade, status
+ * GET  /api/students  — 학생 목록 (필터·검색)  쿼리: q, department, major, grade, status
  * POST /api/students  — 학생 등록 (상담·인턴십 배열 포함)
  */
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
-import { maskName, studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { studentWhere, studentOrderBy } from '@/lib/list-filters';
 import { studentCreateSchema } from '@/lib/validation';
 import type { StudentListRow } from '@/lib/student-shape';
 
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     });
     const rows: StudentListRow[] = items.map((s) => ({
       studentNo: s.studentNo,
-      nameMasked: s.name ? maskName(s.name) : (s.nameMasked || '-'),
+      studentName: s.name || s.nameMasked || '-',
       department: s.department,
       major: s.major,
       grade: s.grade,
@@ -80,7 +80,6 @@ export async function POST(req: Request) {
       data: {
         studentNo: d.studentNo,
         name: d.name,
-        nameMasked: maskName(d.name),
         department: d.department ?? null,
         major: d.major ?? null,
         grade: d.grade ?? null,

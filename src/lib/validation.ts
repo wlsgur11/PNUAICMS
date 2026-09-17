@@ -122,6 +122,7 @@ export const counselingItemSchema = z.object({
  * 건수 상한은 두지 않는다. 상담이 이 시스템의 주 업무라 만날 때마다 쌓인다.
  */
 export const counselingSchema = z.object({
+  type: z.enum(ENUMS.COUNSEL_TYPE as unknown as [string, ...string[]]).optional().nullable(),
   counselDate: z.string().trim().min(1, '상담일자는 필수입니다.'),
   counselor: optStr,
   content: optStr,

@@ -1,9 +1,12 @@
 /**
  * src/lib/student-shape.ts
  * ---------------------------------------------------------
- * 학생 API 응답/페이로드 공용 타입 + 마스킹·프로그램 정규화 헬퍼.
+ * 학생 API 응답/페이로드 공용 타입 + 프로그램 정규화 헬퍼.
+ *
+ * 이름은 마스킹하지 않는다. 이 화면들은 모두 관리자 이상만 열 수 있어서
+ * (requireRole('ADMIN')) 마스킹이 막아 주는 것이 없었고, 상담 상대를 이름으로
+ * 찾지 못해 오히려 업무를 방해했다.
  */
-import { maskName } from './list-filters';
 
 export type ProgramMap = { program1: string; program2: string; program3: string; program4: string; program5: string };
 
@@ -16,7 +19,7 @@ export function toProgramMap(v: unknown): ProgramMap {
   return { program1: pick('program1'), program2: pick('program2'), program3: pick('program3'), program4: pick('program4'), program5: pick('program5') };
 }
 
-export type CounselingItem = { id?: string; counselDate: string; counselor: string; content: string };
+export type CounselingItem = { id?: string; type: string; counselDate: string; counselor: string; content: string };
 
 export type StudentInternshipItem = {
   id?: string;
@@ -29,7 +32,7 @@ export type StudentInternshipItem = {
 
 export type StudentListRow = {
   studentNo: string;
-  nameMasked: string;
+  studentName: string;
   department: string | null;
   major: string | null;
   grade: number | null;
@@ -53,7 +56,6 @@ export type StudentDetail = {
   studentNo: string;
   version: number; // 낙관적 락. 수정 요청에 그대로 실어 보낸다.
   name: string | null;
-  nameMasked: string | null;
   department: string | null;
   major: string | null;
   grade: number | null;
@@ -76,8 +78,3 @@ export type StudentDetail = {
   internships: StudentInternshipItem[];
 };
 
-/** 실명 우선 마스킹(없으면 기존 nameMasked) */
-export function displayMasked(name: string | null, nameMasked: string | null): string {
-  if (name && name.trim()) return maskName(name);
-  return nameMasked || '-';
-}
