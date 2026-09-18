@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
-import { ENUMS } from '@/lib/enums';
+import { ENUMS, gradeLabel } from '@/lib/enums';
 import type { StudentDetail, CounselingItem } from '@/lib/student-shape';
 
 type ProjectDetail = {
@@ -42,6 +42,11 @@ function ProgramGrid({ title, data }: { title: string; data: string[] }) {
   );
 }
 
+/** 마지막에 적은 상담자. 매번 같은 이름을 다시 치지 않도록 이 브라우저에만 남긴다 */
+const COUNSELOR_KEY = 'lastCounselor';
+const lastCounselor = () => { try { return localStorage.getItem(COUNSELOR_KEY) ?? ''; } catch { return ''; } };
+const rememberCounselor = (v: string) => { try { if (v.trim()) localStorage.setItem(COUNSELOR_KEY, v.trim()); } catch { /* 저장소를 막아 둔 브라우저 */ } };
+
 /**
  * 진로지도 상담. 이 시스템의 주 업무라 여기서 바로 넣고 고친다.
  *
@@ -62,8 +67,14 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   const [saving, setSaving] = useState(false);
 
   const openNew = () => {
-    // 상담은 보통 그날 적는다. 오늘 날짜를 넣어 두면 손이 한 번 덜 간다
-    setForm({ type: ENUMS.COUNSEL_TYPE[0], counselDate: new Date().toISOString().slice(0, 10), counselor: '', content: '' });
+    // 상담은 보통 그날, 같은 사람이 적는다. 날짜와 상담자를 미리 채워 두면 손이 덜 간다.
+    // 상담자는 로그인 계정이 아니라 마지막에 적은 이름을 쓴다. 조교가 대신 넣는 경우가 있다
+    setForm({
+      type: ENUMS.COUNSEL_TYPE[0],
+      counselDate: new Date().toISOString().slice(0, 10),
+      counselor: lastCounselor(),
+      content: '',
+    });
     setEditing('new');
   };
   const openEdit = (c: Required<CounselingItem>) => {
@@ -80,6 +91,7 @@ function CounselingCard({ studentNo, rows, onChanged }: {
       } else {
         await api(`/api/counselings/${editing}`, { method: 'PUT', body: JSON.stringify(form) });
       }
+      rememberCounselor(form.counselor);
       toast('저장되었습니다.', 'success');
       setEditing(null);
       onChanged();
@@ -221,10 +233,10 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
           <div className="info-row"><span className="info-label">학번</span><span className="info-value">{s.studentNo}</span></div>
           <div className="info-row"><span className="info-label">이름</span><span className="info-value">{s.name || '-'}</span></div>
           <div className="info-row"><span className="info-label">학과 · 전공</span><span className="info-value">{s.department || '-'} · {s.major || '-'}</span></div>
-          <div className="info-row"><span className="info-label">학년 · 학점</span><span className="info-value">{s.grade ?? '-'}학년 · {s.gpa ?? '-'}</span></div>
+          <div className="info-row"><span className="info-label">학년 · 학점</span><span className="info-value">{gradeLabel(s.grade)} · {s.gpa ?? '-'}</span></div>
           <div className="info-row"><span className="info-label">진로희망</span><span className="info-value">{s.careerGoal || '-'}</span></div>
-          <div className="info-row"><span className="info-label">연락처</span><span className="info-value">{s.phone || '-'}</span></div>
-          <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{s.email || '-'}</span></div>
+          <div className="info-row"><span className="info-label">연락처</span><span className="info-value">{s.phone || <span className="danger-text">미입력</span>}</span></div>
+          <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{s.email || <span className="danger-text">미입력</span>}</span></div>
           <div className="info-row"><span className="info-label">자격증</span><span className="info-value">{s.certificates.join(', ') || '-'}</span></div>
           <div className="info-row"><span className="info-label">외국어</span><span className="info-value">{s.foreignLanguages.join(', ') || '-'}</span></div>
           <div className="info-row"><span className="info-label">동아리</span><span className="info-value">{(s.clubs ?? []).join(', ') || '-'}</span></div>

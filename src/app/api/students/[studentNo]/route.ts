@@ -17,7 +17,9 @@ export async function GET(_req: Request, { params }: Ctx) {
     const s = await prisma.student.findUnique({
       where: { studentNo: params.studentNo },
       include: {
-        counselings: { orderBy: { counselDate: 'asc' } },
+        // 최근 상담을 먼저 본다. 건수 제한을 푼 뒤로 목록이 길어져서
+        // 오래된 순이면 방금 적은 것을 보려고 매번 끝까지 내려야 했다
+        counselings: { orderBy: { counselDate: 'desc' } },
         projects: { include: { project: { include: { company: { select: { id: true, name: true } }, lab: { select: { professorName: true } } } } } },
         manualInternships: { orderBy: { activityDate: 'asc' } },
       },
