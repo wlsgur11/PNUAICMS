@@ -8,6 +8,7 @@ import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 import { clickKeys } from '@/lib/a11y';
+import { GRADES, gradeLabel } from '@/lib/enums';
 import type { StudentListRow } from '@/lib/student-shape';
 
 type Resp = { rows: StudentListRow[]; facets: { departments: string[]; majors: string[]; careerGoals: string[] } };
@@ -49,7 +50,7 @@ function StudentsPageInner() {
           </select>
           <select value={filters.grade} onChange={(e) => set('grade', e.target.value)}>
             <option value="">학년 전체</option>
-            {[1, 2, 3, 4].map((g) => <option key={g} value={g}>{g}학년</option>)}
+            {GRADES.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
           </select>
           <select value={filters.status} onChange={(e) => set('status', e.target.value)}>
             <option value="">재학/졸업 전체</option>
@@ -120,7 +121,7 @@ function StudentsPageInner() {
                   <td>{r.studentName}</td>
                   <td>{r.department || '-'}</td>
                   <td>{r.major || '-'}</td>
-                  <td className="center">{r.grade ?? '-'}</td>
+                  <td className="center">{gradeLabel(r.grade)}</td>
                   <td>{r.careerGoal || '-'}</td>
                   <td className="center">{r.counselCount}회</td>
                   <td>{r.updatedAt.slice(0, 10)}</td>

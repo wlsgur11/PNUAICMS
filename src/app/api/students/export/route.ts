@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { gradeLabel } from '@/lib/enums';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
       name: s.name || s.nameMasked || '',
       dept: s.department ?? '',
       major: s.major ?? '',
-      grade: s.grade ?? '',
+      grade: gradeLabel(s.grade),
       career: s.careerGoal ?? '',
       clubs: s.clubs.join(', '),
       counsel: s._count.counselings,

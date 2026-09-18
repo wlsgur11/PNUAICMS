@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import { gradeLabel } from '@/lib/enums';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { clickKeys } from '@/lib/a11y';
@@ -67,7 +68,7 @@ export default function StudentDashboardPage() {
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 14, marginTop: 14 }}>
         <div className="card">
           <div className="card-title" style={{ marginBottom: 12 }}><span className="accent-bar" />학년별 현황</div>
-          <Bars items={data.gradeDistribution.map((g) => ({ label: `${g.grade}학년`, count: g.count }))} />
+          <Bars items={data.gradeDistribution.map((g) => ({ label: gradeLabel(g.grade), count: g.count }))} />
         </div>
 
         <div className="card">
@@ -76,7 +77,7 @@ export default function StudentDashboardPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {data.needsAttention.map((s) => (
                 <Link key={s.studentNo} className="tag tag-amber" href={`/students/${s.studentNo}`}>
-                  {s.studentName} · {s.grade ?? '-'}학년 · 상담 {s.counselCount}회
+                  {s.studentName} · {gradeLabel(s.grade)} · 상담 {s.counselCount}회
                 </Link>
               ))}
             </div>
