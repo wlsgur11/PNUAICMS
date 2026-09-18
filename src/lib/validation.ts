@@ -133,7 +133,7 @@ export const studentCreateSchema = z.object({
   name: z.string().trim().min(1, '이름은 필수입니다.'),
   department: optStr,
   major: optStr,
-  grade: z.coerce.number().int().min(1).max(4).optional().nullable(),
+  grade: z.coerce.number().int().min(1).max(6).optional().nullable(), // 5=초과학기, 6=대학원 (enums.GRADES)
   gpa: z.coerce.number().min(0).max(4.5).optional().nullable(),
   careerGoal: z.enum(ENUMS.CAREER_GOAL as unknown as [string, ...string[]]).optional().nullable(),
   // 신규 등록은 연락처를 받는다. 상담하면서 적어 두시려고 필수로 둔 칸이다.

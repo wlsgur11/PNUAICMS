@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
-import { ENUMS } from '@/lib/enums';
+import { ENUMS, GRADES } from '@/lib/enums';
 
 export type FormInternship = { internshipType: string; companyName: string; durationWeeks: string; activityDate: string };
 
@@ -128,7 +128,7 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
         <div className="form-field">
           <label>학년</label>
           <select value={f.grade} onChange={(e) => set('grade', Number(e.target.value))}>
-            {[1, 2, 3, 4].map((g) => <option key={g} value={g}>{g}학년</option>)}
+            {GRADES.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
           </select>
         </div>
         <div className="form-field">

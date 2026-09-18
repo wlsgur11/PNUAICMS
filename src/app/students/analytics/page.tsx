@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import { gradeLabel } from '@/lib/enums';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 
@@ -64,7 +65,7 @@ export default function StudentAnalyticsPage() {
       </FadeContent>
       <FadeContent delay={120}>
       <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 14, marginTop: 14 }}>
-        <Bars title="학년별 분포" items={data.gradeDistribution.map((g) => ({ label: `${g.grade}학년`, count: g.count }))} />
+        <Bars title="학년별 분포" items={data.gradeDistribution.map((g) => ({ label: gradeLabel(g.grade), count: g.count }))} />
         <Bars title="학과별 분포" items={data.departmentCounts} />
         <Bars title="진로희망 분포" items={data.careerCounts} />
         <Bars title="주요 참여지표" items={engagement} />

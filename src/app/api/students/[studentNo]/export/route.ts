@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { toProgramList } from '@/lib/student-shape';
+import { gradeLabel } from '@/lib/enums';
 
 type Ctx = { params: { studentNo: string } };
 
@@ -27,7 +28,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   const bc = toProgramList(s.bootcampPrograms);
   const kv: [string, string | number][] = [
     ['학번', s.studentNo], ['이름', s.name ?? ''], ['학과', s.department ?? ''], ['전공', s.major ?? ''],
-    ['학년', s.grade ?? ''], ['학점', s.gpa ?? ''], ['진로희망', s.careerGoal ?? ''],
+    ['학년', gradeLabel(s.grade)], ['학점', s.gpa ?? ''], ['진로희망', s.careerGoal ?? ''],
     ['전화번호', s.phone ?? ''], ['이메일', s.email ?? ''],
     ['자격증', s.certificates.join(', ')], ['외국어', s.foreignLanguages.join(', ')],
     ['졸업일자', s.graduationDate ?? ''], ['취업기업', s.employmentCompany ?? ''],
