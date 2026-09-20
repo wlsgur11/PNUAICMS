@@ -15,8 +15,9 @@ import { useEffect } from 'react';
  * 재는 대상이 다섯 개뿐이라 스크롤마다 바로 재도 부담이 없다.
  */
 const TARGETS = '.lp-sec, .lp-family, .lp-closing';
-// 화면 아래쪽 이 지점을 넘어오면 올린다. 1 이면 딱 걸칠 때라 늦게 올라온다
-const TRIGGER = 0.88;
+// 화면 아래쪽 이 지점을 넘어오면 올린다. 1 에 가까울수록 늦게 시작해서
+// 올라오는 동안이 더 보인다
+const TRIGGER = 0.94;
 
 export default function LandingReveal() {
   useEffect(() => {

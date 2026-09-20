@@ -267,8 +267,10 @@ export default async function LoginPage({ searchParams }: Props) {
 
       <section className="lp-closing">
         <div className="lp-sec-in">
-          <h2 className="lp-h2">부산대학교 AI융합교육원 구성원이면 지금 들어올 수 있습니다</h2>
-          <p className="lp-sec-lead">권한이 없으면 로그인만 되고 데이터는 보이지 않습니다. 관리자에게 알려 주세요.</p>
+          {/* 로그인은 @pusan.ac.kr 도메인이면 전부 열려 있다(lib/access.ts).
+              교육원 소속만 되는 것으로 읽히면 안 된다 */}
+          <h2 className="lp-h2">부산대학교 구성원이면 누구나 들어올 수 있습니다</h2>
+          <p className="lp-sec-lead">@pusan.ac.kr 계정이면 학과나 소속에 관계없이 로그인됩니다. 다만 권한을 받기 전에는 데이터가 보이지 않으니, 관리자에게 알려 주세요.</p>
           <form action={signInAction}>
             {/* 여기엔 구글 4색 로고를 안 쓴다. 파란 버튼 위에 올리면 구글 브랜드
                 가이드에도 어긋나고 색이 뭉개져 보인다. 실제 구글 버튼은 히어로에 있다 */}
