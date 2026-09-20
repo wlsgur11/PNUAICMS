@@ -76,8 +76,9 @@ export default function HeroChart() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    // 차트 영역. 위쪽은 비워 둬야 헤드라인이 선 위에 안 겹친다
-    const box = () => ({ top: h * 0.44, bottom: h * 0.88, left: -w * 0.04, width: w * 1.08 });
+    // 차트 영역. 세로 위치는 바깥 밴드(.lp-band-bottom)가 잡으므로
+    // 여기서는 캔버스를 거의 꽉 쓴다
+    const box = () => ({ top: h * 0.14, bottom: h * 0.88, left: -w * 0.04, width: w * 1.08 });
 
     /** 표본 i 의 화면 좌표. acc 만큼 왼쪽으로 밀어 흐르게 한다 */
     const px = (i: number) => {
