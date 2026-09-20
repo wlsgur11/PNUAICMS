@@ -3,13 +3,14 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * 랜딩 히어로 위쪽 배경. 점 두 종류가 떠다닌다. 큰 점이 기업, 작은 점이 학생이고
- * 선은 기업과 학생 사이에만 긋는다. 기업끼리, 학생끼리는 잇지 않는다.
+ * 랜딩 히어로 배경. 점 두 종류가 자석처럼 움직인다. 큰 점이 기업, 작은 점이
+ * 학생이고 선은 기업과 학생 사이에만 긋는다. 기업끼리, 학생끼리는 잇지 않는다.
  * 이 시스템이 실제로 이어 두는 관계가 그것뿐이라, 그림만 봐도 무엇을 다루는지
  * 읽히게 하려는 것이다.
  *
- * 커서를 대면 가장 가까운 기업이 잡히고, 그 기업에 걸린 학생들이 함께 밝아진다.
- * 기업 점은 끌어서 옮길 수 있다. 옮기면 걸리는 학생도 따라 바뀐다.
+ * 힘은 세 가지다. 기업끼리는 같은 극처럼 밀어내고, 기업과 학생은 적당한 거리를
+ * 두고 당기거나 밀고, 학생끼리는 겹치지 않을 만큼만 밀어낸다. 커서를 대면 가장
+ * 가까운 기업이 잡혀 걸린 학생들이 함께 밝아지고, 기업 점은 끌어서 옮길 수 있다.
  *
  * 기업명은 실제 협력 기업을 그대로 쓴다(names). 학생은 이름 없이 점으로만 둔다.
  * 학생 쪽에 그럴듯한 이름을 붙이면 없는 사람의 기록으로 읽히고, 어느 기업에
@@ -18,14 +19,19 @@ import { useEffect, useRef } from 'react';
 
 // 기업과 학생이 이어질 거리(px)
 const LINK = 168;
-// 커서가 끌어당기는 반경
+// 기업과 학생이 서로 편해하는 거리. 이보다 가까우면 밀고 멀면 당긴다
+const REST = 92;
+// 커서가 학생을 끌어당기는 반경
 const PULL = 180;
 // 커서가 기업을 집어내는 반경
 const FOCUS = 120;
 // 기업 점을 끌기 위해 집는 반경. 점보다 넉넉해야 잡힌다
 const GRAB = 22;
-// 점 개수 상한. 선은 기업×학생만 도니 이 상한이면 프레임당 수백 쌍이다
-const MAX_DOTS = 96;
+// 기업끼리 밀어내는 사정거리
+const PUSH = 230;
+// 점 개수 상한. 매 프레임 쌍을 도는 O(n²) 이라 여기서 막는다
+// (100개면 5천 쌍 남짓이라 프레임에 부담이 없다)
+const MAX_DOTS = 100;
 const AREA_PER_DOT = 10500;
 // 학생 몇 명에 기업 하나꼴로 둘지
 const STUDENTS_PER_COMPANY = 2;
@@ -38,15 +44,32 @@ const NAME_MAX = 12;
 // 이름을 붙일 기업 수 상한. 점은 많아도 되지만 글자는 많으면 배경이 시끄럽다
 const MAX_NAMED = 10;
 
-type Dot = { x: number; y: number; vx: number; vy: number; company: boolean; name: string };
+// 힘 세기. 눈으로 맞춘 값이라 각각의 의미보다 서로의 비율이 중요하다
+const K_PUSH = 0.9; // 기업끼리 밀어내기
+const K_LINK = 0.0016; // 기업–학생 스프링
+const K_CROWD = 0.3; // 학생끼리 겹침 방지
+const K_CURSOR = 0.03; // 커서가 학생을 당기는 힘
+const K_HOME = 0.0014; // 기업이 제자리로 돌아오려는 힘
+const CROWD = 32; // 학생끼리 이 거리 안이면 민다
+const DAMP = 0.9; // 감속. 낮을수록 빨리 멈춘다
+const MAX_V = 1.3;
+// 기업은 무겁다. 같은 힘에 덜 움직인다
+const MASS_COMPANY = 0.4;
+
+type Dot = {
+  x: number; y: number;
+  vx: number; vy: number;
+  hx: number; hy: number; // 제자리(기업만 쓴다)
+  company: boolean;
+  name: string;
+};
 type Rect = { x: number; y: number; w: number; h: number };
 
 export default function HeroNetwork({ names }: { names: string[] }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
   // 의존성은 비워 둔다. names 는 서버에서 한 번 받아 오는 값이라 이 화면이
-  // 떠 있는 동안 바뀌지 않는다. 배열을 의존성에 넣으면 렌더마다 참조가
-  // 달라져 캔버스를 처음부터 다시 만든다
+  // 떠 있는 동안 바뀌지 않는다
   useEffect(() => {
     const canvas = ref.current;
     const host = canvas?.parentElement;
@@ -60,43 +83,11 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     let h = 0;
     let companies: Dot[] = [];
     let students: Dot[] = [];
+    let all: Dot[] = [];
     let raf = 0;
     let running = true;
     let dragging: Dot | null = null;
     const cursor = { x: -9999, y: -9999 };
-
-    const short = (n: string) => (n.length > NAME_MAX ? `${n.slice(0, NAME_MAX)}…` : n);
-
-    const seed = () => {
-      const total = Math.min(MAX_DOTS, Math.max(14, Math.round((w * h) / AREA_PER_DOT)));
-      const nCompany = Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1)));
-      // 기업은 학생보다 느리게 움직인다. 학생이 기업 주위를 도는 것처럼 보인다
-      const make = (company: boolean, name = ''): Dot => {
-        // 이름이 붙는 점은 글 영역을 피해서 놓는다. 기업 점은 느리게 움직여서
-        // 한번 열린 자리에 놓이면 그 근처에 머문다
-        let x = Math.random() * w;
-        let y = Math.random() * h;
-        for (let i = 0; name && i < 40 && blocked(x + 10, y, 90); i++) {
-          x = Math.random() * w;
-          y = Math.random() * h;
-        }
-        // 기업은 제자리에 박아 둔다. 움직이면 이름표가 같이 떠다녀서 읽기
-        // 나쁘고, 빈 자리를 골라 놓은 것도 금방 글 위로 밀려간다
-        return {
-          x,
-          y,
-          vx: company ? 0 : (Math.random() - 0.5) * 0.26,
-          vy: company ? 0 : (Math.random() - 0.5) * 0.26,
-          company,
-          name,
-        };
-      };
-      // 이름은 기업마다 하나씩만 쓴다. 돌려 쓰면 같은 회사가 화면에 여러 번
-      // 뜬다. 이름이 모자라는 만큼은 이름 없는 점으로 남는다
-      companies = Array.from({ length: nCompany }, (_, i) =>
-        make(true, i < MAX_NAMED && names[i] ? short(names[i]) : ''));
-      students = Array.from({ length: total - nCompany }, () => make(false));
-    };
 
     // 헤드라인, 본문, 로그인 카드가 놓인 자리. 여기에 걸리는 기업명은 안 그린다.
     // 글 위에 이름이 겹치면 배경이 아니라 오류로 보인다
@@ -113,6 +104,31 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       const zones = w >= LEGEND_MIN_W ? [...safe, { x: w - 142, y: 12, w: 142, h: 28 }] : safe;
       return zones.some((r) => x + tw > r.x - SAFE_PAD && x < r.x + r.w + SAFE_PAD
         && y + 6 > r.y - SAFE_PAD && y - 6 < r.y + r.h + SAFE_PAD);
+    };
+
+    const short = (n: string) => (n.length > NAME_MAX ? `${n.slice(0, NAME_MAX)}…` : n);
+
+    const seed = () => {
+      const total = Math.min(MAX_DOTS, Math.max(14, Math.round((w * h) / AREA_PER_DOT)));
+      const nCompany = Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1)));
+
+      const make = (company: boolean, name = ''): Dot => {
+        // 이름이 붙는 점은 글 영역을 피해서 자리를 잡는다
+        let x = Math.random() * w;
+        let y = Math.random() * h;
+        for (let i = 0; name && i < 40 && blocked(x + 10, y, 90); i++) {
+          x = Math.random() * w;
+          y = Math.random() * h;
+        }
+        return { x, y, vx: 0, vy: 0, hx: x, hy: y, company, name };
+      };
+
+      // 이름은 기업마다 하나씩만 쓴다. 돌려 쓰면 같은 회사가 화면에 여러 번
+      // 뜬다. 이름이 모자라는 만큼은 이름 없는 점으로 남는다
+      companies = Array.from({ length: nCompany }, (_, i) =>
+        make(true, i < MAX_NAMED && names[i] ? short(names[i]) : ''));
+      students = Array.from({ length: total - nCompany }, () => make(false));
+      all = [...companies, ...students];
     };
 
     const resize = () => {
@@ -137,6 +153,88 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         if (d < bestD) { bestD = d; best = c; }
       }
       return best;
+    };
+
+    /** a 를 b 쪽으로, b 를 반대쪽으로. f 가 음수면 서로 밀어낸다 */
+    const pull = (a: Dot, b: Dot, f: number) => {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 0.01) return;
+      const ax = (dx / d) * f;
+      const ay = (dy / d) * f;
+      a.vx += ax * (a.company ? MASS_COMPANY : 1);
+      a.vy += ay * (a.company ? MASS_COMPANY : 1);
+      b.vx -= ax * (b.company ? MASS_COMPANY : 1);
+      b.vy -= ay * (b.company ? MASS_COMPANY : 1);
+    };
+
+    const physics = () => {
+      // 기업끼리는 같은 극처럼 밀어낸다. 가까울수록 세게
+      for (let i = 0; i < companies.length; i++) {
+        for (let j = i + 1; j < companies.length; j++) {
+          const a = companies[i];
+          const b = companies[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d > PUSH) continue;
+          pull(a, b, -K_PUSH * (1 - d / PUSH));
+        }
+      }
+
+      // 기업과 학생은 REST 거리를 두려 한다. 멀면 당기고 가까우면 민다
+      for (const c of companies) {
+        for (const s of students) {
+          const d = Math.hypot(c.x - s.x, c.y - s.y);
+          if (d > LINK) continue;
+          pull(c, s, (d - REST) * K_LINK);
+        }
+      }
+
+      // 학생끼리는 겹치지 않을 만큼만
+      for (let i = 0; i < students.length; i++) {
+        for (let j = i + 1; j < students.length; j++) {
+          const a = students[i];
+          const b = students[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d > CROWD) continue;
+          pull(a, b, -K_CROWD * (1 - d / CROWD));
+        }
+      }
+
+      for (const p of all) {
+        if (p === dragging) { p.vx = 0; p.vy = 0; continue; }
+
+        if (p.company) {
+          // 기업은 제자리로 돌아오려 한다. 안 그러면 서로 밀어내다 벽에 붙고,
+          // 빈 자리를 골라 놓은 이름표도 글 위로 밀려간다
+          p.vx += (p.hx - p.x) * K_HOME;
+          p.vy += (p.hy - p.y) * K_HOME;
+        } else {
+          // 커서는 학생만 당긴다. 기업까지 끌리면 이름표가 커서를 따라다닌다
+          const dx = cursor.x - p.x;
+          const dy = cursor.y - p.y;
+          const d = Math.hypot(dx, dy);
+          if (d < PULL && d > 1) {
+            const f = (1 - d / PULL) * K_CURSOR;
+            p.vx += (dx / d) * f;
+            p.vy += (dy / d) * f;
+          }
+        }
+
+        // 가장자리는 부드럽게 되민다. 튕기게 하면 벽에서 덜그럭거린다
+        const m = 12;
+        if (p.x < m) p.vx += (m - p.x) * 0.02;
+        if (p.x > w - m) p.vx -= (p.x - (w - m)) * 0.02;
+        if (p.y < m) p.vy += (m - p.y) * 0.02;
+        if (p.y > h - m) p.vy -= (p.y - (h - m)) * 0.02;
+
+        p.vx *= DAMP;
+        p.vy *= DAMP;
+        const v = Math.hypot(p.vx, p.vy);
+        if (v > MAX_V) { p.vx = (p.vx / v) * MAX_V; p.vy = (p.vy / v) * MAX_V; }
+        p.x += p.vx;
+        p.y += p.vy;
+      }
     };
 
     const draw = () => {
@@ -219,28 +317,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     };
 
     const step = () => {
-      for (const p of [...companies, ...students]) {
-        if (p === dragging) continue;
-        p.x += p.vx;
-        p.y += p.vy;
-        // 가장자리에서 반대쪽으로 넘긴다. 튕기게 하면 벽에 점이 몰린다
-        if (p.x < -LINK) p.x = w + LINK;
-        if (p.x > w + LINK) p.x = -LINK;
-        if (p.y < -LINK) p.y = h + LINK;
-        if (p.y > h + LINK) p.y = -LINK;
-
-        // 학생만 커서 쪽으로 아주 약하게 끌린다. 세게 당기면 한 점에 뭉치고,
-        // 기업까지 끌리면 이름표가 커서를 따라다닌다
-        if (p.company) continue;
-        const dx = cursor.x - p.x;
-        const dy = cursor.y - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d < PULL && d > 1) {
-          const f = (1 - d / PULL) * 0.22;
-          p.x += (dx / d) * f;
-          p.y += (dy / d) * f;
-        }
-      }
+      physics();
       draw();
       if (running) raf = requestAnimationFrame(step);
     };
@@ -283,6 +360,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     };
     const onUp = () => {
       if (!dragging) return;
+      // 놓은 자리를 새 제자리로 삼는다. 안 그러면 손을 떼는 순간 돌아간다
+      dragging.hx = dragging.x;
+      dragging.hy = dragging.y;
       dragging = null;
       canvas.style.cursor = '';
     };
@@ -305,9 +385,10 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     window.addEventListener('mouseup', onUp);
     document.addEventListener('visibilitychange', onVisible);
 
-    // 애니메이션을 줄여 달라는 설정이면 한 번만 그리고 멈춘다
+    // 애니메이션을 줄여 달라는 설정이면 자리만 잡아 두고 한 번 그린 뒤 멈춘다
     if (reduced) {
       running = false;
+      for (let i = 0; i < 120; i++) physics();
       draw();
     } else {
       raf = requestAnimationFrame(step);
