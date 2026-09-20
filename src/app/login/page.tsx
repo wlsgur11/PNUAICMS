@@ -1,12 +1,18 @@
+import { unstable_cache } from 'next/cache';
 import { signIn } from '@/auth';
-import LoginGrid from '@/components/LoginGrid';
+import { prisma } from '@/lib/db';
+import CountUp from '@/components/CountUp';
+import HeroNetwork from '@/components/HeroNetwork';
+import LandingReveal from '@/components/LandingReveal';
+import './landing.css';
 
 type Props = {
   searchParams: { callbackUrl?: string; error?: string };
 };
 
 export const metadata = {
-  title: '로그인 - AI 산학협력 관리 시스템',
+  title: 'AI 산학협력 관리 시스템 - 부산대학교 AI융합교육원',
+  description: '기업 정보와 산학협력·인턴십 실적, 학생 이력을 한곳에서 관리합니다.',
 };
 
 /** Google 공식 G 로고 (4색). */
@@ -21,54 +27,262 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage({ searchParams }: Props) {
+const NAV = [
+  { href: '#steps', label: '이용 절차' },
+  { href: '#features', label: '주요 기능' },
+  { href: '#roles', label: '역할별 안내' },
+];
+
+const STEPS = [
+  { no: '01', title: '구글 로그인', desc: '@pusan.ac.kr 계정으로 들어옵니다. 다른 도메인 계정은 로그인되지 않습니다.' },
+  { no: '02', title: '권한 부여', desc: '처음 들어오면 일반 계정입니다. 관리자가 권한을 주면 그때부터 데이터가 열립니다.' },
+  { no: '03', title: '기업과 실적', desc: '기업을 등록하고 컨택 이력을 남깁니다. 실적 엑셀을 올리면 기업에 자동으로 붙습니다.' },
+  { no: '04', title: '학생과 상담', desc: '학생 이력을 등록하고, 만날 때마다 상담 내역을 그 학생 아래에 쌓습니다.' },
+];
+
+const FEATURES = [
+  { title: '기업 관리', desc: '기업 정보와 실무자, 컨택 이력을 한곳에서 봅니다. 기업명만 넣으면 사업자 정보를 자동으로 조회해 채웁니다.' },
+  { title: '산학·인턴십 실적', desc: '실적 엑셀을 올리면 기업에 자동으로 연결됩니다. 엑셀에 이름이 다르게 적혀 와도 별칭으로 이어 둘 수 있습니다.' },
+  { title: 'SW중심대학 성과', desc: '목표 대비 달성률과 영역별 지표를 연도별로 비교합니다. 전년 대비 증감을 함께 표시합니다.' },
+  { title: '학생 이력', desc: '학생 한 명의 상담 내역과 사업 참여, 인턴십, 취업 기업을 한 화면에 모읍니다. 상담은 학생 상세에서 바로 넣고 고칩니다.' },
+  { title: '대시보드', desc: '목표 달성률과 파이프라인, 지역·분야 쏠림, 다음에 연락할 기업을 첫 화면에서 확인합니다.' },
+  { title: '엑셀 연동', desc: '올리기와 내려받기를 모두 지원합니다. 목록에 건 필터가 그대로 적용된 엑셀을 받습니다.' },
+];
+
+const ROLES = [
+  { role: '일반', work: '로그인만 됩니다. 관리자가 권한을 줄 때까지 기업·실적·학생 데이터는 보이지 않습니다.', how: '구글 로그인' },
+  { role: '관리자', work: '기업과 실적, 학생 이력을 보고 등록하고 수정합니다. 엑셀을 올리고 내려받습니다.', how: '구글 로그인' },
+  { role: '슈퍼관리자', work: '관리자 권한에 더해 사용자 계정의 역할을 부여하고 회수합니다.', how: '구글 로그인' },
+];
+
+/**
+ * 랜딩에 띄우는 집계. 로그인 전 화면이라 사람을 특정할 수 있는 값은 안 쓰고
+ * 건수만 센다. 실제 숫자라 볼 때마다 늘어 있는 게 보인다.
+ *
+ * 한 시간 캐시한다. 로그인하러 온 사람마다 카운트 네 번을 돌릴 이유가 없다.
+ */
+const getStats = unstable_cache(
+  async () => {
+    const [companies, students, projects, internships, names] = await Promise.all([
+      prisma.company.count({ where: { isActive: true } }),
+      prisma.student.count(),
+      prisma.project.count(),
+      prisma.internship.count(),
+      // 배경에 띄울 기업명. 실제 협력 기업이라 사실 그대로다. 학생은 이름 없이
+      // 점으로만 두어서, 어느 기업에 누가 갔다는 주장은 하지 않는다
+      prisma.company.findMany({
+        where: { isActive: true },
+        select: { name: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 40,
+      }),
+    ]);
+    return {
+      companies,
+      students,
+      records: projects + internships,
+      names: names.map((c) => c.name).filter(Boolean),
+    };
+  },
+  ['landing-stats'],
+  { revalidate: 3600 },
+);
+
+const FAMILY = [
+  { label: 'AI융합교육원', host: 'swedu.pusan.ac.kr', href: 'https://swedu.pusan.ac.kr' },
+  { label: 'AIPMS', host: 'aipms.pusan.ac.kr', href: 'https://aipms.pusan.ac.kr' },
+  { label: 'PLATO', host: 'plato.pusan.ac.kr', href: 'https://plato.pusan.ac.kr' },
+  { label: '코드플레이스', host: 'code.pusan.ac.kr', href: 'https://code.pusan.ac.kr' },
+  { label: 'AI역량지원시스템', host: 'swcss.pusan.ac.kr', href: 'https://swcss.pusan.ac.kr' },
+  { label: '피클', host: 'pickle.pusan.ac.kr', href: 'https://pickle.pusan.ac.kr' },
+  { label: '공식 유튜브', host: 'youtube.com/@pnuswedu', href: 'https://youtube.com/@pnuswedu' },
+  { label: '인프런', host: 'inflearn.com/@pnuswedu', href: 'https://inflearn.com/@pnuswedu' },
+];
+
+export default async function LoginPage({ searchParams }: Props) {
   const callbackUrl = searchParams.callbackUrl || '/';
   const error = searchParams.error;
 
+  // 여기는 로그인으로 들어오는 유일한 길목이다. 집계가 안 나온다고 화면이
+  // 막히면 아무도 못 들어온다. 실패하면 숫자만 빼고 그대로 그린다
+  let stats: Awaited<ReturnType<typeof getStats>> | null = null;
+  try {
+    stats = await getStats();
+  } catch {
+    stats = null;
+  }
+
+  // 로그인 버튼이 히어로와 맨 아래 두 군데에 있다. 서버 액션이라 클라이언트
+  // 컴포넌트로 빼면 signIn 을 못 불러서, 액션 하나를 두 폼이 같이 쓴다
+  const signInAction = async () => {
+    'use server';
+    await signIn('google', { redirectTo: callbackUrl });
+  };
+
   return (
-    <div className="login-wrap">
-      <div className="login-bg">
-        <LoginGrid />
-      </div>
-      <div className="login-card">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-pnu.png" alt="부산대학교 AI융합교육원" className="login-logo" />
-
-        <div className="login-divider" />
-
-        <div className="login-main">
-          <h1 className="login-title">AI 산학협력 관리 시스템</h1>
-          <p className="login-sub">부산대학교 AI융합교육원</p>
+    <div className="lp">
+      <LandingReveal />
+      {/* 상단 고정 네비. 앵커 링크라 자바스크립트가 필요 없다 */}
+      <header className="lp-nav">
+        <div className="lp-nav-in">
+          <a className="lp-brand" href="#top">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-pnu.png" alt="" className="lp-brand-logo" />
+            <span className="lp-brand-name">AI 산학협력 관리 시스템</span>
+          </a>
+          <nav className="lp-nav-links">
+            {NAV.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
+          </nav>
+          <a className="lp-nav-cta" href="#sign-in">로그인</a>
         </div>
+      </header>
 
-        {error && (
-          <div className="login-error">
-            로그인에 실패했습니다. 부산대 계정인지 확인해 주세요.
+      {/* 히어로는 테마와 무관하게 늘 어둡다. 배경은 기업과 학생이 이어지는 그림 */}
+      <section className="lp-hero" id="top">
+        <div className="lp-hero-bg"><HeroNetwork names={stats?.names ?? []} /></div>
+        <div className="lp-hero-in">
+          <div className="lp-hero-copy">
+            <p className="lp-eyebrow">부산대학교 AI융합교육원</p>
+            <h1 className="lp-h1">기업을 찾고, 실적을 쌓고,<br />학생을 잇는다</h1>
+            <p className="lp-lead">
+              산학협력 기업 정보부터 실적 집계, 학생 상담 이력까지 한 화면에서 이어집니다.
+              엑셀로 흩어져 있던 기록을 한곳에 모아 두고, 목표 대비 어디까지 왔는지 바로 확인합니다.
+            </p>
+
+            {/* 갓 만든 빈 DB 에서 '0곳 0명 0건' 이 뜨면 망가진 화면으로 보인다.
+                기업이 하나도 없으면 줄을 통째로 뺀다 */}
+            {stats && stats.companies > 0 && (
+              <dl className="lp-stats">
+                <div>
+                  <dt><CountUp end={stats.companies} /><span>곳</span></dt>
+                  <dd>협력 기업</dd>
+                </div>
+                <div>
+                  <dt><CountUp end={stats.students} /><span>명</span></dt>
+                  <dd>등록 학생</dd>
+                </div>
+                <div>
+                  <dt><CountUp end={stats.records} /><span>건</span></dt>
+                  <dd>산학·인턴십 실적</dd>
+                </div>
+              </dl>
+            )}
           </div>
-        )}
 
-        <form
-          action={async () => {
-            'use server';
-            await signIn('google', { redirectTo: callbackUrl });
-          }}
-        >
-          <button type="submit" className="login-btn">
-            <GoogleIcon />
-            <span>Google로 로그인</span>
-          </button>
-        </form>
+          <div className="lp-signin" id="sign-in">
+            <h2 className="lp-signin-title">로그인</h2>
+            <p className="lp-signin-sub">부산대학교 Google 계정으로 로그인</p>
 
-        <p className="login-note">@pusan.ac.kr 계정 전용</p>
+            {error && (
+              <div className="lp-error">로그인에 실패했습니다. 부산대 계정인지 확인해 주세요.</div>
+            )}
 
-        <div className="login-hint">
-          <strong>교직원 계정 안내</strong>
-          부산대 포털(웹메일)에 먼저 로그인한 뒤 ‘Google로 로그인’을 누르면 한 번에 진행됩니다.
-          포털 로그인 창으로 넘어가는 경우, 로그인 후 이 페이지로 돌아와 버튼을 한 번 더 눌러주세요.
+            <form action={signInAction}>
+              <button type="submit" className="lp-google">
+                <GoogleIcon />
+                <span>부산대학교 Google 계정으로 로그인</span>
+              </button>
+            </form>
+
+            <ul className="lp-notes">
+              <li><strong>@pusan.ac.kr</strong> 계정만 사용할 수 있습니다.</li>
+              <li>교직원 계정은 Google Workspace를 쓰지 않으면 로그인 중에 부산대학교 웹메일 화면으로 넘어갑니다. 그 화면에서 그대로 로그인하면 됩니다.</li>
+              <li>처음 로그인하면 일반 계정으로 만들어집니다. 관리자에게 권한을 요청해 주세요.</li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="login-footer">© 2026 부산대학교 AI융합교육원</div>
+      <section className="lp-sec" id="steps">
+        <div className="lp-sec-in">
+          <h2 className="lp-h2">이용 절차</h2>
+          <p className="lp-sec-lead">네 단계면 됩니다. 학교 계정으로 들어와 권한을 한 번 받으면 그다음부터는 반복하지 않습니다.</p>
+          <ol className="lp-steps">
+            {STEPS.map((s) => (
+              <li key={s.no}>
+                <span className="lp-step-no">{s.no}</span>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="lp-sec" id="features">
+        <div className="lp-sec-in">
+          <h2 className="lp-h2">주요 기능</h2>
+          <p className="lp-sec-lead">기업, 실적, 학생을 따로 관리하지 않고 같은 시스템에서 이어 둡니다.</p>
+          <dl className="lp-features">
+            {FEATURES.map((f) => (
+              <div key={f.title}>
+                <dt>{f.title}</dt>
+                <dd>{f.desc}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <section className="lp-sec" id="roles">
+        <div className="lp-sec-in">
+          <h2 className="lp-h2">역할별 안내</h2>
+          <p className="lp-sec-lead">권한은 관리자가 계정마다 지정합니다. 처음 로그인한 계정은 모두 일반으로 시작합니다.</p>
+          <div className="lp-table-wrap">
+            <table className="lp-table">
+              <thead>
+                <tr><th>역할</th><th>하는 일</th><th>접속 방법</th></tr>
+              </thead>
+              <tbody>
+                {ROLES.map((r) => (
+                  <tr key={r.role}>
+                    <th scope="row">{r.role}</th>
+                    <td>{r.work}</td>
+                    <td className="lp-how">{r.how}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-family">
+        <div className="lp-sec-in">
+          <h2 className="lp-h3">패밀리 사이트</h2>
+          <ul className="lp-family-grid">
+            {FAMILY.map((f) => (
+              <li key={f.href}>
+                <a href={f.href} target="_blank" rel="noreferrer noopener">
+                  <span className="lp-family-bar" />
+                  <strong>{f.label}</strong>
+                  <span className="lp-family-host">{f.host}</span>
+                  <span className="lp-family-go">바로가기 →</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="lp-closing">
+        <div className="lp-sec-in">
+          <h2 className="lp-h2">부산대학교 AI융합교육원 구성원이면 지금 들어올 수 있습니다</h2>
+          <p className="lp-sec-lead">권한이 없으면 로그인만 되고 데이터는 보이지 않습니다. 관리자에게 알려 주세요.</p>
+          <form action={signInAction}>
+            {/* 여기엔 구글 4색 로고를 안 쓴다. 파란 버튼 위에 올리면 구글 브랜드
+                가이드에도 어긋나고 색이 뭉개져 보인다. 실제 구글 버튼은 히어로에 있다 */}
+            <button type="submit" className="lp-google lp-google-lg">로그인하러 가기</button>
+          </form>
+        </div>
+      </section>
+
+      <footer className="lp-footer">
+        <div className="lp-sec-in lp-footer-in">
+          <span>부산대학교 AI융합교육원</span>
+          <span className="lp-footer-copy">© {new Date().getFullYear()} Pusan National University</span>
+        </div>
+      </footer>
     </div>
   );
 }

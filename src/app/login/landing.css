@@ -1,0 +1,668 @@
+/* ─────────────────────────────────────────────────────────
+   랜딩(로그인 전 첫 화면) 전용 스타일
+     · 미인증 상태에서 뜨는 유일한 페이지라 사이드바 셸 밖에서 그린다(layout.tsx)
+     · 본문은 앱과 같은 테마 토큰을 쓰고, 히어로와 푸터만 테마와 무관하게 어둡다
+     · 글자 크기는 --fs 를 따르지 않는다. 앱 화면과 달리 표가 아니라 읽는 글이라
+       clamp() 로 화면 폭에 맞춘다
+   ───────────────────────────────────────────────────────── */
+
+.lp {
+  --lp-max: 1120px;
+  --lp-nav-h: 60px;
+  --lp-dark: #141a24;
+  --lp-dark-2: #0f141c;
+  --lp-on-dark: #e8ecf3;
+  --lp-on-dark-dim: #9aa5b6;
+  --lp-on-dark-line: rgba(255, 255, 255, 0.12);
+
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--text-1);
+  /* clip 이어야 한다. hidden 은 이 요소를 스크롤 컨테이너로 만들어서
+     안쪽 position: sticky 인 상단 네비가 안 붙는다 */
+  overflow-x: clip;
+  /* 한국어는 어절 단위로 끊어야 읽힌다. 안 걸면 '구성원이 / 면' 처럼 낱말 가운데가 잘린다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 앵커를 눌렀을 때 한 번에 튀지 않고 밀려 내려간다 */
+  html:has(.lp) {
+    scroll-behavior: smooth;
+  }
+
+  /* 스크롤에 맞춰 구역이 떠오른다. 클래스는 LandingReveal 이 붙인다 */
+  .lp-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .lp-reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 로컬 AUTH_BYPASS 에서는 미인증 판정이 안 나서 앱 셸이 랜딩을 한 번 더 감싼다.
+   그러면 본문 여백이 랜딩 둘레에 테두리처럼 남는다. 운영에서는 셸 자체가 없다 */
+body:has(.lp) .main {
+  padding: 0;
+}
+
+.lp-sec-in {
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── 상단 고정 네비 ── */
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--lp-nav-h);
+  background: color-mix(in srgb, var(--lp-dark) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--lp-on-dark-line);
+}
+
+.lp-nav-in {
+  max-width: var(--lp-max);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+/* 로고 원본이 짙은 남색이라 어두운 네비에서 안 보인다. 흰 실루엣으로 뒤집는다 */
+.lp-brand-logo {
+  height: 24px;
+  width: auto;
+  flex-shrink: 0;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+.lp-brand-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lp-on-dark);
+  letter-spacing: -0.2px;
+  /* 자리가 모자라면 옆 칸을 밀지 말고 여기서 잘린다 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-nav-links {
+  display: flex;
+  gap: 22px;
+  margin-left: auto;
+}
+
+.lp-nav-links a {
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--lp-on-dark-dim);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+.lp-nav-links a:hover {
+  color: var(--lp-on-dark);
+}
+
+.lp-nav-cta {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--indigo-600);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.lp-nav-cta:hover {
+  background: var(--indigo-500);
+}
+
+/* ── 히어로 ── */
+.lp-hero {
+  position: relative;
+  background: var(--lp-dark);
+  overflow: hidden;
+  /* 첫 화면을 꽉 채운다. svh 는 모바일 주소창이 접힐 때 높이가 튀는 걸 막는다 */
+  min-height: calc(100vh - var(--lp-nav-h));
+  min-height: calc(100svh - var(--lp-nav-h));
+  display: flex;
+  align-items: center;
+}
+
+/* 배경. 기업과 학생이 이어지는 그림(HeroNetwork) */
+.lp-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.lp-net {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lp-hero-in {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: clamp(56px, 9vw, 104px) 24px clamp(64px, 10vw, 116px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 56px;
+  align-items: start;
+  /* 격자 위에 얹힌 글이라, 칸이 켜져도 글자가 읽히도록 커서를 통과시킨다 */
+  pointer-events: none;
+}
+
+.lp-hero-in a,
+.lp-hero-in button,
+.lp-signin {
+  pointer-events: auto;
+}
+
+.lp-eyebrow {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--indigo-500);
+}
+
+.lp-h1 {
+  margin: 0 0 20px;
+  font-size: clamp(30px, 4.6vw, 52px);
+  font-weight: 800;
+  line-height: 1.24;
+  letter-spacing: -1.2px;
+  color: #fff;
+}
+
+.lp-lead {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(14px, 1.3vw, 16px);
+  line-height: 1.8;
+  color: var(--lp-on-dark-dim);
+}
+
+/* ── 히어로 안 집계 ── */
+.lp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 40px;
+  margin: 34px 0 0;
+  padding-top: 26px;
+  border-top: 1px solid var(--lp-on-dark-line);
+}
+
+.lp-stats dt {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: clamp(24px, 2.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 단위는 숫자보다 작게. 같은 크기면 숫자가 안 읽힌다 */
+.lp-stats dt span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lp-on-dark-dim);
+}
+
+.lp-stats dd {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--lp-on-dark-dim);
+}
+
+/* ── 히어로 안 로그인 카드 ── */
+.lp-signin {
+  border: 1px solid var(--lp-on-dark-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 28px 26px 24px;
+  scroll-margin-top: calc(var(--lp-nav-h) + 16px);
+}
+
+.lp-signin-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lp-signin-sub {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: var(--lp-on-dark-dim);
+}
+
+.lp-error {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.lp-google {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: #1f2a37;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+
+.lp-google:hover {
+  background: #eef1f6;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.lp-google svg { flex-shrink: 0; }
+
+.lp-google-lg {
+  width: auto;
+  min-width: 280px;
+  margin: 0 auto;
+  padding: 15px 28px;
+  border-color: var(--border);
+  background: var(--indigo-600);
+  color: #fff;
+}
+
+.lp-google-lg:hover {
+  background: var(--indigo-700);
+  box-shadow: var(--shadow-md);
+}
+
+.lp-notes {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.lp-notes li {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--lp-on-dark-dim);
+  padding-left: 11px;
+  position: relative;
+}
+
+.lp-notes li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--lp-on-dark-dim);
+}
+
+.lp-notes strong {
+  color: var(--lp-on-dark);
+  font-weight: 700;
+}
+
+/* ── 본문 섹션 공통 ── */
+.lp-sec {
+  border-bottom: 1px solid var(--border);
+  padding: clamp(56px, 8vw, 96px) 0;
+  scroll-margin-top: var(--lp-nav-h);
+}
+
+.lp-h2 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--text-1);
+}
+
+.lp-h3 {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+}
+
+.lp-sec-lead {
+  margin: 0 0 40px;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+/* ── 이용 절차 ── */
+.lp-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.lp-steps li {
+  border-top: 2px solid var(--border);
+  padding-top: 16px;
+}
+
+.lp-step-no {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.lp-steps h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.lp-steps p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text-2);
+}
+
+/* ── 주요 기능 ── */
+.lp-features {
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.lp-features > div {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-features dt {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.lp-features dd {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+/* ── 역할별 안내 ── */
+.lp-table-wrap {
+  overflow-x: auto;
+}
+
+.lp-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.lp-table thead th {
+  text-align: left;
+  padding: 0 16px 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.lp-table tbody th {
+  width: 140px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+  vertical-align: top;
+}
+
+.lp-table tbody th,
+.lp-table tbody td {
+  padding: 18px 16px 18px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text-2);
+  vertical-align: top;
+}
+
+.lp-how {
+  width: 120px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--accent) !important;
+}
+
+/* ── 패밀리 사이트 ── */
+.lp-family {
+  padding: clamp(48px, 7vw, 72px) 0;
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-family-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.lp-family-grid a {
+  display: block;
+  height: 100%;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+
+.lp-family-grid a:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.lp-family-bar {
+  display: block;
+  width: 24px;
+  height: 3px;
+  margin-bottom: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.lp-family-grid strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.lp-family-host {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.lp-family-go {
+  display: block;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ── 마무리 CTA ── */
+.lp-closing {
+  padding: clamp(64px, 9vw, 104px) 0;
+  text-align: center;
+}
+
+.lp-closing .lp-h2 {
+  max-width: 20ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lp-closing .lp-sec-lead {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── 푸터 ── */
+.lp-footer {
+  background: var(--lp-dark-2);
+  padding: 28px 0;
+}
+
+.lp-footer-in {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--lp-on-dark-dim);
+}
+
+.lp-footer-copy {
+  color: rgba(154, 165, 182, 0.7);
+}
+
+/* ── 포커스 ── */
+.lp a:focus-visible,
+.lp button:focus-visible {
+  outline: 2px solid var(--indigo-500);
+  outline-offset: 2px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 960px) {
+  .lp-hero-in {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+  }
+
+  .lp-signin {
+    max-width: 440px;
+  }
+
+  .lp-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lp-features > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}
+
+/* 앵커 링크가 브랜드 이름과 로그인 버튼 사이에 끼면 글자가 쪼개진다.
+   좁아지면 링크부터 접는다. 섹션은 스크롤로 다 닿는다 */
+@media (max-width: 900px) {
+  .lp-nav-links {
+    display: none;
+  }
+
+  .lp-nav-cta {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* 로고 워드마크가 넓어서 시스템 이름까지 넣을 자리가 없다. 이름은 바로 아래
+     히어로에 큰 글씨로 다시 나오니 좁은 화면에서는 로고만 둔다 */
+  .lp-brand-name {
+    display: none;
+  }
+
+  .lp-brand-logo {
+    height: 20px;
+  }
+
+  .lp-steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .lp-google-lg {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* 커서가 없으면 이어지는 그림이 안 살고 배터리만 먹는다 */
+@media (hover: none) {
+  .lp-hero-bg {
+    display: none;
+  }
+}

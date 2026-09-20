@@ -23,28 +23,34 @@ const THEME_INIT = `(function(){var d=document.documentElement;try{var t=localSt
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   const me = await getCurrentUser();
+  // 미인증 상태에서 그려지는 화면은 랜딩(/login) 하나뿐이다. 나머지는 미들웨어가
+  // 거기로 돌려보낸다. 사이드바 셸을 씌우면 랜딩이 그 옆 칸에 끼어 버린다.
+  // (AUTH_BYPASS 로컬 개발에서는 me 가 더미 사용자라 셸이 그대로 뜬다)
+  const bare = !session && !me;
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
       </head>
       <body>
-        <SWRProvider>
-          <MeProvider value={me}>
-            <div className="app-shell">
-              <Sidebar
-                userEmail={session?.user?.email}
-                userName={session?.user?.name}
-                role={me?.role ?? null}
-                logoutSlot={<LogoutForm />}
-                version={pkg.version}
-              />
-              <main className="main">{children}</main>
-            </div>
-            <RoleGuard />
-            <Toaster />
-          </MeProvider>
-        </SWRProvider>
+        {bare ? children : (
+          <SWRProvider>
+            <MeProvider value={me}>
+              <div className="app-shell">
+                <Sidebar
+                  userEmail={session?.user?.email}
+                  userName={session?.user?.name}
+                  role={me?.role ?? null}
+                  logoutSlot={<LogoutForm />}
+                  version={pkg.version}
+                />
+                <main className="main">{children}</main>
+              </div>
+              <RoleGuard />
+              <Toaster />
+            </MeProvider>
+          </SWRProvider>
+        )}
       </body>
     </html>
   );
