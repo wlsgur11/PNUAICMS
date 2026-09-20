@@ -1,5 +1,5 @@
 import { signIn } from '@/auth';
-import HeroNetwork from '@/components/HeroNetwork';
+import HeroChart from '@/components/HeroChart';
 import './landing.css';
 
 type Props = {
@@ -90,9 +90,9 @@ export default function LoginPage({ searchParams }: Props) {
         </div>
       </header>
 
-      {/* 히어로는 테마와 무관하게 늘 어둡다. 배경은 커서를 따라 이어지는 점들 */}
+      {/* 히어로는 테마와 무관하게 늘 어둡다. 배경은 옅게 깔린 지표 화면 */}
       <section className="lp-hero" id="top">
-        <div className="lp-hero-bg"><HeroNetwork /></div>
+        <div className="lp-hero-bg"><HeroChart /></div>
         <div className="lp-hero-in">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">부산대학교 AI융합교육원</p>
