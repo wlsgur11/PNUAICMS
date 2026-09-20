@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
  * 읽히게 하려는 것이다.
  *
  * 커서를 대면 가장 가까운 기업이 잡히고, 그 기업에 걸린 학생들이 함께 밝아진다.
+ * 기업 점은 끌어서 옮길 수 있다. 옮기면 걸리는 학생도 따라 바뀐다.
  *
  * 기업명은 실제 협력 기업을 그대로 쓴다(names). 학생은 이름 없이 점으로만 둔다.
  * 학생 쪽에 그럴듯한 이름을 붙이면 없는 사람의 기록으로 읽히고, 어느 기업에
@@ -21,6 +22,8 @@ const LINK = 168;
 const PULL = 180;
 // 커서가 기업을 집어내는 반경
 const FOCUS = 120;
+// 기업 점을 끌기 위해 집는 반경. 점보다 넉넉해야 잡힌다
+const GRAB = 22;
 // 점 개수 상한. 선은 기업×학생만 도니 이 상한이면 프레임당 수백 쌍이다
 const MAX_DOTS = 96;
 const AREA_PER_DOT = 10500;
@@ -59,6 +62,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     let students: Dot[] = [];
     let raf = 0;
     let running = true;
+    let dragging: Dot | null = null;
     const cursor = { x: -9999, y: -9999 };
 
     const short = (n: string) => (n.length > NAME_MAX ? `${n.slice(0, NAME_MAX)}…` : n);
@@ -186,7 +190,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         if (!c.name || w < LEGEND_MIN_W) continue;
         const tx = c.x + (on ? 14 : 10);
         const tw = ctx.measureText(c.name).width;
-        if (tx + tw > w - 8 || blocked(tx, c.y, tw)) continue;
+        // 끌고 있는 동안은 글 위에 겹치더라도 보여 준다. 잡은 게 무엇인지
+        // 안 보이면 끌 수가 없다. 놓으면 원래 규칙으로 돌아간다
+        if (c !== dragging && (tx + tw > w - 8 || blocked(tx, c.y, tw))) continue;
         ctx.fillStyle = on ? 'rgba(222, 232, 250, 0.95)' : 'rgba(200, 214, 238, 0.34)';
         ctx.fillText(c.name, tx, c.y);
       }
@@ -214,6 +220,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
 
     const step = () => {
       for (const p of [...companies, ...students]) {
+        if (p === dragging) continue;
         p.x += p.vx;
         p.y += p.vy;
         // 가장자리에서 반대쪽으로 넘긴다. 튕기게 하면 벽에 점이 몰린다
@@ -238,14 +245,46 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       if (running) raf = requestAnimationFrame(step);
     };
 
-    const onMove = (e: MouseEvent) => {
+    const at = (e: MouseEvent) => {
       const r = host.getBoundingClientRect();
-      cursor.x = e.clientX - r.left;
-      cursor.y = e.clientY - r.top;
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    /** 집을 수 있는 기업. 없으면 null */
+    const grabbable = (x: number, y: number) =>
+      companies.find((c) => Math.hypot(c.x - x, c.y - y) <= GRAB) ?? null;
+
+    const onMove = (e: MouseEvent) => {
+      const p = at(e);
+      cursor.x = p.x;
+      cursor.y = p.y;
+      if (!dragging) canvas.style.cursor = grabbable(p.x, p.y) ? 'grab' : '';
     };
     const onLeave = () => {
+      if (dragging) return;
       cursor.x = -9999;
       cursor.y = -9999;
+    };
+    const onDown = (e: MouseEvent) => {
+      const p = at(e);
+      const hit = grabbable(p.x, p.y);
+      if (!hit) return;
+      dragging = hit;
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    };
+    // 끄는 동안은 창 전체에서 받는다. 로그인 카드 위를 지나가도 놓치지 않는다
+    const onDragMove = (e: MouseEvent) => {
+      if (!dragging) return;
+      const p = at(e);
+      dragging.x = Math.max(0, Math.min(w, p.x));
+      dragging.y = Math.max(0, Math.min(h, p.y));
+      cursor.x = p.x;
+      cursor.y = p.y;
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = null;
+      canvas.style.cursor = '';
     };
     // 탭이 뒤로 가면 프레임을 돌리지 않는다
     const onVisible = () => {
@@ -261,6 +300,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     ro.observe(host);
     host.addEventListener('mousemove', onMove);
     host.addEventListener('mouseleave', onLeave);
+    host.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onDragMove);
+    window.addEventListener('mouseup', onUp);
     document.addEventListener('visibilitychange', onVisible);
 
     // 애니메이션을 줄여 달라는 설정이면 한 번만 그리고 멈춘다
@@ -277,6 +319,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       ro.disconnect();
       host.removeEventListener('mousemove', onMove);
       host.removeEventListener('mouseleave', onLeave);
+      host.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('mouseup', onUp);
       document.removeEventListener('visibilitychange', onVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
