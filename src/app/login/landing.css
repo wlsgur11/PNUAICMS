@@ -134,31 +134,11 @@ body:has(.lp) .main {
   align-items: center;
 }
 
-/* 배경 두 겹. 위는 이어지는 점(HeroNetwork), 아래는 지표 차트(HeroChart).
-   각 캔버스는 제 밴드 크기로 그리고 커서도 제 밴드 안에서만 받는다 */
+/* 배경. 기업과 학생이 이어지는 그림(HeroNetwork) */
 .lp-hero-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
-}
-
-.lp-hero-band {
-  position: absolute;
-  left: 0;
-  right: 0;
-}
-
-/* 겹치는 구간을 마스크로 흐려서 두 그림의 경계가 선으로 안 보이게 한다 */
-.lp-band-top {
-  top: 0;
-  height: 62%;
-  -webkit-mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
-  mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
-}
-
-.lp-band-bottom {
-  bottom: 0;
-  height: 58%;
 }
 
 .lp-net {
