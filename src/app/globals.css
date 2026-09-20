@@ -31,9 +31,10 @@
 
   --white: #ffffff;
   /* 표면(surface). 다크에서 어두운 표면으로 재정의됨 */
-  --radius: 4px;
-  --radius-sm: 4px;
-  --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --radius: 8px;
+  --radius-sm: 6px;
+  /* 카드는 테두리로 구분한다. 그림자는 떠 있는 것(팝오버, 호버)에만 남긴다 */
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
   --sidebar-w: 260px;
 
@@ -48,8 +49,10 @@
   --accent-strong: #2357b0;
   --accent-soft: #e3ecfb;
   --accent-on-soft: #1f53b0;
-  --sidebar-bg: #eef1f6;
-  --sidebar-border: #dfe4ec;
+  /* 사이드바는 라이트에서도 짙게 둔다. 사이드바·본문배경·카드가 전부 옅은
+     회색이면 세 층이 한 덩어리로 보여서 어디가 어디인지 안 읽힌다 */
+  --sidebar-bg: #1b2532;
+  --sidebar-border: #2c3848;
 
   /* 소프트 칩(뱃지/태그/스탯아이콘) */
   --info-soft-bg: #e3ecfb;
@@ -195,7 +198,19 @@ a {
 :root[data-sidebar="collapsed"] .ui-scale { display: none; }
 
 /* ── 사이드바 ── */
+/* 사이드바 안에서만 쓰는 색. 아래 규칙들이 전부 --text-*, --accent-* 를 보고
+   있어서 여기서 값만 갈아끼우면 규칙을 하나도 안 고쳐도 어두운 배경에 맞는다 */
 .sidebar {
+  --text-1: #eef2f8;
+  --text-2: #b4c0d0;
+  --text-3: #8492a5;
+  --accent: #7ea9f6;
+  --accent-soft: rgba(126, 169, 246, 0.16);
+  --accent-on-soft: #d6e4ff;
+  --neutral-soft-bg: rgba(255, 255, 255, 0.08);
+  --neutral-soft-text: #b4c0d0;
+  --slate-100: rgba(255, 255, 255, 0.08);
+
   width: var(--sidebar-w);
   flex-shrink: 0;
   background: var(--sidebar-bg);
@@ -219,11 +234,14 @@ a {
   padding: 0 6px;
 }
 
+/* 엠블럼 원본이 짙은 남색이라 어두운 사이드바에서 묻힌다. 흰 실루엣으로 뒤집는다 */
 .brand-logo {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
   object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
 }
 
 .brand-text {
@@ -283,7 +301,7 @@ a {
   align-items: center;
   gap: 11px;
   padding: 9px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-2);
   font-size: calc(13.5px * var(--fs, 1));
   font-weight: 400;
@@ -327,7 +345,7 @@ a {
   gap: 11px;
   width: 100%;
   padding: 9px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: none;
   border: none;
   cursor: pointer;
@@ -384,7 +402,7 @@ a {
   font-size: calc(10px * var(--fs, 1));
   font-weight: 500;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--neutral-soft-bg);
   color: var(--neutral-soft-text);
 }
@@ -404,7 +422,7 @@ a {
   margin-bottom: 10px;
   background: none;
   border: 1px solid var(--sidebar-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-2);
   font: inherit;
   font-size: calc(13px * var(--fs, 1));
@@ -420,7 +438,7 @@ a {
 .sidebar-user {
   padding: 12px;
   background: rgba(120, 140, 170, 0.10);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   margin-bottom: 10px;
 }
 
@@ -451,7 +469,7 @@ a {
   background: transparent;
   color: var(--text-2);
   border: 1px solid var(--sidebar-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: calc(12px * var(--fs, 1));
   font-weight: 500;
   cursor: pointer;
@@ -603,7 +621,7 @@ a {
 .card-title .accent-bar {
   width: 4px;
   height: 18px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--indigo-600);
 }
 
@@ -731,7 +749,7 @@ table.data-table {
   font-size: calc(13px * var(--fs, 1));
   font-weight: 600;
   color: var(--slate-500);
-  padding: 16px 20px;
+  padding: 11px 16px;
   border-bottom: 1px solid var(--slate-200);
   white-space: nowrap;
 }
@@ -741,13 +759,22 @@ table.data-table {
   text-align: center;
 }
 
+/* 칸 너비가 한 글자 모자라 '1학/년' 으로 접히던 자리들. 가운데 정렬 칸과
+   학번, 날짜처럼 길이가 정해진 값은 접지 않는다 */
+.data-table tbody td.center,
+.data-table tbody td.nowrap {
+  white-space: nowrap;
+}
+
 .data-table thead th.right,
 .data-table tbody td.right {
   text-align: right;
 }
 
+/* 상하 16px 이면 한 행이 75px 이라 한 화면에 열두 줄밖에 안 들어간다.
+   훑어서 찾는 화면이라 행 수가 곧 쓸모다 */
 .data-table tbody td {
-  padding: 16px 20px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--slate-100);
   font-size: calc(14px * var(--fs, 1));
   color: var(--slate-700);
@@ -855,7 +882,7 @@ table.data-table {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: calc(12px * var(--fs, 1));
   font-weight: 700;
   white-space: nowrap;
@@ -894,7 +921,7 @@ table.data-table {
   display: inline-flex;
   align-items: center;
   padding: 5px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: calc(12px * var(--fs, 1));
   font-weight: 600;
 }
