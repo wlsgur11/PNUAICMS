@@ -1,4 +1,7 @@
+import { unstable_cache } from 'next/cache';
 import { signIn } from '@/auth';
+import { prisma } from '@/lib/db';
+import CountUp from '@/components/CountUp';
 import HeroNetwork from '@/components/HeroNetwork';
 import './landing.css';
 
@@ -51,6 +54,26 @@ const ROLES = [
   { role: '슈퍼관리자', work: '관리자 권한에 더해 사용자 계정의 역할을 부여하고 회수합니다.', how: '구글 로그인' },
 ];
 
+/**
+ * 랜딩에 띄우는 집계. 로그인 전 화면이라 사람을 특정할 수 있는 값은 안 쓰고
+ * 건수만 센다. 실제 숫자라 볼 때마다 늘어 있는 게 보인다.
+ *
+ * 한 시간 캐시한다. 로그인하러 온 사람마다 카운트 네 번을 돌릴 이유가 없다.
+ */
+const getStats = unstable_cache(
+  async () => {
+    const [companies, students, projects, internships] = await Promise.all([
+      prisma.company.count({ where: { isActive: true } }),
+      prisma.student.count(),
+      prisma.project.count(),
+      prisma.internship.count(),
+    ]);
+    return { companies, students, records: projects + internships };
+  },
+  ['landing-stats'],
+  { revalidate: 3600 },
+);
+
 const FAMILY = [
   { label: 'AI융합교육원', host: 'swedu.pusan.ac.kr', href: 'https://swedu.pusan.ac.kr' },
   { label: 'AIPMS', host: 'aipms.pusan.ac.kr', href: 'https://aipms.pusan.ac.kr' },
@@ -62,9 +85,18 @@ const FAMILY = [
   { label: '인프런', host: 'inflearn.com/@pnuswedu', href: 'https://inflearn.com/@pnuswedu' },
 ];
 
-export default function LoginPage({ searchParams }: Props) {
+export default async function LoginPage({ searchParams }: Props) {
   const callbackUrl = searchParams.callbackUrl || '/';
   const error = searchParams.error;
+
+  // 여기는 로그인으로 들어오는 유일한 길목이다. 집계가 안 나온다고 화면이
+  // 막히면 아무도 못 들어온다. 실패하면 숫자만 빼고 그대로 그린다
+  let stats: Awaited<ReturnType<typeof getStats>> | null = null;
+  try {
+    stats = await getStats();
+  } catch {
+    stats = null;
+  }
 
   // 로그인 버튼이 히어로와 맨 아래 두 군데에 있다. 서버 액션이라 클라이언트
   // 컴포넌트로 빼면 signIn 을 못 불러서, 액션 하나를 두 폼이 같이 쓴다
@@ -101,6 +133,25 @@ export default function LoginPage({ searchParams }: Props) {
               산학협력 기업 정보부터 실적 집계, 학생 상담 이력까지 한 화면에서 이어집니다.
               엑셀로 흩어져 있던 기록을 한곳에 모아 두고, 목표 대비 어디까지 왔는지 바로 확인합니다.
             </p>
+
+            {/* 갓 만든 빈 DB 에서 '0곳 0명 0건' 이 뜨면 망가진 화면으로 보인다.
+                기업이 하나도 없으면 줄을 통째로 뺀다 */}
+            {stats && stats.companies > 0 && (
+              <dl className="lp-stats">
+                <div>
+                  <dt><CountUp end={stats.companies} /><span>곳</span></dt>
+                  <dd>협력 기업</dd>
+                </div>
+                <div>
+                  <dt><CountUp end={stats.students} /><span>명</span></dt>
+                  <dd>등록 학생</dd>
+                </div>
+                <div>
+                  <dt><CountUp end={stats.records} /><span>건</span></dt>
+                  <dd>산학·인턴십 실적</dd>
+                </div>
+              </dl>
+            )}
           </div>
 
           <div className="lp-signin" id="sign-in">
