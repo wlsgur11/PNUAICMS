@@ -35,9 +35,10 @@
   /* 스크롤에 맞춰 구역이 떠오른다. 클래스는 LandingReveal 이 붙인다 */
   .lp-reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(44px);
+    /* 느리고 길게. 짧으면 스크롤을 따라잡아서 떠오르는 게 안 보인다 */
+    transition: opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
   }
 
