@@ -9,7 +9,10 @@ import { useEffect, useRef } from 'react';
  * 읽히게 하려는 것이다.
  *
  * 커서를 대면 가장 가까운 기업이 잡히고, 그 기업에 걸린 학생들이 함께 밝아진다.
- * 이름과 숫자는 안 적는다. 배경에 그럴듯한 값을 적으면 실제 데이터로 읽힌다.
+ *
+ * 기업명은 실제 협력 기업을 그대로 쓴다(names). 학생은 이름 없이 점으로만 둔다.
+ * 학생 쪽에 그럴듯한 이름을 붙이면 없는 사람의 기록으로 읽히고, 어느 기업에
+ * 누가 갔다는 주장까지 하게 된다.
  */
 
 // 기업과 학생이 이어질 거리(px)
@@ -23,14 +26,22 @@ const MAX_DOTS = 96;
 const AREA_PER_DOT = 10500;
 // 학생 몇 명에 기업 하나꼴로 둘지
 const STUDENTS_PER_COMPANY = 4;
-// 범례를 넣을 만큼 폭이 있는지. 좁으면 헤드라인 위로 올라탄다
+// 범례와 기업명을 넣을 만큼 폭이 있는지. 좁으면 헤드라인 위로 올라탄다
 const LEGEND_MIN_W = 560;
+// 기업명이 글 영역과 이만큼 떨어져야 그린다
+const SAFE_PAD = 10;
+// 기업명이 이보다 길면 줄인다. 긴 법인명이 배경에서 줄을 다 차지한다
+const NAME_MAX = 12;
 
-type Dot = { x: number; y: number; vx: number; vy: number; company: boolean };
+type Dot = { x: number; y: number; vx: number; vy: number; company: boolean; name: string };
+type Rect = { x: number; y: number; w: number; h: number };
 
-export default function HeroNetwork() {
+export default function HeroNetwork({ names }: { names: string[] }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
+  // 의존성은 비워 둔다. names 는 서버에서 한 번 받아 오는 값이라 이 화면이
+  // 떠 있는 동안 바뀌지 않는다. 배열을 의존성에 넣으면 렌더마다 참조가
+  // 달라져 캔버스를 처음부터 다시 만든다
   useEffect(() => {
     const canvas = ref.current;
     const host = canvas?.parentElement;
@@ -48,19 +59,45 @@ export default function HeroNetwork() {
     let running = true;
     const cursor = { x: -9999, y: -9999 };
 
+    const short = (n: string) => (n.length > NAME_MAX ? `${n.slice(0, NAME_MAX)}…` : n);
+
     const seed = () => {
       const total = Math.min(MAX_DOTS, Math.max(14, Math.round((w * h) / AREA_PER_DOT)));
-      const nCompany = Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1)));
+      // 기업 점은 이름 수를 넘기지 않는다. 넘기면 같은 이름이 화면에 여러 번 뜬다
+      const nCompany = Math.min(
+        Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1))),
+        names.length || Infinity,
+      );
       // 기업은 학생보다 느리게 움직인다. 학생이 기업 주위를 도는 것처럼 보인다
-      const make = (company: boolean): Dot => ({
+      const make = (company: boolean, name = ''): Dot => ({
         x: Math.random() * w,
         y: Math.random() * h,
         vx: (Math.random() - 0.5) * (company ? 0.1 : 0.26),
         vy: (Math.random() - 0.5) * (company ? 0.1 : 0.26),
         company,
+        name,
       });
-      companies = Array.from({ length: nCompany }, () => make(true));
+      // 기업이 이름 수보다 많으면 돌려 쓴다. 이름이 없으면 점만 뜬다
+      companies = Array.from({ length: nCompany }, (_, i) =>
+        make(true, names[i] ? short(names[i]) : ''));
       students = Array.from({ length: total - nCompany }, () => make(false));
+    };
+
+    // 헤드라인, 본문, 로그인 카드가 놓인 자리. 여기에 걸리는 기업명은 안 그린다.
+    // 글 위에 이름이 겹치면 배경이 아니라 오류로 보인다
+    let safe: Rect[] = [];
+    const measureSafe = () => {
+      const hostRect = host.getBoundingClientRect();
+      safe = ['.lp-hero-copy', '.lp-signin']
+        .map((sel) => document.querySelector(sel)?.getBoundingClientRect())
+        .filter((r): r is DOMRect => !!r)
+        .map((r) => ({ x: r.left - hostRect.left, y: r.top - hostRect.top, w: r.width, h: r.height }));
+    };
+    const blocked = (x: number, y: number, tw: number) => {
+      // 범례는 캔버스에 직접 그리는 것이라 DOM 에 없다. 사각형을 손으로 넣는다
+      const zones = w >= LEGEND_MIN_W ? [...safe, { x: w - 142, y: 12, w: 142, h: 28 }] : safe;
+      return zones.some((r) => x + tw > r.x - SAFE_PAD && x < r.x + r.w + SAFE_PAD
+        && y + 6 > r.y - SAFE_PAD && y - 6 < r.y + r.h + SAFE_PAD);
     };
 
     const resize = () => {
@@ -72,6 +109,7 @@ export default function HeroNetwork() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      measureSafe();
       seed();
     };
 
@@ -118,6 +156,9 @@ export default function HeroNetwork() {
         ctx.fill();
       }
 
+      ctx.font = '600 11px Pretendard, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
       for (const c of companies) {
         const on = c === hit;
         ctx.fillStyle = on ? 'rgba(143, 183, 250, 1)' : 'rgba(111, 161, 243, 0.55)';
@@ -131,6 +172,12 @@ export default function HeroNetwork() {
           ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
           ctx.stroke();
         }
+        if (!c.name || w < LEGEND_MIN_W) continue;
+        const tx = c.x + (on ? 14 : 10);
+        const tw = ctx.measureText(c.name).width;
+        if (tx + tw > w - 8 || blocked(tx, c.y, tw)) continue;
+        ctx.fillStyle = on ? 'rgba(222, 232, 250, 0.95)' : 'rgba(200, 214, 238, 0.34)';
+        ctx.fillText(c.name, tx, c.y);
       }
 
       // 범례. 점 옆에 라벨을 띄우면 헤드라인, 본문 글자 위에 겹쳐서
@@ -138,10 +185,6 @@ export default function HeroNetwork() {
       if (w >= LEGEND_MIN_W) {
         const x = w - 132;
         const y = 26;
-        ctx.font = '600 11px Pretendard, system-ui, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-
         ctx.fillStyle = 'rgba(111, 161, 243, 0.75)';
         ctx.beginPath();
         ctx.arc(x, y, 3.4, 0, Math.PI * 2);
@@ -223,6 +266,7 @@ export default function HeroNetwork() {
       host.removeEventListener('mouseleave', onLeave);
       document.removeEventListener('visibilitychange', onVisible);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <canvas ref={ref} className="lp-net" aria-hidden="true" />;

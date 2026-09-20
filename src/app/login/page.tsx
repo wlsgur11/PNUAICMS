@@ -62,13 +62,26 @@ const ROLES = [
  */
 const getStats = unstable_cache(
   async () => {
-    const [companies, students, projects, internships] = await Promise.all([
+    const [companies, students, projects, internships, names] = await Promise.all([
       prisma.company.count({ where: { isActive: true } }),
       prisma.student.count(),
       prisma.project.count(),
       prisma.internship.count(),
+      // 배경에 띄울 기업명. 실제 협력 기업이라 사실 그대로다. 학생은 이름 없이
+      // 점으로만 두어서, 어느 기업에 누가 갔다는 주장은 하지 않는다
+      prisma.company.findMany({
+        where: { isActive: true },
+        select: { name: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 18,
+      }),
     ]);
-    return { companies, students, records: projects + internships };
+    return {
+      companies,
+      students,
+      records: projects + internships,
+      names: names.map((c) => c.name).filter(Boolean),
+    };
   },
   ['landing-stats'],
   { revalidate: 3600 },
@@ -124,7 +137,7 @@ export default async function LoginPage({ searchParams }: Props) {
 
       {/* 히어로는 테마와 무관하게 늘 어둡다. 배경은 기업과 학생이 이어지는 그림 */}
       <section className="lp-hero" id="top">
-        <div className="lp-hero-bg"><HeroNetwork /></div>
+        <div className="lp-hero-bg"><HeroNetwork names={stats?.names ?? []} /></div>
         <div className="lp-hero-in">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">부산대학교 AI융합교육원</p>
