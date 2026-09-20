@@ -53,6 +53,8 @@ const K_HOME = 0.0014; // 기업이 제자리로 돌아오려는 힘
 const CROWD = 32; // 학생끼리 이 거리 안이면 민다
 const DAMP = 0.9; // 감속. 낮을수록 빨리 멈춘다
 const MAX_V = 1.3;
+// 끌 때 커서를 따라가는 비율. 1 이면 딱 붙고, 낮을수록 무겁게 끌려온다
+const DRAG_EASE = 0.16;
 // 기업은 무겁다. 같은 힘에 덜 움직인다
 const MASS_COMPANY = 0.4;
 
@@ -87,6 +89,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     let raf = 0;
     let running = true;
     let dragging: Dot | null = null;
+    // 끌고 있는 점이 가려는 자리. 커서를 바로 따라붙이지 않고 이 자리로
+    // 조금씩 당겨서 무게가 있는 것처럼 만든다
+    const dragTo = { x: 0, y: 0 };
     const cursor = { x: -9999, y: -9999 };
 
     // 헤드라인, 본문, 로그인 카드가 놓인 자리. 여기에 걸리는 기업명은 안 그린다.
@@ -202,7 +207,15 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       }
 
       for (const p of all) {
-        if (p === dragging) { p.vx = 0; p.vy = 0; continue; }
+        if (p === dragging) {
+          // 커서에 딱 붙이면 가볍다. 남은 거리의 일부씩만 따라가게 두면
+          // 손에 끌려오는 느낌이 난다
+          p.x += (dragTo.x - p.x) * DRAG_EASE;
+          p.y += (dragTo.y - p.y) * DRAG_EASE;
+          p.vx = 0;
+          p.vy = 0;
+          continue;
+        }
 
         if (p.company) {
           // 기업은 제자리로 돌아오려 한다. 안 그러면 서로 밀어내다 벽에 붙고,
@@ -346,6 +359,8 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       const hit = grabbable(p.x, p.y);
       if (!hit) return;
       dragging = hit;
+      dragTo.x = hit.x;
+      dragTo.y = hit.y;
       canvas.style.cursor = 'grabbing';
       e.preventDefault();
     };
@@ -353,16 +368,17 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     const onDragMove = (e: MouseEvent) => {
       if (!dragging) return;
       const p = at(e);
-      dragging.x = Math.max(0, Math.min(w, p.x));
-      dragging.y = Math.max(0, Math.min(h, p.y));
+      dragTo.x = Math.max(0, Math.min(w, p.x));
+      dragTo.y = Math.max(0, Math.min(h, p.y));
       cursor.x = p.x;
       cursor.y = p.y;
     };
     const onUp = () => {
       if (!dragging) return;
-      // 놓은 자리를 새 제자리로 삼는다. 안 그러면 손을 떼는 순간 돌아간다
-      dragging.hx = dragging.x;
-      dragging.hy = dragging.y;
+      // 놓은 자리를 새 제자리로 삼는다. 안 그러면 손을 떼는 순간 돌아간다.
+      // 끌려오는 중이었더라도 가려던 자리를 제자리로 잡아야 덜 흔들린다
+      dragging.hx = dragTo.x;
+      dragging.hy = dragTo.y;
       dragging = null;
       canvas.style.cursor = '';
     };

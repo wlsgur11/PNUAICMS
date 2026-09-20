@@ -3,6 +3,7 @@ import { signIn } from '@/auth';
 import { prisma } from '@/lib/db';
 import CountUp from '@/components/CountUp';
 import HeroNetwork from '@/components/HeroNetwork';
+import LandingReveal from '@/components/LandingReveal';
 import './landing.css';
 
 type Props = {
@@ -120,6 +121,7 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="lp">
+      <LandingReveal />
       {/* 상단 고정 네비. 앵커 링크라 자바스크립트가 필요 없다 */}
       <header className="lp-nav">
         <div className="lp-nav-in">
