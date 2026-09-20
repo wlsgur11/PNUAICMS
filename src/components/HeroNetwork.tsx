@@ -25,13 +25,15 @@ const FOCUS = 120;
 const MAX_DOTS = 96;
 const AREA_PER_DOT = 10500;
 // 학생 몇 명에 기업 하나꼴로 둘지
-const STUDENTS_PER_COMPANY = 4;
+const STUDENTS_PER_COMPANY = 2;
 // 범례와 기업명을 넣을 만큼 폭이 있는지. 좁으면 헤드라인 위로 올라탄다
 const LEGEND_MIN_W = 560;
 // 기업명이 글 영역과 이만큼 떨어져야 그린다
 const SAFE_PAD = 10;
 // 기업명이 이보다 길면 줄인다. 긴 법인명이 배경에서 줄을 다 차지한다
 const NAME_MAX = 12;
+// 이름을 붙일 기업 수 상한. 점은 많아도 되지만 글자는 많으면 배경이 시끄럽다
+const MAX_NAMED = 10;
 
 type Dot = { x: number; y: number; vx: number; vy: number; company: boolean; name: string };
 type Rect = { x: number; y: number; w: number; h: number };
@@ -63,23 +65,32 @@ export default function HeroNetwork({ names }: { names: string[] }) {
 
     const seed = () => {
       const total = Math.min(MAX_DOTS, Math.max(14, Math.round((w * h) / AREA_PER_DOT)));
-      // 기업 점은 이름 수를 넘기지 않는다. 넘기면 같은 이름이 화면에 여러 번 뜬다
-      const nCompany = Math.min(
-        Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1))),
-        names.length || Infinity,
-      );
+      const nCompany = Math.max(3, Math.round(total / (STUDENTS_PER_COMPANY + 1)));
       // 기업은 학생보다 느리게 움직인다. 학생이 기업 주위를 도는 것처럼 보인다
-      const make = (company: boolean, name = ''): Dot => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * (company ? 0.1 : 0.26),
-        vy: (Math.random() - 0.5) * (company ? 0.1 : 0.26),
-        company,
-        name,
-      });
-      // 기업이 이름 수보다 많으면 돌려 쓴다. 이름이 없으면 점만 뜬다
+      const make = (company: boolean, name = ''): Dot => {
+        // 이름이 붙는 점은 글 영역을 피해서 놓는다. 기업 점은 느리게 움직여서
+        // 한번 열린 자리에 놓이면 그 근처에 머문다
+        let x = Math.random() * w;
+        let y = Math.random() * h;
+        for (let i = 0; name && i < 40 && blocked(x + 10, y, 90); i++) {
+          x = Math.random() * w;
+          y = Math.random() * h;
+        }
+        // 기업은 제자리에 박아 둔다. 움직이면 이름표가 같이 떠다녀서 읽기
+        // 나쁘고, 빈 자리를 골라 놓은 것도 금방 글 위로 밀려간다
+        return {
+          x,
+          y,
+          vx: company ? 0 : (Math.random() - 0.5) * 0.26,
+          vy: company ? 0 : (Math.random() - 0.5) * 0.26,
+          company,
+          name,
+        };
+      };
+      // 이름은 기업마다 하나씩만 쓴다. 돌려 쓰면 같은 회사가 화면에 여러 번
+      // 뜬다. 이름이 모자라는 만큼은 이름 없는 점으로 남는다
       companies = Array.from({ length: nCompany }, (_, i) =>
-        make(true, names[i] ? short(names[i]) : ''));
+        make(true, i < MAX_NAMED && names[i] ? short(names[i]) : ''));
       students = Array.from({ length: total - nCompany }, () => make(false));
     };
 
@@ -211,12 +222,14 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         if (p.y < -LINK) p.y = h + LINK;
         if (p.y > h + LINK) p.y = -LINK;
 
-        // 커서 쪽으로 아주 약하게 끌어준다. 세게 당기면 한 점에 뭉쳐 버린다
+        // 학생만 커서 쪽으로 아주 약하게 끌린다. 세게 당기면 한 점에 뭉치고,
+        // 기업까지 끌리면 이름표가 커서를 따라다닌다
+        if (p.company) continue;
         const dx = cursor.x - p.x;
         const dy = cursor.y - p.y;
         const d = Math.hypot(dx, dy);
         if (d < PULL && d > 1) {
-          const f = (1 - d / PULL) * (p.company ? 0.1 : 0.22);
+          const f = (1 - d / PULL) * 0.22;
           p.x += (dx / d) * f;
           p.y += (dy / d) * f;
         }

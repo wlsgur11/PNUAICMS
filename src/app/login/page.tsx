@@ -73,7 +73,7 @@ const getStats = unstable_cache(
         where: { isActive: true },
         select: { name: true },
         orderBy: { updatedAt: 'desc' },
-        take: 18,
+        take: 40,
       }),
     ]);
     return {
