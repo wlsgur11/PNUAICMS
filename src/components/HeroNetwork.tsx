@@ -12,6 +12,10 @@ import { useEffect, useRef } from 'react';
  * 두고 당기거나 밀고, 학생끼리는 겹치지 않을 만큼만 밀어낸다. 커서를 대면 가장
  * 가까운 기업이 잡혀 걸린 학생들이 함께 밝아지고, 기업 점은 끌어서 옮길 수 있다.
  *
+ * 선은 한 번에 나타나지 않는다. 쌍마다 자란 정도를 기억해 두고 기업 쪽에서
+ * 학생 쪽으로 조금씩 뻗어 나간다. 거리가 멀어지면 같은 속도로 되감긴다.
+ * 매 프레임 거리만 재서 그렸다 지우면 점이 조금만 움직여도 선이 깜빡인다.
+ *
  * 기업명은 실제 협력 기업을 그대로 쓴다(names). 학생은 이름 없이 점으로만 둔다.
  * 학생 쪽에 그럴듯한 이름을 붙이면 없는 사람의 기록으로 읽히고, 어느 기업에
  * 누가 갔다는 주장까지 하게 된다.
@@ -58,6 +62,15 @@ const DRAG_EASE = 0.16;
 // 기업은 무겁다. 같은 힘에 덜 움직인다
 const MASS_COMPANY = 0.4;
 
+// 선이 1초에 자라는 비율. 다 뻗는 데 4초 남짓(쌍마다 편차가 있어 3~7초).
+// 1.4초였을 때는 너무 빨라서 그냥 나타나는 것처럼 보였다.
+// 프레임 수가 아니라 시간으로 재야 120Hz 화면에서 두 배로 빨라지지 않는다
+const GROW = 0.25;
+// 되감기는 조금 빠르게. 안 그러면 멀어진 선이 오래 남아 지저분하다
+const SHRINK = 0.45;
+// 이 아래로 줄어든 선은 그리지 않는다
+const GROW_MIN = 0.02;
+
 type Dot = {
   x: number; y: number;
   vx: number; vy: number;
@@ -86,6 +99,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     let companies: Dot[] = [];
     let students: Dot[] = [];
     let all: Dot[] = [];
+    // grow[기업 index][학생 index] = 그 선이 얼마나 뻗었는지 0..1.
+    // 프레임 사이에 남아 있어야 '자란다' 가 된다
+    let grow: Float32Array[] = [];
     let raf = 0;
     let running = true;
     let dragging: Dot | null = null;
@@ -134,6 +150,8 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         make(true, i < MAX_NAMED && names[i] ? short(names[i]) : ''));
       students = Array.from({ length: total - nCompany }, () => make(false));
       all = [...companies, ...students];
+      // 전부 0 에서 시작한다. 처음 열 때 화면 전체가 한 번 뻗어 나간다
+      grow = companies.map(() => new Float32Array(students.length));
     };
 
     const resize = () => {
@@ -160,6 +178,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       return best;
     };
 
+    /** 쌍마다 조금씩 다른 속도. 난수를 저장하지 않고 번호에서 뽑는다 */
+    const speed = (ci: number, si: number) => 0.6 + (((ci * 7919 + si * 104729) % 97) / 97) * 0.8;
+
     /** a 를 b 쪽으로, b 를 반대쪽으로. f 가 음수면 서로 밀어낸다 */
     const pull = (a: Dot, b: Dot, f: number) => {
       const dx = b.x - a.x;
@@ -174,7 +195,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       b.vy -= ay * (b.company ? MASS_COMPANY : 1);
     };
 
-    const physics = () => {
+    const physics = (dt: number) => {
       // 기업끼리는 같은 극처럼 밀어낸다. 가까울수록 세게
       for (let i = 0; i < companies.length; i++) {
         for (let j = i + 1; j < companies.length; j++) {
@@ -186,11 +207,19 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         }
       }
 
-      // 기업과 학생은 REST 거리를 두려 한다. 멀면 당기고 가까우면 민다
-      for (const c of companies) {
-        for (const s of students) {
+      // 기업과 학생은 REST 거리를 두려 한다. 멀면 당기고 가까우면 민다.
+      // 거리를 여기서 이미 재므로 선이 자라고 되감기는 것도 같이 처리한다
+      for (let ci = 0; ci < companies.length; ci++) {
+        const c = companies[ci];
+        const g = grow[ci];
+        for (let si = 0; si < students.length; si++) {
+          const s = students[si];
           const d = Math.hypot(c.x - s.x, c.y - s.y);
-          if (d > LINK) continue;
+          if (d > LINK) {
+            if (g[si] > 0) g[si] = Math.max(0, g[si] - SHRINK * speed(ci, si) * dt);
+            continue;
+          }
+          if (g[si] < 1) g[si] = Math.min(1, g[si] + GROW * speed(ci, si) * dt);
           pull(c, s, (d - REST) * K_LINK);
         }
       }
@@ -255,23 +284,44 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       const hit = focused();
       const linked = new Set<Dot>();
 
-      // 기업–학생 선. 잡힌 기업의 선만 진하게 긋는다
-      for (const c of companies) {
+      // 기업–학생 선. 자란 만큼만 기업 쪽에서 뻗어 나간다.
+      // 잡힌 기업의 선만 진하게 긋는다
+      const tips: { x: number; y: number; on: boolean }[] = [];
+      for (let ci = 0; ci < companies.length; ci++) {
+        const c = companies[ci];
         const on = c === hit;
-        for (const s of students) {
+        const g = grow[ci];
+        for (let si = 0; si < students.length; si++) {
+          const t = g[si];
+          if (t < GROW_MIN) continue;
+          const s = students[si];
           const d = Math.hypot(c.x - s.x, c.y - s.y);
-          if (d > LINK) continue;
-          if (on) linked.add(s);
-          const fade = 1 - d / LINK;
+          // 다 뻗은 선만 '이어졌다' 로 친다. 자라는 중인 건 아직 닿지 않았다
+          if (on && t > 0.98) linked.add(s);
+          const ex = c.x + (s.x - c.x) * t;
+          const ey = c.y + (s.y - c.y) * t;
+          const fade = Math.max(0, 1 - d / LINK);
+          // 진하기를 자란 정도에 비례시키면 안 된다. 30% 자란 선이 30% 투명도가
+          // 되어 뻗는 동안이 거의 안 보이고, 다 자랐을 때 갑자기 나타나는 것처럼
+          // 보인다. 처음 잠깐만 스며들고 그 뒤로는 길이만 길어진다
+          const ink = Math.min(1, t * 5);
           ctx.strokeStyle = on
-            ? `rgba(143, 183, 250, ${0.25 + fade * 0.55})`
-            : `rgba(111, 161, 243, ${fade * 0.2})`;
+            ? `rgba(143, 183, 250, ${(0.25 + fade * 0.55) * ink})`
+            : `rgba(111, 161, 243, ${fade * 0.22 * ink})`;
           ctx.lineWidth = on ? 1.4 : 1;
           ctx.beginPath();
           ctx.moveTo(c.x, c.y);
-          ctx.lineTo(s.x, s.y);
+          ctx.lineTo(ex, ey);
           ctx.stroke();
+          // 뻗는 중인 끝에만 점을 찍는다. 자라는 방향이 보인다
+          if (t < 0.98) tips.push({ x: ex, y: ey, on });
         }
+      }
+      for (const p of tips) {
+        ctx.fillStyle = p.on ? 'rgba(178, 205, 253, 0.8)' : 'rgba(126, 169, 246, 0.45)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       for (const s of students) {
@@ -329,8 +379,14 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       }
     };
 
-    const step = () => {
-      physics();
+    // 힘 계산은 프레임 단위 그대로 두고(감속이 그 전제로 맞춰져 있다),
+    // 선이 자라는 속도만 시간으로 잰다
+    let last = performance.now();
+    const step = (now: number) => {
+      // 탭이 잠깐 멈췄다 돌아와도 선이 한 번에 다 뻗지 않게 막는다
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      physics(dt);
       draw();
       if (running) raf = requestAnimationFrame(step);
     };
@@ -387,7 +443,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       const on = !document.hidden;
       if (on === running || reduced) return;
       running = on;
-      if (on) raf = requestAnimationFrame(step);
+      if (on) { last = performance.now(); raf = requestAnimationFrame(step); }
       else cancelAnimationFrame(raf);
     };
 
@@ -404,7 +460,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     // 애니메이션을 줄여 달라는 설정이면 자리만 잡아 두고 한 번 그린 뒤 멈춘다
     if (reduced) {
       running = false;
-      for (let i = 0; i < 120; i++) physics();
+      for (let i = 0; i < 160; i++) physics(1 / 60);
       draw();
     } else {
       raf = requestAnimationFrame(step);
