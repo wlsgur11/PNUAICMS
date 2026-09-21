@@ -1655,10 +1655,17 @@ table.data-table {
 /* 지표 하나. 한 카드에 여러 개를 가로로 나란히 둔다 */
 .dash-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  /* 150px 로 두면 1280 노트북에서 세 번째 지표가 다음 줄로 밀린다.
+     40px 숫자('18.4%')가 105px 쯤이라 130 이면 넉넉하다 */
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 20px;
 }
-.dash-metric-label { font-size: calc(12px * var(--fs, 1)); color: var(--text-3); margin-bottom: 8px; }
+/* 숫자의 이름. 아래 설명글과 같은 크기, 같은 연한 색으로 두면 숫자만 크고
+   그게 무슨 값인지가 안 읽힌다. 라벨 > 설명 순으로 확실히 벌린다 */
+.dash-metric-label {
+  font-size: calc(13px * var(--fs, 1)); font-weight: 600; color: var(--text-2);
+  margin-bottom: 6px;
+}
 /* 이 화면에서 제일 커야 하는 글자. 24px 일 때는 밑에 붙은 설명 세 줄이 면적을
    더 차지해서, 눈이 숫자에 머물지 않고 회색 글자로 흩어졌다 */
 .dash-metric-value {
