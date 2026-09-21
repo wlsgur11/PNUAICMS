@@ -3,17 +3,18 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * 랜딩 히어로 배경. 점 두 종류가 자석처럼 떠 있고, 기업에서 학생 쪽으로 뿌리가
- * 자란다. 큰 점이 기업, 작은 점이 학생이다. 선은 기업과 학생 사이에만 생긴다.
+ * 랜딩 히어로 배경. 점 두 종류가 자석처럼 움직인다. 큰 점이 기업, 작은 점이
+ * 학생이고 선은 기업과 학생 사이에만 긋는다. 기업끼리, 학생끼리는 잇지 않는다.
  * 이 시스템이 실제로 이어 두는 관계가 그것뿐이라, 그림만 봐도 무엇을 다루는지
  * 읽히게 하려는 것이다.
  *
- * 뿌리는 곧게 뻗지 않는다. 끝이 좌우로 더듬으며 나아가고, 닿고 나면 그 구불한
- * 길이 그대로 남는다. 직선 길이만 늘리면 옅은 선에서는 그냥 나타나는 것처럼
- * 보여서 '자란다' 가 읽히지 않는다.
+ * 힘은 세 가지다. 기업끼리는 같은 극처럼 밀어내고, 기업과 학생은 적당한 거리를
+ * 두고 당기거나 밀고, 학생끼리는 겹치지 않을 만큼만 밀어낸다. 커서를 대면 가장
+ * 가까운 기업이 잡혀 걸린 학생들이 함께 밝아지고, 기업 점은 끌어서 옮길 수 있다.
  *
- * 기업 하나가 동시에 뻗는 뿌리는 몇 개로 묶는다. 거리 안에 든 쌍을 전부 이으면
- * 그물이 되어 한 가닥이 어디로 가는지 안 보인다.
+ * 선은 한 번에 나타나지 않는다. 쌍마다 자란 정도를 기억해 두고 기업 쪽에서
+ * 학생 쪽으로 조금씩 뻗어 나간다. 거리가 멀어지면 같은 속도로 되감긴다.
+ * 매 프레임 거리만 재서 그렸다 지우면 점이 조금만 움직여도 선이 깜빡인다.
  *
  * 기업명은 실제 협력 기업을 그대로 쓴다(names). 학생은 이름 없이 점으로만 둔다.
  * 학생 쪽에 그럴듯한 이름을 붙이면 없는 사람의 기록으로 읽히고, 어느 기업에
@@ -33,6 +34,7 @@ const GRAB = 22;
 // 기업끼리 밀어내는 사정거리
 const PUSH = 230;
 // 점 개수 상한. 매 프레임 쌍을 도는 O(n²) 이라 여기서 막는다
+// (100개면 5천 쌍 남짓이라 프레임에 부담이 없다)
 const MAX_DOTS = 100;
 const AREA_PER_DOT = 10500;
 // 학생 몇 명에 기업 하나꼴로 둘지
@@ -47,40 +49,27 @@ const NAME_MAX = 12;
 const MAX_NAMED = 10;
 
 // 힘 세기. 눈으로 맞춘 값이라 각각의 의미보다 서로의 비율이 중요하다
-const K_PUSH = 0.9;
-const K_LINK = 0.0016;
-const K_CROWD = 0.3;
-const K_CURSOR = 0.03;
-const K_HOME = 0.0014;
-const CROWD = 32;
-const DAMP = 0.9;
+const K_PUSH = 0.9; // 기업끼리 밀어내기
+const K_LINK = 0.0016; // 기업–학생 스프링
+const K_CROWD = 0.3; // 학생끼리 겹침 방지
+const K_CURSOR = 0.03; // 커서가 학생을 당기는 힘
+const K_HOME = 0.0014; // 기업이 제자리로 돌아오려는 힘
+const CROWD = 32; // 학생끼리 이 거리 안이면 민다
+const DAMP = 0.9; // 감속. 낮을수록 빨리 멈춘다
 const MAX_V = 1.3;
+// 끌 때 커서를 따라가는 비율. 1 이면 딱 붙고, 낮을수록 무겁게 끌려온다
 const DRAG_EASE = 0.16;
+// 기업은 무겁다. 같은 힘에 덜 움직인다
 const MASS_COMPANY = 0.4;
 
-// ── 뿌리 ──
-// 기업 하나가 동시에 들고 있는 뿌리 수
-const MAX_ROOTS = 3;
-// 1초에 나아가는 정도(0=기업, 1=학생). 0.5 면 닿는 데 2초
-const ROOT_SPEED = 0.5;
-// 되감기는 조금 빠르게
-const ROOT_BACK = 0.9;
-// 경로 점을 이 간격마다 찍는다. 작을수록 곡선이 곱지만 점이 많아진다
-const SAMPLE = 0.045;
-// 끝이 좌우로 흔들리는 세기와 한계(px). 약하면 직선과 구분이 안 된다.
-// 이 값으로 휨의 중앙값이 선 길이의 16% 쯤 된다(WANDER=4 였을 때는 8% 라
-// 옅은 선에서 직선으로 보였다)
-const WANDER = 7;
-// 흔들림이 얼마나 이어지는지. 높을수록 한쪽으로 길게 휜다
-const WANDER_KEEP = 0.9;
-const WANDER_MAX = 44;
-// 다 닿은 뿌리가 버티는 시간(초). 지나면 되감고 다른 학생에게 다시 뻗는다.
-// 안 그러면 처음 2초만 자라고 그 뒤로는 멈춘 그림이 된다
-const LIFE_MIN = 6;
-const LIFE_MAX = 15;
-// 목표가 이 배수보다 멀어지면 되감는다. 다시 가까워지면 이어서 자란다
-const GIVE_UP = 1.2;
-const RESUME = 0.92;
+// 선이 1초에 자라는 비율. 다 뻗는 데 4초 남짓(쌍마다 편차가 있어 3~7초).
+// 1.4초였을 때는 너무 빨라서 그냥 나타나는 것처럼 보였다.
+// 프레임 수가 아니라 시간으로 재야 120Hz 화면에서 두 배로 빨라지지 않는다
+const GROW = 0.25;
+// 되감기는 조금 빠르게. 안 그러면 멀어진 선이 오래 남아 지저분하다
+const SHRINK = 0.45;
+// 이 아래로 줄어든 선은 그리지 않는다
+const GROW_MIN = 0.02;
 
 type Dot = {
   x: number; y: number;
@@ -90,23 +79,6 @@ type Dot = {
   name: string;
 };
 type Rect = { x: number; y: number; w: number; h: number };
-
-/**
- * 뿌리 하나. 경로는 화면 좌표가 아니라 기업→학생 벡터 기준으로 (t, off) 로 적는다.
- * t 는 0(기업)에서 1(학생)까지, off 는 그 직선에서 옆으로 벗어난 거리다.
- * 이렇게 두면 양 끝 점이 떠다녀도 지나온 길이 같이 따라 휜다. 화면 좌표로 적으면
- * 점이 움직이는 순간 길만 제자리에 남는다.
- */
-type Root = {
-  si: number;
-  pts: { t: number; off: number }[];
-  t: number;
-  off: number;
-  ov: number;
-  back: boolean;
-  age: number; // 다 닿은 뒤 지난 시간(초)
-  life: number; // 이만큼 지나면 되감는다
-};
 
 export default function HeroNetwork({ names }: { names: string[] }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
@@ -127,10 +99,14 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     let companies: Dot[] = [];
     let students: Dot[] = [];
     let all: Dot[] = [];
-    let roots: Root[][] = []; // roots[기업 index]
+    // grow[기업 index][학생 index] = 그 선이 얼마나 뻗었는지 0..1.
+    // 프레임 사이에 남아 있어야 '자란다' 가 된다
+    let grow: Float32Array[] = [];
     let raf = 0;
     let running = true;
     let dragging: Dot | null = null;
+    // 끌고 있는 점이 가려는 자리. 커서를 바로 따라붙이지 않고 이 자리로
+    // 조금씩 당겨서 무게가 있는 것처럼 만든다
     const dragTo = { x: 0, y: 0 };
     const cursor = { x: -9999, y: -9999 };
 
@@ -152,8 +128,6 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     };
 
     const short = (n: string) => (n.length > NAME_MAX ? `${n.slice(0, NAME_MAX)}…` : n);
-    /** 뿌리마다 조금씩 다른 속도. 난수를 저장하지 않고 번호에서 뽑는다 */
-    const jitter = (ci: number, si: number) => 0.65 + (((ci * 7919 + si * 104729) % 97) / 97) * 0.7;
 
     const seed = () => {
       const total = Math.min(MAX_DOTS, Math.max(14, Math.round((w * h) / AREA_PER_DOT)));
@@ -170,12 +144,14 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         return { x, y, vx: 0, vy: 0, hx: x, hy: y, company, name };
       };
 
-      // 이름은 기업마다 하나씩만 쓴다. 돌려 쓰면 같은 회사가 화면에 여러 번 뜬다
+      // 이름은 기업마다 하나씩만 쓴다. 돌려 쓰면 같은 회사가 화면에 여러 번
+      // 뜬다. 이름이 모자라는 만큼은 이름 없는 점으로 남는다
       companies = Array.from({ length: nCompany }, (_, i) =>
         make(true, i < MAX_NAMED && names[i] ? short(names[i]) : ''));
       students = Array.from({ length: total - nCompany }, () => make(false));
       all = [...companies, ...students];
-      roots = companies.map(() => []);
+      // 전부 0 에서 시작한다. 처음 열 때 화면 전체가 한 번 뻗어 나간다
+      grow = companies.map(() => new Float32Array(students.length));
     };
 
     const resize = () => {
@@ -202,6 +178,9 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       return best;
     };
 
+    /** 쌍마다 조금씩 다른 속도. 난수를 저장하지 않고 번호에서 뽑는다 */
+    const speed = (ci: number, si: number) => 0.6 + (((ci * 7919 + si * 104729) % 97) / 97) * 0.8;
+
     /** a 를 b 쪽으로, b 를 반대쪽으로. f 가 음수면 서로 밀어낸다 */
     const pull = (a: Dot, b: Dot, f: number) => {
       const dx = b.x - a.x;
@@ -216,7 +195,7 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       b.vy -= ay * (b.company ? MASS_COMPANY : 1);
     };
 
-    const physics = () => {
+    const physics = (dt: number) => {
       // 기업끼리는 같은 극처럼 밀어낸다. 가까울수록 세게
       for (let i = 0; i < companies.length; i++) {
         for (let j = i + 1; j < companies.length; j++) {
@@ -228,11 +207,19 @@ export default function HeroNetwork({ names }: { names: string[] }) {
         }
       }
 
-      // 기업과 학생은 REST 거리를 두려 한다. 멀면 당기고 가까우면 민다
-      for (const c of companies) {
-        for (const s of students) {
+      // 기업과 학생은 REST 거리를 두려 한다. 멀면 당기고 가까우면 민다.
+      // 거리를 여기서 이미 재므로 선이 자라고 되감기는 것도 같이 처리한다
+      for (let ci = 0; ci < companies.length; ci++) {
+        const c = companies[ci];
+        const g = grow[ci];
+        for (let si = 0; si < students.length; si++) {
+          const s = students[si];
           const d = Math.hypot(c.x - s.x, c.y - s.y);
-          if (d > LINK) continue;
+          if (d > LINK) {
+            if (g[si] > 0) g[si] = Math.max(0, g[si] - SHRINK * speed(ci, si) * dt);
+            continue;
+          }
+          if (g[si] < 1) g[si] = Math.min(1, g[si] + GROW * speed(ci, si) * dt);
           pull(c, s, (d - REST) * K_LINK);
         }
       }
@@ -292,114 +279,48 @@ export default function HeroNetwork({ names }: { names: string[] }) {
       }
     };
 
-    /** 뿌리를 자라게 하고, 끊긴 자리에 새로 심는다. dt 는 초 */
-    const growRoots = (dt: number) => {
-      for (let ci = 0; ci < companies.length; ci++) {
-        const c = companies[ci];
-        const rs = roots[ci];
-
-        for (let k = rs.length - 1; k >= 0; k--) {
-          const r = rs[k];
-          const s = students[r.si];
-          const d = Math.hypot(c.x - s.x, c.y - s.y);
-          // 멀어지면 되감고, 다시 가까워지면 이어서 자란다
-          if (d > LINK * GIVE_UP) r.back = true;
-          else if (d < LINK * RESUME && r.age <= r.life) r.back = false;
-
-          if (r.back) {
-            r.t -= ROOT_BACK * dt;
-            while (r.pts.length > 1 && r.pts[r.pts.length - 1].t > r.t) r.pts.pop();
-            if (r.t <= 0) rs.splice(k, 1);
-            continue;
-          }
-          if (r.t >= 1) {
-            // 다 닿았으면 수명을 센다. 수명이 다하면 되감기 시작
-            r.age += dt;
-            if (r.age > r.life) r.back = true;
-            continue;
-          }
-
-          r.t = Math.min(1, r.t + ROOT_SPEED * jitter(ci, r.si) * dt);
-          // 끝이 좌우로 더듬으며 나아간다. 양 끝에서는 흔들림을 0 으로 좁혀서
-          // 기업과 학생 점에 정확히 붙게 한다
-          let guard = 0;
-          while (r.pts[r.pts.length - 1].t + SAMPLE <= r.t && guard++ < 8) {
-            const nt = r.pts[r.pts.length - 1].t + SAMPLE;
-            r.ov += (Math.random() - 0.5) * WANDER;
-            r.ov *= WANDER_KEEP;
-            r.off += r.ov;
-            if (Math.abs(r.off) > WANDER_MAX) {
-              r.off = Math.sign(r.off) * WANDER_MAX;
-              r.ov *= -0.4;
-            }
-            r.pts.push({ t: nt, off: r.off * Math.sin(Math.PI * nt) });
-          }
-          if (r.t >= 1 && r.pts[r.pts.length - 1].t < 1) r.pts.push({ t: 1, off: 0 });
-        }
-
-        // 빈 자리가 있으면 가장 가까운 학생에게 새로 심는다
-        if (rs.length >= MAX_ROOTS) continue;
-        let bestSi = -1;
-        let bestD = LINK;
-        for (let si = 0; si < students.length; si++) {
-          if (rs.some((r) => r.si === si)) continue;
-          const s = students[si];
-          const d = Math.hypot(c.x - s.x, c.y - s.y);
-          if (d < bestD) { bestD = d; bestSi = si; }
-        }
-        if (bestSi >= 0) {
-          rs.push({
-            si: bestSi, pts: [{ t: 0, off: 0 }], t: 0, off: 0, ov: 0, back: false,
-            age: 0, life: LIFE_MIN + Math.random() * (LIFE_MAX - LIFE_MIN),
-          });
-        }
-      }
-    };
-
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const hit = focused();
       const linked = new Set<Dot>();
-      const tips: { x: number; y: number; on: boolean }[] = [];
 
+      // 기업–학생 선. 자란 만큼만 기업 쪽에서 뻗어 나간다.
+      // 잡힌 기업의 선만 진하게 긋는다
+      const tips: { x: number; y: number; on: boolean }[] = [];
       for (let ci = 0; ci < companies.length; ci++) {
         const c = companies[ci];
         const on = c === hit;
-        for (const r of roots[ci]) {
-          const s = students[r.si];
-          const dx = s.x - c.x;
-          const dy = s.y - c.y;
-          const len = Math.hypot(dx, dy) || 1;
-          // 직선에 수직인 방향. off 를 여기에 실어서 길이 휜다
-          const nx = -dy / len;
-          const ny = dx / len;
-          // 다 닿은 뿌리만 '이어졌다' 로 친다
-          if (on && r.t >= 1) linked.add(s);
-
-          const fade = Math.max(0, 1 - len / (LINK * GIVE_UP));
+        const g = grow[ci];
+        for (let si = 0; si < students.length; si++) {
+          const t = g[si];
+          if (t < GROW_MIN) continue;
+          const s = students[si];
+          const d = Math.hypot(c.x - s.x, c.y - s.y);
+          // 다 뻗은 선만 '이어졌다' 로 친다. 자라는 중인 건 아직 닿지 않았다
+          if (on && t > 0.98) linked.add(s);
+          const ex = c.x + (s.x - c.x) * t;
+          const ey = c.y + (s.y - c.y) * t;
+          const fade = Math.max(0, 1 - d / LINK);
+          // 진하기를 자란 정도에 비례시키면 안 된다. 30% 자란 선이 30% 투명도가
+          // 되어 뻗는 동안이 거의 안 보이고, 다 자랐을 때 갑자기 나타나는 것처럼
+          // 보인다. 처음 잠깐만 스며들고 그 뒤로는 길이만 길어진다
+          const ink = Math.min(1, t * 5);
           ctx.strokeStyle = on
-            ? `rgba(143, 183, 250, ${0.3 + fade * 0.5})`
-            : `rgba(111, 161, 243, ${0.14 + fade * 0.3})`;
-          ctx.lineWidth = on ? 1.5 : 1;
+            ? `rgba(143, 183, 250, ${(0.25 + fade * 0.55) * ink})`
+            : `rgba(111, 161, 243, ${fade * 0.22 * ink})`;
+          ctx.lineWidth = on ? 1.4 : 1;
           ctx.beginPath();
           ctx.moveTo(c.x, c.y);
-          let lx = c.x;
-          let ly = c.y;
-          for (const p of r.pts) {
-            lx = c.x + dx * p.t + nx * p.off;
-            ly = c.y + dy * p.t + ny * p.off;
-            ctx.lineTo(lx, ly);
-          }
+          ctx.lineTo(ex, ey);
           ctx.stroke();
-          if (r.t < 1) tips.push({ x: lx, y: ly, on });
+          // 뻗는 중인 끝에만 점을 찍는다. 자라는 방향이 보인다
+          if (t < 0.98) tips.push({ x: ex, y: ey, on });
         }
       }
-
-      // 뻗는 중인 끝에만 점을 찍는다. 어디로 가고 있는지가 보인다
       for (const p of tips) {
-        ctx.fillStyle = p.on ? 'rgba(178, 205, 253, 0.85)' : 'rgba(126, 169, 246, 0.5)';
+        ctx.fillStyle = p.on ? 'rgba(178, 205, 253, 0.8)' : 'rgba(126, 169, 246, 0.45)';
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -459,15 +380,13 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     };
 
     // 힘 계산은 프레임 단위 그대로 두고(감속이 그 전제로 맞춰져 있다),
-    // 뿌리가 자라는 속도만 시간으로 잰다. 프레임 단위면 120Hz 화면에서
-    // 두 배로 빨리 자란다
+    // 선이 자라는 속도만 시간으로 잰다
     let last = performance.now();
     const step = (now: number) => {
-      // 탭이 잠깐 멈췄다 돌아와도 한 번에 다 뻗지 않게 막는다
+      // 탭이 잠깐 멈췄다 돌아와도 선이 한 번에 다 뻗지 않게 막는다
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      physics();
-      growRoots(dt);
+      physics(dt);
       draw();
       if (running) raf = requestAnimationFrame(step);
     };
@@ -512,7 +431,8 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     };
     const onUp = () => {
       if (!dragging) return;
-      // 놓은 자리를 새 제자리로 삼는다. 안 그러면 손을 떼는 순간 돌아간다
+      // 놓은 자리를 새 제자리로 삼는다. 안 그러면 손을 떼는 순간 돌아간다.
+      // 끌려오는 중이었더라도 가려던 자리를 제자리로 잡아야 덜 흔들린다
       dragging.hx = dragTo.x;
       dragging.hy = dragTo.y;
       dragging = null;
@@ -537,10 +457,10 @@ export default function HeroNetwork({ names }: { names: string[] }) {
     window.addEventListener('mouseup', onUp);
     document.addEventListener('visibilitychange', onVisible);
 
-    // 애니메이션을 줄여 달라는 설정이면 다 자란 모습만 한 번 그리고 멈춘다
+    // 애니메이션을 줄여 달라는 설정이면 자리만 잡아 두고 한 번 그린 뒤 멈춘다
     if (reduced) {
       running = false;
-      for (let i = 0; i < 260; i++) { physics(); growRoots(1 / 60); }
+      for (let i = 0; i < 160; i++) physics(1 / 60);
       draw();
     } else {
       raf = requestAnimationFrame(step);
