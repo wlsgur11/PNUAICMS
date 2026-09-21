@@ -126,8 +126,10 @@
   --accent-strong: #6fa1f3;
   --accent-soft: rgba(79, 139, 240, 0.18);
   --accent-on-soft: #cfe0fb;
-  --sidebar-bg: #222b36;
-  --sidebar-border: #343f4d;
+  /* 다크에서도 사이드바가 제일 어둡다. 본문 배경(#1b222c)보다 밝게 두면
+     라이트에서 고친 '세 층이 한 덩어리' 가 여기서 그대로 재현된다 */
+  --sidebar-bg: #0f141c;
+  --sidebar-border: #26313f;
 
   --info-soft-bg: rgba(79, 139, 240, 0.18);
   --info-soft-text: #bcd6fb;
