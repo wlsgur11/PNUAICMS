@@ -96,14 +96,16 @@ function StudentsPageInner() {
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ width: 120 }}>학번</th>
-              <th style={{ width: 90 }}>이름</th>
-              <th>학과</th>
-              <th>전공</th>
-              <th className="center" style={{ width: 60 }}>학년</th>
+              {/* 남는 폭을 진로희망이 다 가져가고 학년은 한 글자 모자라 접혔다.
+                  값 길이에 맞춰 나눈다. 학년은 '초과학기' 가 제일 길다 */}
+              <th style={{ width: 110 }}>학번</th>
+              <th style={{ width: 84 }}>이름</th>
+              <th style={{ width: 150 }}>학과</th>
+              <th style={{ width: 150 }}>전공</th>
+              <th className="center" style={{ width: 96 }}>학년</th>
               <th>진로희망</th>
-              <th className="center" style={{ width: 80 }}>상담</th>
-              <th style={{ width: 110 }}>최근수정</th>
+              <th className="center" style={{ width: 72 }}>상담</th>
+              <th style={{ width: 118 }}>최근수정</th>
             </tr>
           </thead>
           <tbody>
@@ -117,14 +119,14 @@ function StudentsPageInner() {
                     role="button" tabIndex={0}
                     onClick={() => router.push(`/students/${r.studentNo}`)}
                     onKeyDown={clickKeys(() => router.push(`/students/${r.studentNo}`))}>
-                  <td>{r.studentNo}</td>
+                  <td className="nowrap">{r.studentNo}</td>
                   <td>{r.studentName}</td>
                   <td>{r.department || '-'}</td>
                   <td>{r.major || '-'}</td>
                   <td className="center">{gradeLabel(r.grade)}</td>
                   <td>{r.careerGoal || '-'}</td>
                   <td className="center">{r.counselCount}회</td>
-                  <td>{r.updatedAt.slice(0, 10)}</td>
+                  <td className="nowrap">{r.updatedAt.slice(0, 10)}</td>
                 </tr>
               ))
             )}
