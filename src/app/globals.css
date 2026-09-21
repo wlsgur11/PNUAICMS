@@ -1655,26 +1655,28 @@ table.data-table {
 /* 지표 하나. 한 카드에 여러 개를 가로로 나란히 둔다 */
 .dash-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 20px;
 }
-.dash-metric-label { font-size: calc(12px * var(--fs, 1)); color: var(--text-3); margin-bottom: 6px; }
+.dash-metric-label { font-size: calc(12px * var(--fs, 1)); color: var(--text-3); margin-bottom: 8px; }
+/* 이 화면에서 제일 커야 하는 글자. 24px 일 때는 밑에 붙은 설명 세 줄이 면적을
+   더 차지해서, 눈이 숫자에 머물지 않고 회색 글자로 흩어졌다 */
 .dash-metric-value {
-  font-size: calc(24px * var(--fs, 1)); font-weight: 500; line-height: 1.1; color: var(--text-1);
-  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+  font-size: calc(40px * var(--fs, 1)); font-weight: 600; line-height: 1.05; color: var(--text-1);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
-.dash-metric-sub { font-size: calc(11px * var(--fs, 1)); color: var(--text-3); margin-top: 5px; line-height: 1.5; }
+.dash-metric-sub { font-size: calc(11px * var(--fs, 1)); color: var(--text-3); margin-top: 8px; line-height: 1.5; }
 .dash-metric-value.met { color: var(--green-600); }
 /* 큰 숫자 뒤 단위. 숫자와 같은 크기로 붙이면 24px 숫자끼리의 크기 비교가 흐려진다.
    확실히 작고 연해야 단위는 읽히면서 숫자가 주가 된다 */
 .dash-metric-value .unit {
-  font-size: calc(15px * var(--fs, 1)); font-weight: 400; color: var(--text-3);
-  letter-spacing: 0; margin-left: 2px;
+  font-size: calc(17px * var(--fs, 1)); font-weight: 400; color: var(--text-3);
+  letter-spacing: 0; margin-left: 3px;
 }
 
 /* 진행 막대. 숫자를 가리지 않도록 얇게 */
-.dash-track { height: 4px; background: var(--slate-100); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-.dash-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.5s ease; }
+.dash-track { height: 6px; background: var(--slate-100); border-radius: 3px; margin-top: 12px; overflow: hidden; }
+.dash-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.5s ease; }
 .dash-fill.met { background: var(--green-600); }
 
 .dash-delta { font-size: calc(11px * var(--fs, 1)); font-weight: 500; font-variant-numeric: tabular-nums; }
