@@ -97,10 +97,10 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
         <div>
           <div className="dash-metric-label">SW중심대학 지표</div>
           <div className="dash-metric-value">
-            {swcu.met}<span style={{ fontSize: 'calc(15px * var(--fs, 1))', color: 'var(--text-3)' }}> / {swcu.total}</span>
+            {swcu.met}<span className="unit">/ {swcu.total}</span>
           </div>
           {/* 지표 하나당 눈금 하나. 개수와 달성 여부만 읽히면 되므로 얇게 둔다 */}
-          <div style={{ display: 'flex', gap: 2, marginTop: 10, height: 4 }}>
+          <div style={{ display: 'flex', gap: 2, marginTop: 12, height: 6 }}>
             {swcu.cells.map((c, i) => (
               /* na 는 목표치가 없어 판정을 못 한 칸이다. 사선으로 둬야 미달과 구분된다 */
               <div
