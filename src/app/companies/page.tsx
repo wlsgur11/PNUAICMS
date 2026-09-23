@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
-import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { ENUMS, COLLAB_FIELDS } from '@/lib/enums';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
@@ -56,7 +55,7 @@ function CompaniesInner() {
   const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY_FILTERS);
 
   const swrKey = `/api/companies?${filterParams(applied).toString()}`;
-  const { data: rows, isLoading } = useSWR<Row[]>(swrKey);
+  const { data: rows, error, isLoading } = useSWR<Row[]>(swrKey);
 
   return (
     <>
@@ -140,7 +139,7 @@ function CompaniesInner() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length.toLocaleString()}</strong>건
         </div>
       )}
       <FadeContent>
@@ -156,6 +155,8 @@ function CompaniesInner() {
           <tbody>
             {isLoading && !rows ? (
               <tr><td colSpan={7} className="loading">불러오는 중…</td></tr>
+            ) : error && !rows ? (
+              <tr><td colSpan={7} className="empty">불러오기 실패: {(error as Error).message}</td></tr>
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={7} className="empty">조건에 맞는 기업이 없습니다.</td></tr>
             ) : (
