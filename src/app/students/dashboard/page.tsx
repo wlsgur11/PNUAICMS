@@ -48,7 +48,8 @@ function Bars({ items }: { items: { label: string; count: number }[] }) {
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const { data } = useSWR<Stats>('/api/students/stats');
+  const { data, error } = useSWR<Stats>('/api/students/stats');
+  if (error && !data) return <div className="empty">불러오기 실패: {(error as Error).message}</div>;
   if (!data) return <div className="loading">불러오는 중…</div>;
 
   return (

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate as globalMutate } from 'swr';
 import PageHeader from '@/components/PageHeader';
-import { api } from '@/lib/client';
+import { api, today } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
 import { ENUMS, gradeLabel } from '@/lib/enums';
@@ -71,7 +71,7 @@ function CounselingCard({ studentNo, rows, onChanged }: {
     // 상담자는 로그인 계정이 아니라 마지막에 적은 이름을 쓴다. 조교가 대신 넣는 경우가 있다
     setForm({
       type: ENUMS.COUNSEL_TYPE[0],
-      counselDate: new Date().toISOString().slice(0, 10),
+      counselDate: today(),
       counselor: lastCounselor(),
       content: '',
     });
@@ -179,13 +179,14 @@ function CounselingCard({ studentNo, rows, onChanged }: {
 export default function StudentDetailPage({ params }: { params: { studentNo: string } }) {
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const { data: s, isLoading, mutate: reload } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
+  const { data: s, error, isLoading, mutate: reload } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
   const { data: projectDetail } = useSWR<ProjectDetail>(
     selectedProjectId ? `/api/projects/${selectedProjectId}` : null
   );
 
   if (isLoading && !s) return <div className="loading">불러오는 중…</div>;
-  if (!s) return <div className="empty">학생을 찾을 수 없습니다.</div>;
+  // 404 면 서버가 '학생을 찾을 수 없습니다' 를 보낸다. 서버 오류까지 그 문구로 덮으면 없는 학생으로 읽힌다
+  if (!s) return <div className="empty">{error ? (error as Error).message : '학생을 찾을 수 없습니다.'}</div>;
 
   /**
    * 학번이 기본키라 잘못 넣은 학번은 고칠 수가 없다. 임의 학번으로 만든 학생은

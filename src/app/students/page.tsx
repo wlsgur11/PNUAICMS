@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
-import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 import { clickKeys } from '@/lib/a11y';
@@ -30,7 +29,7 @@ function StudentsPageInner() {
   // 필터는 URL 쿼리와 동기화한다. 상세로 갔다 돌아와도 조건이 유지된다.
   const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY);
 
-  const { data, isLoading } = useSWR<Resp>(`/api/students?${filterParams(applied).toString()}`);
+  const { data, error, isLoading } = useSWR<Resp>(`/api/students?${filterParams(applied).toString()}`);
   const rows = data?.rows;
   const facets = data?.facets;
 
@@ -88,7 +87,7 @@ function StudentsPageInner() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>명
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length.toLocaleString()}</strong>명
         </div>
       )}
       <FadeContent>
@@ -111,6 +110,8 @@ function StudentsPageInner() {
           <tbody>
             {isLoading && !rows ? (
               <tr><td colSpan={8} className="loading">불러오는 중…</td></tr>
+            ) : error && !rows ? (
+              <tr><td colSpan={8} className="empty">불러오기 실패: {(error as Error).message}</td></tr>
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={8} className="empty">조건에 맞는 학생이 없습니다.</td></tr>
             ) : (

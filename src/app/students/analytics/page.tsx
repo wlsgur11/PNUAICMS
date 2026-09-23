@@ -35,7 +35,8 @@ function Bars({ title, items }: { title: string; items: { label: string; count: 
 }
 
 export default function StudentAnalyticsPage() {
-  const { data } = useSWR<Stats>('/api/students/stats');
+  const { data, error } = useSWR<Stats>('/api/students/stats');
+  if (error && !data) return <div className="empty">불러오기 실패: {(error as Error).message}</div>;
   if (!data) return <div className="loading">불러오는 중…</div>;
 
   const engagement = [
