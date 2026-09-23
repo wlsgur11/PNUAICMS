@@ -137,7 +137,7 @@ export const studentCreateSchema = z.object({
   gpa: z.coerce.number().min(0).max(4.5).optional().nullable(),
   careerGoal: z.enum(ENUMS.CAREER_GOAL as unknown as [string, ...string[]]).optional().nullable(),
   // 신규 등록은 연락처를 받는다. 상담하면서 적어 두시려고 필수로 둔 칸이다.
-  // 수정에는 안 걸린다(studentUpdateSchema 가 partial). 실적 엑셀에서 들어온 학생은
+  // 수정에서는 studentUpdateSchema 가 다시 풀어 준다. 실적 엑셀에서 들어온 학생은
   // 연락처가 비어 있는데, 거기까지 막으면 학과·학년조차 못 고친다
   phone: z.string({ required_error: '전화번호는 필수입니다.' }).trim().min(1, '전화번호는 필수입니다.'),
   email: z.string({ required_error: '이메일은 필수입니다.' }).trim().min(1, '이메일은 필수입니다.'),
@@ -162,6 +162,10 @@ export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true, c
   // 학번을 고칠 수 있게 한다. 교수님이 진짜 학번을 모르실 때 임의로 넣어 두시는데,
   // 기본키라 한번 넣으면 못 고쳐서 지우고 다시 만드는 수밖에 없었다(상담도 함께 날아갔다)
   studentNo: z.string().trim().min(1, '학번은 비울 수 없습니다.').optional(),
+  // partial 은 '안 보냄' 만 허용한다. 폼은 빈 칸을 null 로 보내서, 연락처가 빈 학생은
+  // 'Expected string, received null' 로 수정 자체가 막혔다
+  phone: optStr,
+  email: optStr,
   // 상담은 학생 상세에서 따로 다룬다(/api/students/:no/counselings). 여기서 받으면
   // 수정 폼을 저장할 때마다 그동안 따로 넣은 상담이 통째로 덮인다
   internships: z.array(studentInternshipItemSchema).optional(),
