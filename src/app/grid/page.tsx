@@ -47,7 +47,7 @@ export default function GridPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   // SWR로 서버 데이터 캐싱. 로컬 dirty 편집은 별도의 rows state로 관리.
-  const { data: serverRows, mutate: refresh } = useSWR<GridRow[]>('/api/grid');
+  const { data: serverRows, error, mutate: refresh } = useSWR<GridRow[]>('/api/grid');
   useEffect(() => { if (serverRows) setRows(serverRows.map((r) => ({ ...r }))); }, [serverRows]);
   const load = async () => { await refresh(); revalidateAll(); };
 
@@ -257,6 +257,9 @@ export default function GridPage() {
       setSaving(false);
     }
   }
+
+  // 빈 표를 띄우면 등록된 기업이 없는 줄 알고 새로 입력하게 된다
+  if (error && !serverRows) return <><PageHeader title="엑셀 입력" /><div className="card empty">불러오기 실패: {(error as Error).message}</div></>;
 
   return (
     <>

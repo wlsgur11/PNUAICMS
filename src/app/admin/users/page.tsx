@@ -31,7 +31,7 @@ function SaveTag({ st, field }: { st?: SaveState; field: SaveField }) {
 
 export default function AdminUsersPage() {
   const me = useMe();
-  const { data, mutate, isLoading } = useSWR<Row[]>('/api/admin/users');
+  const { data, error, mutate, isLoading } = useSWR<Row[]>('/api/admin/users');
   const [status, setStatus] = useState<Record<string, SaveState | undefined>>({});
 
   // 낙관적 업데이트: 화면을 먼저 바꾸고 저장 → 끝나면 "저장됨 ✓", 실패 시 자동 롤백.
@@ -80,6 +80,8 @@ export default function AdminUsersPage() {
             <tbody>
               {isLoading && !data ? (
                 <tr><td colSpan={5} className="loading">불러오는 중…</td></tr>
+              ) : error && !data ? (
+                <tr><td colSpan={5} className="empty">불러오기 실패: {(error as Error).message}</td></tr>
               ) : !data || data.length === 0 ? (
                 <tr><td colSpan={5} className="empty">사용자가 없습니다.</td></tr>
               ) : (

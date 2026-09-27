@@ -26,7 +26,11 @@ export async function api<T = unknown>(url: string, init?: RequestInit): Promise
   return json.data as T;
 }
 
-export const today = () => new Date().toISOString().slice(0, 10);
+// toISOString 은 UTC 라 한국 시각 오전 9시 전에는 어제 날짜가 나온다
+export const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 export function formatKDate(d = new Date()): string {
   const days = ['일', '월', '화', '수', '목', '금', '토'];

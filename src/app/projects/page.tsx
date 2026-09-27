@@ -4,7 +4,6 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
-import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
 import { useUrlFilters, filterParams } from '@/lib/use-url-filters';
 import { clickKeys } from '@/lib/a11y';
@@ -38,7 +37,7 @@ function ProjectsPageInner() {
 
   const [selected, setSelected] = useState<Row | null>(null);
 
-  const { data, isLoading } = useSWR<Resp>(`/api/projects?${filterParams(applied).toString()}`);
+  const { data, error, isLoading } = useSWR<Resp>(`/api/projects?${filterParams(applied).toString()}`);
   const rows = data?.rows;
   const facets = data?.facets;
 
@@ -48,8 +47,8 @@ function ProjectsPageInner() {
 
       {rows && (
         <div className="filter-bar" style={{ gap: 24, marginBottom: 4 }}>
-          <span className="muted">프로젝트 <strong><CountUp end={rows.length} /></strong>건</span>
-          <span className="muted">참여기업 연결 <strong><CountUp end={rows.filter((r) => r.companyId).length} /></strong>건</span>
+          <span className="muted">프로젝트 <strong>{rows.length.toLocaleString()}</strong>건</span>
+          <span className="muted">참여기업 연결 <strong>{rows.filter((r) => r.companyId).length.toLocaleString()}</strong>건</span>
         </div>
       )}
 
@@ -88,7 +87,7 @@ function ProjectsPageInner() {
 
       {rows && (
         <div className="muted" style={{ margin: '16px 2px 0', fontSize: 'calc(13px * var(--fs, 1))' }}>
-          검색 결과 <strong style={{ color: 'var(--slate-900)' }}><CountUp end={rows.length} /></strong>건
+          검색 결과 <strong style={{ color: 'var(--slate-900)' }}>{rows.length.toLocaleString()}</strong>건
         </div>
       )}
       <FadeContent>
@@ -108,6 +107,8 @@ function ProjectsPageInner() {
           <tbody>
             {isLoading && !rows ? (
               <tr><td colSpan={7} className="loading">불러오는 중…</td></tr>
+            ) : error && !rows ? (
+              <tr><td colSpan={7} className="empty">불러오기 실패: {(error as Error).message}</td></tr>
             ) : !rows || rows.length === 0 ? (
               <tr><td colSpan={7} className="empty">조건에 맞는 프로젝트가 없습니다.</td></tr>
             ) : (

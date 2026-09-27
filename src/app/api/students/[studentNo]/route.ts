@@ -108,6 +108,8 @@ export async function PUT(req: Request, { params }: Ctx) {
     const internships = d.internships === undefined ? undefined
       : d.internships.filter((i) => i.internshipType || i.companyName || i.activityDate || i.durationWeeks != null);
 
+    const finalNo = newNo ?? params.studentNo;
+
     await prisma.$transaction(async (tx) => {
       // 낙관적 락. 상담·인턴십이 replace-all 이라 락 없이는 동시 수정 시 통째로 덮인다.
       // updateMany 로 version 이 맞을 때만 갱신하고, 안 맞으면 트랜잭션을 되돌린다.
@@ -138,14 +140,15 @@ export async function PUT(req: Request, { params }: Ctx) {
       if (newNo) await tx.student.update({ where: { studentNo: params.studentNo }, data: { studentNo: newNo } });
       // 상담은 여기서 건드리지 않는다. 학생 상세에서 한 건씩 넣고 고친다.
       // 예전처럼 통째로 지우고 다시 넣으면, 이 폼을 저장하는 순간 그 사이 따로 넣은 상담이 사라진다
+      // 학번을 바꿨으면 인턴십은 이미 새 학번에 붙어 있다. 옛 학번으로 지우면 하나도
+      // 안 지워지고, 옛 학번으로 넣으면 없는 학생이라 FK 위반으로 저장 전체가 실패한다
       if (internships !== undefined) {
-        await tx.studentInternship.deleteMany({ where: { studentNo: params.studentNo } });
+        await tx.studentInternship.deleteMany({ where: { studentNo: finalNo } });
         if (internships.length) {
-          await tx.studentInternship.createMany({ data: internships.map((i) => ({ studentNo: params.studentNo, internshipType: i.internshipType || null, companyName: i.companyName || null, durationWeeks: i.durationWeeks ?? null, activityDate: i.activityDate || null, createdBy: user.email })) });
+          await tx.studentInternship.createMany({ data: internships.map((i) => ({ studentNo: finalNo, internshipType: i.internshipType || null, companyName: i.companyName || null, durationWeeks: i.durationWeeks ?? null, activityDate: i.activityDate || null, createdBy: user.email })) });
         }
       }
     });
-    const finalNo = newNo ?? params.studentNo;
     const after = await prisma.student.findUnique({ where: { studentNo: finalNo }, select: { version: true } });
     return ok({ studentNo: finalNo, version: after?.version });
   });
