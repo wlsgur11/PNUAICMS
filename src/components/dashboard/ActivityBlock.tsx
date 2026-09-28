@@ -27,19 +27,20 @@ const INPUTS: { key: Key; label: string; unit: string; last: 'lastCounseling' | 
 const lastOf = (l: LastInput) => (l ? `마지막 입력 ${ago(l.at)}${l.by ? `, ${l.by}` : ''}` : '입력된 기록 없음');
 
 /**
- * 최근 12주 주별 막대. 폭을 제한한다. 카드가 화면 전체 폭이라 칸에 맞춰 늘리면
- * 막대 하나가 100px 을 넘는 벽돌이 되고, 입력이 드문 지금은 그 벽돌 하나만 떠 보인다.
- * 입력이 없는 주도 회색 짧은 막대로 남겨 12주가 이어진 흐름으로 읽히게 한다.
+ * 최근 12주 주별 막대. 칸의 남은 폭을 채우되 막대 하나는 24px 을 넘기지 않는다.
+ * 폭에 맞춰 막대를 늘리면 넓은 화면에서 100px 이 넘는 벽돌이 되고, 막대 영역을 좁게
+ * 묶으면 칸 오른쪽이 텅 빈다. 입력이 없는 주도 회색 짧은 막대로 남겨 12주가 이어진
+ * 흐름으로 읽히게 한다.
  */
 function Spark({ weeks, k, label, unit }: { weeks: ActivityWeek[]; k: Key; label: string; unit: string }) {
   const n = weeks.length;
   const max = Math.max(1, ...weeks.map((w) => w[k]));
   return (
-    <div style={{ maxWidth: 260, margin: '12px 0 10px' }}>
+    <div style={{ flex: '1 1 140px', minWidth: 0 }}>
       <div
         role="img"
         aria-label={`최근 12주 주별 ${label}. 이번 주 ${weeks[n - 1][k]}${unit}, 지난주 ${weeks[n - 2][k]}${unit}`}
-        style={{ display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 3, alignItems: 'end', height: 40 }}
+        style={{ display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 4, alignItems: 'end', height: 52 }}
       >
         {weeks.map((w, i) => {
           const v = w[k];
@@ -48,6 +49,7 @@ function Spark({ weeks, k, label, unit }: { weeks: ActivityWeek[]; k: Key; label
               key={w.start}
               title={`${md(w.start)} 주: ${v}${unit}`}
               style={{
+                justifySelf: 'center', width: '100%', maxWidth: 24,
                 height: v > 0 ? `${(v / max) * 100}%` : 2,
                 minHeight: v > 0 ? 3 : undefined,
                 borderRadius: 1,
@@ -76,6 +78,7 @@ const inlineNum = { fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 600, colo
  *
  * 접속 두 값까지 같은 크기의 칸으로 두면 다섯 칸이 되어, 1280 노트북에서 4+1 로
  * 기업 등록 칸만 아랫줄에 떨어졌다. 입력 세 칸만 두면 노트북에서도 한 줄에 들어간다.
+ * 칸 안에서는 숫자와 막대를 나란히 둔다. 위아래로 쌓으면 칸 오른쪽이 비고 카드만 길어진다.
  *
  * 입력 칸마다 눈금을 따로 잡는다. 기업은 엑셀로 수십 곳이 한 번에 들어오는 주가 있어서,
  * 눈금을 같이 쓰면 상담 막대가 바닥에 붙는다.
@@ -117,13 +120,16 @@ export default function ActivityBlock({ a }: { a: UserActivity }) {
         borderTop: '1px solid var(--border)', paddingTop: 18,
       }}>
         {INPUTS.map((r) => (
-          <div key={r.key}>
-            <div className="dash-metric-label">이번 주 {r.label}</div>
-            <div className="dash-metric-value"><CountUp end={a.weeks[n - 1][r.key]} /><span className="unit">{r.unit}</span></div>
-            {/* 막대를 숫자 바로 아래에 둔다. 보조 문구는 칸마다 줄 수가 달라 그 아래에 두면 막대 높이가 어긋난다 */}
+          <div key={r.key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 24px' }}>
+            {/* 숫자 쪽 폭을 고정한다. 글자 길이대로 두면 입력자 이름이 붙은 칸만 막대가
+                아래로 떨어져, 같은 화면에서 칸마다 모양이 달라진다 */}
+            <div style={{ flex: '0 0 150px' }}>
+              <div className="dash-metric-label">이번 주 {r.label}</div>
+              <div className="dash-metric-value"><CountUp end={a.weeks[n - 1][r.key]} /><span className="unit">{r.unit}</span></div>
+              <div className="dash-metric-sub">지난주 {a.weeks[n - 2][r.key]}{r.unit}</div>
+              <div className="dash-metric-sub" style={{ marginTop: 2 }}>{lastOf(a[r.last])}</div>
+            </div>
             <Spark weeks={a.weeks} k={r.key} label={r.label} unit={r.unit} />
-            <div className="dash-metric-sub">지난주 {a.weeks[n - 2][r.key]}{r.unit}</div>
-            <div className="dash-metric-sub">{lastOf(a[r.last])}</div>
           </div>
         ))}
       </div>
