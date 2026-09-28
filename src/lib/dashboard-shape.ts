@@ -129,6 +129,25 @@ export type FollowUp = {
  */
 export type DistributionItem = { key: string; count: number; code?: string; version?: string };
 
+/** 한 주(한국 시각 월요일 시작)에 입력된 기록 수 */
+export type ActivityWeek = { start: string; counselings: number; contacts: number; companies: number };
+export type LastInput = { at: string; by: string | null } | null;
+
+/** 사용자 활동. 성과가 아니라 시스템이 실제로 쓰이고 있는지 보는 값이다 */
+export type UserActivity = {
+  /** 로그인은 했지만 권한을 못 받은 계정 수. 승인할 수 있는 슈퍼관리자에게만 보낸다 */
+  pendingUsers: number | null;
+  /** 권한 있는 계정 중 최근 7일 안에 접속한 수 */
+  activeUsers7d: number;
+  /** 권한 있는(일반이 아닌) 활성 계정 수 */
+  totalUsers: number;
+  /** [지난주, 이번 주] */
+  weeks: ActivityWeek[];
+  lastCounseling: LastInput;
+  lastContact: LastInput;
+  lastCompany: LastInput;
+};
+
 /** 학생 관리 현황. 대시보드에 학생 지표가 하나도 없던 공백을 채운다 */
 export type StudentSummary = {
   total: number;
@@ -209,6 +228,7 @@ export type DashboardData = {
   projectHeadcount: { year: ProjectHeadcount; total: ProjectHeadcount } | null;
   /** unlinked = 연구실이 연결되지 않은 과제 수. 상위 목록이 전체를 못 덮는 몫 */
   labs: { top: LabRank[]; labCount: number; unlinked: number } | null;
+  activity: UserActivity | null;
   recentHistories: {
     id: string;
     companyId: string;

@@ -23,7 +23,7 @@ type Parsed = {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireRole('ADMIN');
+    const user = await requireRole('ADMIN');
     const len = Number(req.headers.get('content-length') ?? 0);
     if (len > MAX_UPLOAD_BYTES) return fail('파일이 너무 큽니다. 최대 10MB까지 업로드할 수 있습니다.', 413);
 
@@ -205,6 +205,7 @@ export async function POST(req: Request) {
                 code,
                 name,
                 ...rec.company,
+                createdBy: user.email,
                 collaboration: { create: {} }, // 빈 1:1 협업 생성
               } as { code: string; name: string; collaboration: { create: object } },
             });

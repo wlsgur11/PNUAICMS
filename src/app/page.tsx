@@ -18,6 +18,7 @@ import SwcuAreaCard from '@/components/dashboard/SwcuAreaCard';
 import ProjectHeadcountCard from '@/components/dashboard/ProjectHeadcountCard';
 import LabRankCard from '@/components/dashboard/LabRankCard';
 import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
+import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import type { DashboardData } from '@/lib/dashboard-shape';
 
 export default function DashboardPage() {
@@ -128,6 +129,15 @@ export default function DashboardPage() {
               <RecentContactsBlock rows={data.recentHistories} />
             </div>
           </FadeContent>
+
+          {/* 성과가 아니라 시스템 사용 현황이라 맨 아래에 둔다 */}
+          {data.activity && (
+            <FadeContent delay={300}>
+              <div className="dash-row">
+                <ActivityBlock a={data.activity} />
+              </div>
+            </FadeContent>
+          )}
         </>
       )}
 
