@@ -133,8 +133,9 @@ export default function DashboardPage() {
           {/* 성과가 아니라 시스템 사용 현황이라 맨 아래에 둔다 */}
           {data.activity && (
             <FadeContent delay={300}>
-              <div className="dash-section">사용자 활동</div>
-              <ActivityBlock a={data.activity} />
+              <div className="dash-row">
+                <ActivityBlock a={data.activity} />
+              </div>
             </FadeContent>
           )}
         </>
