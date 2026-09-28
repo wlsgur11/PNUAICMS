@@ -10,40 +10,13 @@ import { companyCreateSchema } from '@/lib/validation';
 import { lookupCompany } from '@/lib/lookup';
 import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
 import { kstDate } from '@/lib/kst';
+import { companyWhere } from '@/lib/list-filters';
 
 export async function GET(req: Request) {
   return handle(async () => {
     await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
-    const q = sp.get('q')?.trim();
-    const region = sp.get('region')?.trim();
-    const priority = sp.get('priority')?.trim();
-    const status = sp.get('status')?.trim();
-    const aiField = sp.get('aiField')?.trim();
-    const mou = sp.get('mou') === '1';
-    const business = sp.get('business')?.trim();
-    const includeInactive = sp.get('includeInactive') === '1';
-
-    const where: Record<string, unknown> = {};
-    if (!includeInactive) where.isActive = true;
-    if (q) where.name = { contains: q, mode: 'insensitive' };
-    if (region) where.region = region;
-    if (priority) where.priority = priority;
-    if (status) where.status = status;
-    if (aiField) where.aiField = { contains: aiField, mode: 'insensitive' };
-    if (mou) where.mou = true;
-    // 사업단: 해당 사업단으로 컨택한 이력이 있는 기업만 (사업단은 컨택이력에 기록됨)
-    if (business) where.histories = { some: { business } };
-
-    // 협력 항목(체크된 항목 모두 만족 — AND)
-    const COLLAB_KEYS = [
-      'internship', 'industryProject', 'curriculumCommittee', 'guestLecture',
-      'employment', 'overseasEducation', 'valueSpread', 'fieldTrainingOrg',
-      'startup', 'etc',
-    ] as const;
-    const collabConds: Record<string, true> = {};
-    for (const k of COLLAB_KEYS) if (sp.get(k) === '1') collabConds[k] = true;
-    if (Object.keys(collabConds).length) where.collaboration = { is: collabConds };
+    const where = companyWhere(sp);
 
     // 정렬: sort 파라미터로 동적 정렬. 이름순/연도/우선순위/상태/수정일 등.
     const sort = sp.get('sort') || 'name_asc';
@@ -56,7 +29,7 @@ export async function GET(req: Request) {
         case 'priority_asc': return [{ priority: { sort: 'asc' as const, nulls: 'last' as const } }, nameAsc];
         case 'status_asc': return [{ status: 'asc' as const }, nameAsc];
         case 'updated_desc': return [{ updatedAt: 'desc' as const }];
-        case 'meeting_desc': return [nameAsc]; // 최근미팅일은 컬럼이 아니라 fetch 후 정렬
+        case 'meeting_desc': case 'meeting_asc': return [nameAsc]; // 최근미팅일은 컬럼이 아니라 fetch 후 정렬
         default: return [nameAsc]; // name_asc
       }
     })();
@@ -88,6 +61,8 @@ export async function GET(req: Request) {
 
     // 컬럼이 아닌 파생값(최근미팅일)은 후처리 정렬
     if (sort === 'meeting_desc') rows.sort((a, b) => (b.lastMeeting || '').localeCompare(a.lastMeeting || ''));
+    // 오래 연락 안 한 곳부터. 기록이 없는 곳은 다른 정렬처럼 맨 뒤로 보낸다
+    if (sort === 'meeting_asc') rows.sort((a, b) => (a.lastMeeting || '9999').localeCompare(b.lastMeeting || '9999'));
     return ok(rows);
   });
 }

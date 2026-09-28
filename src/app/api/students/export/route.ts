@@ -5,18 +5,20 @@ import ExcelJS from 'exceljs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { studentWhere, studentOrderBy, counselCountFilter } from '@/lib/list-filters';
 import { gradeLabel } from '@/lib/enums';
 import { kstDate } from '@/lib/kst';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
-  const items = await prisma.student.findMany({
+  const found = await prisma.student.findMany({
     where: studentWhere(sp),
     orderBy: studentOrderBy(sp),
     include: { _count: { select: { counselings: true } } },
   });
+  const keep = counselCountFilter(sp);
+  const items = keep ? found.filter(keep) : found;
 
   const wb = new ExcelJS.Workbook();
   wb.created = new Date();

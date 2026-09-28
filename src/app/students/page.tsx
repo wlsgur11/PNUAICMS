@@ -65,6 +65,7 @@ function StudentsPageInner() {
             <option value="">상담 전체</option>
             <option value="없음">상담 없음</option>
             <option value="있음">상담 있음</option>
+            <option value="관리필요" title="3~4학년 재학생 중 상담 2회 미만">상담 관리 필요</option>
           </select>
           {/* 신규 등록은 연락처가 필수다. 예전 학생은 비어 있어서 채울 대상을 뽑아 본다 */}
           <select value={filters.contact} onChange={(e) => set('contact', e.target.value)}>

@@ -20,6 +20,7 @@ type Row = {
 type Filters = {
   q: string; region: string; priority: string; status: string; aiField: string;
   business: string;
+  followup: string;
   sort: string;
   mou: boolean; includeInactive: boolean;
   internship: boolean; industryProject: boolean; curriculumCommittee: boolean;
@@ -29,6 +30,7 @@ type Filters = {
 const EMPTY_FILTERS: Filters = {
   q: '', region: '', priority: '', status: '', aiField: '',
   business: '',
+  followup: '',
   sort: 'name_asc',
   mou: false, includeInactive: false,
   internship: false, industryProject: false, curriculumCommittee: false,
@@ -39,7 +41,7 @@ const EMPTY_FILTERS: Filters = {
 // 상세 조건. 처음에는 접어 둔다. 전부 펼쳐 두면 1280 노트북에서 필터가 295px 을 차지해
 // 첫 화면에 기업이 5줄만 보였다. 자주 쓰는 검색, 우선순위, 진행상태, 정렬만 밖에 둔다
 const ADVANCED = [
-  'region', 'business', 'aiField', 'mou', 'includeInactive', ...COLLAB_FIELDS.map((c) => c.key),
+  'region', 'business', 'followup', 'aiField', 'mou', 'includeInactive', ...COLLAB_FIELDS.map((c) => c.key),
 ] as (keyof Filters)[];
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
@@ -48,6 +50,7 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'year_desc', label: '사업참여연도 (최신순)' },
   { value: 'year_asc', label: '사업참여연도 (오래된순)' },
   { value: 'meeting_desc', label: '최근 미팅일 (최신순)' },
+  { value: 'meeting_asc', label: '최근 미팅일 (오래된순)' },
   { value: 'priority_asc', label: '우선순위 (A→C)' },
   { value: 'status_asc', label: '진행상태순' },
   { value: 'updated_desc', label: '최근 수정순' },
@@ -126,6 +129,12 @@ function CompaniesInner() {
             <select value={filters.business} onChange={(e) => set('business', e.target.value)} title="관심사업분야(사업단) - 컨택이력 기준">
               <option value="">관심사업분야 전체</option>
               {ENUMS.BUSINESS.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            {/* 대시보드 '다음에 연락할 기업' 에서 넘어온다. 협약완료, 보류, 종료는 빠진다 */}
+            <select value={filters.followup} onChange={(e) => set('followup', e.target.value)} title="협약완료, 보류, 종료는 제외">
+              <option value="">후속 연락 전체</option>
+              <option value="none">컨택 기록 없음</option>
+              <option value="stale">반년 넘게 조용</option>
             </select>
             <input
               placeholder="AI 기술분야 (예: 비전, NLP)"
