@@ -16,8 +16,8 @@ import {
   type ProjectHeadcount, type UserActivity,
 } from '@/lib/dashboard-shape';
 import { COLLAB_FIELDS } from '@/lib/enums';
-import { isJunkValue } from '@/lib/list-filters';
-import { KST_MS, kstDate } from '@/lib/kst';
+import { isJunkValue, FOLLOWUP_DONE, followupCutoff, NEEDS_COUNSEL_WHERE, NEEDS_COUNSEL_MAX } from '@/lib/list-filters';
+import { KST_MS } from '@/lib/kst';
 
 // AUTH_BYPASS=true 일 때 Next 가 이 라우트를 정적 캐시하는 것을 막는다.
 export const dynamic = 'force-dynamic';
@@ -340,7 +340,7 @@ export async function GET(req: Request) {
       prisma.student.groupBy({ by: ['grade'], where: { grade: { not: null } }, _count: { _all: true } }),
       // 3~4학년인데 상담이 2회 미만인 학생. 지금 챙겨야 할 대상
       prisma.student.findMany({
-        where: { grade: { in: [3, 4] }, OR: [{ graduationDate: null }, { graduationDate: '' }] },
+        where: NEEDS_COUNSEL_WHERE,
         select: { _count: { select: { counselings: true } } },
       }),
       // 인턴십은 162건 뿐이라 연도별 합계와 구성 여섯 갈래를 따로 질의하는 것보다
@@ -358,7 +358,7 @@ export async function GET(req: Request) {
       // 후속 조치가 남은 기업만. 협약완료·보류·종료는 지금 할 일이 없다.
       // 마지막 컨택일이 필요해 관계에서 최신 한 건만 끌어온다
       prisma.company.findMany({
-        where: { isActive: true, status: { notIn: ['협약완료', '보류', '종료'] } },
+        where: { isActive: true, status: { notIn: FOLLOWUP_DONE } },
         select: {
           id: true, name: true, status: true, priority: true,
           histories: { select: { contactDate: true }, orderBy: { contactDate: 'desc' }, take: 1 },
@@ -412,7 +412,6 @@ export async function GET(req: Request) {
 
     // ── 다음에 연락할 기업. 후속 조치가 남은 곳만 읽고 정렬은 JS 에서 한다.
     // 마지막 컨택일이 관계 테이블에 있어 DB 정렬로는 한 번에 못 세운다.
-    const FOLLOWUP_DONE = ['협약완료', '보류', '종료'];
     // 우선순위 A > B > C > 미기재. 같으면 오래 조용한 곳부터
     const PRIORITY_RANK: Record<string, number> = { A: 0, B: 1, C: 2 };
     const rankOf = (p: string | null) => (p && PRIORITY_RANK[p.trim().toUpperCase()] != null
@@ -434,8 +433,8 @@ export async function GET(req: Request) {
       if (b.lastContact == null) return 1;
       return a.lastContact.localeCompare(b.lastContact);
     });
-    // 반년. 컨택 주기가 학기 단위라 한 학기를 통째로 건너뛴 셈이 되는 길이다
-    const halfYearAgo = kstDate(new Date(Date.now() - 182 * 864e5));
+    // 목록의 followup=stale 과 같은 기준일
+    const halfYearAgo = followupCutoff();
 
     // 연구실별 과제 수.
     // Lab 의 식별키가 (교수명|연구실명) 이라, 엑셀 연구실명 칸이 밀려 숫자가 들어오면
@@ -508,7 +507,7 @@ export async function GET(req: Request) {
           grade: g,
           count: gradeRows.find((r) => r.grade === g)?._count._all ?? 0,
         })),
-        needsAttention: attentionRows.filter((s) => s._count.counselings < 2).length,
+        needsAttention: attentionRows.filter((s) => s._count.counselings < NEEDS_COUNSEL_MAX).length,
       },
       internshipHeadcount: heads,
       internshipComposition: { year: toComp(comps.year), total: toComp(comps.total) },
