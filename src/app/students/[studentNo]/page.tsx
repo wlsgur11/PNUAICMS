@@ -230,81 +230,86 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
         }
       />
 
-      <div className="card">
-        <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />기본 정보</div>
-        <div className="info-list">
-          <div className="info-row"><span className="info-label">학번</span><span className="info-value">{s.studentNo}</span></div>
-          <div className="info-row"><span className="info-label">이름</span><span className="info-value">{s.name || '-'}</span></div>
-          <div className="info-row"><span className="info-label">학과 · 전공</span><span className="info-value">{s.department || '-'} · {s.major || '-'}</span></div>
-          <div className="info-row"><span className="info-label">학년 · 학점</span><span className="info-value">{gradeLabel(s.grade)} · {s.gpa ?? '-'}</span></div>
-          <div className="info-row"><span className="info-label">진로희망</span><span className="info-value">{s.careerGoal || '-'}</span></div>
-          <div className="info-row"><span className="info-label">연락처</span><span className="info-value">{s.phone || <span className="danger-text">미입력</span>}</span></div>
-          <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{s.email || <span className="danger-text">미입력</span>}</span></div>
-          <div className="info-row"><span className="info-label">자격증</span><span className="info-value">{s.certificates.join(', ') || '-'}</span></div>
-          <div className="info-row"><span className="info-label">외국어</span><span className="info-value">{s.foreignLanguages.join(', ') || '-'}</span></div>
-          <div className="info-row"><span className="info-label">동아리</span><span className="info-value">{(s.clubs ?? []).join(', ') || '-'}</span></div>
-          <div className="info-row"><span className="info-label">졸업일자</span><span className="info-value">{s.graduationDate || '-'}</span></div>
-          <div className="info-row"><span className="info-label">취업기업</span><span className="info-value">
-            {s.employmentCompany
-              ? (s.employmentCompanyId
-                  ? <Link className="link" href={`/companies/${s.employmentCompanyId}`}>{s.employmentCompany}</Link>
-                  : s.employmentCompany)
-              : '-'}
-          </span></div>
+      {/* 넓은 화면에서는 상담이 오른쪽에 온다. 배치는 globals.css 의 .student-detail */}
+      <div className="student-detail">
+        <div className="card" style={{ gridArea: 'info' }}>
+          <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />기본 정보</div>
+          <div className="info-list">
+            <div className="info-row"><span className="info-label">학번</span><span className="info-value">{s.studentNo}</span></div>
+            <div className="info-row"><span className="info-label">이름</span><span className="info-value">{s.name || '-'}</span></div>
+            <div className="info-row"><span className="info-label">학과 · 전공</span><span className="info-value">{s.department || '-'} · {s.major || '-'}</span></div>
+            <div className="info-row"><span className="info-label">학년 · 학점</span><span className="info-value">{gradeLabel(s.grade)} · {s.gpa ?? '-'}</span></div>
+            <div className="info-row"><span className="info-label">진로희망</span><span className="info-value">{s.careerGoal || '-'}</span></div>
+            <div className="info-row"><span className="info-label">연락처</span><span className="info-value">{s.phone || <span className="danger-text">미입력</span>}</span></div>
+            <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{s.email || <span className="danger-text">미입력</span>}</span></div>
+            <div className="info-row"><span className="info-label">자격증</span><span className="info-value">{s.certificates.join(', ') || '-'}</span></div>
+            <div className="info-row"><span className="info-label">외국어</span><span className="info-value">{s.foreignLanguages.join(', ') || '-'}</span></div>
+            <div className="info-row"><span className="info-label">동아리</span><span className="info-value">{(s.clubs ?? []).join(', ') || '-'}</span></div>
+            <div className="info-row"><span className="info-label">졸업일자</span><span className="info-value">{s.graduationDate || '-'}</span></div>
+            <div className="info-row"><span className="info-label">취업기업</span><span className="info-value">
+              {s.employmentCompany
+                ? (s.employmentCompanyId
+                    ? <Link className="link" href={`/companies/${s.employmentCompanyId}`}>{s.employmentCompany}</Link>
+                    : s.employmentCompany)
+                : '-'}
+            </span></div>
+          </div>
         </div>
-      </div>
 
-      <CounselingCard studentNo={s.studentNo} rows={s.counselings} onChanged={reload} />
+        <div style={{ gridArea: 'counsel' }}>
+          <CounselingCard studentNo={s.studentNo} rows={s.counselings} onChanged={reload} />
+        </div>
 
-      <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
-        <ProgramGrid title="SW중심대학 사업 참여" data={s.swPrograms} />
-        <ProgramGrid title="부트캠프 사업 참여" data={s.bootcampPrograms} />
-      </div>
+        <div className="tile-grid" style={{ gridArea: 'programs', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
+          <ProgramGrid title="SW중심대학 사업 참여" data={s.swPrograms} />
+          <ProgramGrid title="부트캠프 사업 참여" data={s.bootcampPrograms} />
+        </div>
 
-      <div className="card">
-        <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />연결된 산학 프로젝트 ({s.projects.length})</div>
-        {s.projects.length === 0 ? <div className="empty">연결된 산학 프로젝트가 없습니다.</div> : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th className="center" style={{ width: 56 }}>연도</th><th>과제명</th><th>기간</th><th>지도교수</th><th>기업</th></tr></thead>
-              <tbody>
-                {s.projects.map((p) => (
-                  <tr key={p.id} className="row-click"
-                      role="button" tabIndex={0}
-                      onClick={() => setSelectedProjectId(p.id)}
-                      onKeyDown={clickKeys(() => setSelectedProjectId(p.id))}>
-                    <td className="center">{p.year ?? '-'}</td>
-                    <td>{p.title || '-'}</td>
-                    <td>{p.period || '-'}</td>
-                    <td>{p.professorName || '-'}</td>
-                    <td>{p.companyId ? <Link className="link" href={`/companies/${p.companyId}`} onClick={(e) => e.stopPropagation()}>{p.companyName}</Link> : <span className="muted">{p.companyName}</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        <div className="card" style={{ gridArea: 'projects' }}>
+          <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />연결된 산학 프로젝트 ({s.projects.length})</div>
+          {s.projects.length === 0 ? <div className="empty">연결된 산학 프로젝트가 없습니다.</div> : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th className="center" style={{ width: 56 }}>연도</th><th>과제명</th><th>기간</th><th>지도교수</th><th>기업</th></tr></thead>
+                <tbody>
+                  {s.projects.map((p) => (
+                    <tr key={p.id} className="row-click"
+                        role="button" tabIndex={0}
+                        onClick={() => setSelectedProjectId(p.id)}
+                        onKeyDown={clickKeys(() => setSelectedProjectId(p.id))}>
+                      <td className="center">{p.year ?? '-'}</td>
+                      <td>{p.title || '-'}</td>
+                      <td>{p.period || '-'}</td>
+                      <td>{p.professorName || '-'}</td>
+                      <td>{p.companyId ? <Link className="link" href={`/companies/${p.companyId}`} onClick={(e) => e.stopPropagation()}>{p.companyName}</Link> : <span className="muted">{p.companyName}</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-      <div className="card">
-        <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />인턴십 이력 ({s.internships.length})</div>
-        {s.internships.length === 0 ? <div className="empty">등록된 인턴십이 없습니다. ‘정보 수정’에서 추가할 수 있습니다.</div> : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th>유형</th><th>기업체명</th><th className="center" style={{ width: 80 }}>기간(주)</th><th style={{ width: 120 }}>연월일</th></tr></thead>
-              <tbody>
-                {s.internships.map((it) => (
-                  <tr key={it.id}>
-                    <td>{it.internshipType || '-'}</td>
-                    <td>{it.companyId ? <Link className="link" href={`/companies/${it.companyId}`}>{it.companyName || '-'}</Link> : <span className="muted">{it.companyName || '-'}</span>}</td>
-                    <td className="center">{it.durationWeeks ?? '-'}</td>
-                    <td>{it.activityDate || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="card" style={{ gridArea: 'intern' }}>
+          <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />인턴십 이력 ({s.internships.length})</div>
+          {s.internships.length === 0 ? <div className="empty">등록된 인턴십이 없습니다. ‘정보 수정’에서 추가할 수 있습니다.</div> : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th>유형</th><th>기업체명</th><th className="center" style={{ width: 80 }}>기간(주)</th><th style={{ width: 120 }}>연월일</th></tr></thead>
+                <tbody>
+                  {s.internships.map((it) => (
+                    <tr key={it.id}>
+                      <td>{it.internshipType || '-'}</td>
+                      <td>{it.companyId ? <Link className="link" href={`/companies/${it.companyId}`}>{it.companyName || '-'}</Link> : <span className="muted">{it.companyName || '-'}</span>}</td>
+                      <td className="center">{it.durationWeeks ?? '-'}</td>
+                      <td>{it.activityDate || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {selectedProjectId && (

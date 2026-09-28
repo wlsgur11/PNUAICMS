@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -36,6 +36,12 @@ const EMPTY_FILTERS: Filters = {
   valueSpread: false, fieldTrainingOrg: false,
 };
 
+// 상세 조건. 처음에는 접어 둔다. 전부 펼쳐 두면 1280 노트북에서 필터가 295px 을 차지해
+// 첫 화면에 기업이 5줄만 보였다. 자주 쓰는 검색, 우선순위, 진행상태, 정렬만 밖에 둔다
+const ADVANCED = [
+  'region', 'business', 'aiField', 'mou', 'includeInactive', ...COLLAB_FIELDS.map((c) => c.key),
+] as (keyof Filters)[];
+
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'name_asc', label: '기관명 (가나다순)' },
   { value: 'name_desc', label: '기관명 (역순)' },
@@ -53,6 +59,11 @@ function CompaniesInner() {
   // 대시보드 카드처럼 조건을 붙여 들어오는 진입도 그대로 반영된다.
   // 사용자가 '검색'을 눌러 확정한 applied 만 SWR 키에 반영 → 입력 중에는 재조회 안 함.
   const { filters, set, applied, apply, reset } = useUrlFilters<Filters>(EMPTY_FILTERS);
+  // 접혀 있어도 걸린 조건 수는 버튼에 보인다. 결과가 왜 줄었는지 모르는 일이 없게.
+  // 직접 열거나 닫기 전까지는 조건이 걸려 있으면 펼친다(대시보드에서 조건을 붙여 들어올 때)
+  const activeCount = ADVANCED.filter((k) => !!filters[k]).length;
+  const [open, setOpen] = useState<boolean | null>(null);
+  const expanded = open ?? activeCount > 0;
 
   const swrKey = `/api/companies?${filterParams(applied).toString()}`;
   const { data: rows, error, isLoading } = useSWR<Row[]>(swrKey);
@@ -62,17 +73,12 @@ function CompaniesInner() {
       <PageHeader title="협력 기업 리스트" />
 
       <form onSubmit={(e) => { e.preventDefault(); apply(); }}>
-        {/* 1행: 텍스트·드롭다운·MOU·버튼 */}
         <div className="filter-bar">
           <input
             placeholder="기업명 검색..."
             value={filters.q}
             onChange={(e) => set('q', e.target.value)}
           />
-          <select value={filters.region} onChange={(e) => set('region', e.target.value)}>
-            <option value="">지역 전체</option>
-            {ENUMS.REGION.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
           <select value={filters.priority} onChange={(e) => set('priority', e.target.value)}>
             <option value="">우선순위 전체</option>
             {ENUMS.PRIORITY.map((p) => <option key={p} value={p}>{p} 등급</option>)}
@@ -81,27 +87,18 @@ function CompaniesInner() {
             <option value="">진행상태 전체</option>
             {ENUMS.STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={filters.business} onChange={(e) => set('business', e.target.value)} title="관심사업분야(사업단) - 컨택이력 기준">
-            <option value="">관심사업분야 전체</option>
-            {ENUMS.BUSINESS.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
           <select value={filters.sort} onChange={(e) => set('sort', e.target.value)} title="정렬 기준">
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <input
-            placeholder="AI 기술분야 (예: 비전, NLP)"
-            value={filters.aiField}
-            onChange={(e) => set('aiField', e.target.value)}
-            style={{ minWidth: 160, flex: '0 1 220px' }}
-          />
-          <label className="collab-toggle" style={{ marginLeft: 4 }}>
-            <input type="checkbox" checked={filters.mou} onChange={(e) => set('mou', e.target.checked)} />
-            MOU 체결
-          </label>
-          <label className="collab-toggle">
-            <input type="checkbox" checked={filters.includeInactive} onChange={(e) => set('includeInactive', e.target.checked)} />
-            비활성 포함
-          </label>
+          <button
+            type="button"
+            className="btn"
+            aria-expanded={expanded}
+            aria-controls="company-filters-more"
+            onClick={() => setOpen(!expanded)}
+          >
+            상세 조건{activeCount > 0 ? ` ${activeCount}개` : ''} {expanded ? '▴' : '▾'}
+          </button>
           <div className="spacer" />
           <button type="button" className="btn" onClick={reset}>초기화</button>
           {/* 필터는 이미 자동 반영된다. 이 버튼은 디바운스를 건너뛰고 지금 바로 조회하는 용도. */}
@@ -120,20 +117,46 @@ function CompaniesInner() {
           <Link className="btn" href="/companies/new">＋ 신규 등록</Link>
         </div>
 
-        {/* 2행: 협력 항목 체크박스 (선택한 모든 항목을 만족하는 기업만) */}
-        <div className="filter-bar" style={{ marginTop: 12 }}>
-          <span className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', fontWeight: 600 }}>협력 항목:</span>
-          {COLLAB_FIELDS.map((cf) => (
-            <label key={cf.key} className="collab-toggle">
-              <input
-                type="checkbox"
-                checked={!!filters[cf.key as keyof Filters]}
-                onChange={(e) => set(cf.key as keyof Filters, e.target.checked as Filters[keyof Filters])}
-              />
-              {cf.label}
+        <div id="company-filters-more" hidden={!expanded}>
+          <div className="filter-bar" style={{ marginTop: 12 }}>
+            <select value={filters.region} onChange={(e) => set('region', e.target.value)}>
+              <option value="">지역 전체</option>
+              {ENUMS.REGION.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select value={filters.business} onChange={(e) => set('business', e.target.value)} title="관심사업분야(사업단) - 컨택이력 기준">
+              <option value="">관심사업분야 전체</option>
+              {ENUMS.BUSINESS.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <input
+              placeholder="AI 기술분야 (예: 비전, NLP)"
+              value={filters.aiField}
+              onChange={(e) => set('aiField', e.target.value)}
+              style={{ minWidth: 160, flex: '0 1 220px' }}
+            />
+            <label className="collab-toggle" style={{ marginLeft: 4 }}>
+              <input type="checkbox" checked={filters.mou} onChange={(e) => set('mou', e.target.checked)} />
+              MOU 체결
             </label>
-          ))}
-          <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>※ 선택한 항목을 모두 만족하는 기업만 표시</span>
+            <label className="collab-toggle">
+              <input type="checkbox" checked={filters.includeInactive} onChange={(e) => set('includeInactive', e.target.checked)} />
+              비활성 포함
+            </label>
+          </div>
+          {/* 협력 항목 체크박스 (선택한 모든 항목을 만족하는 기업만) */}
+          <div className="filter-bar" style={{ marginTop: 12 }}>
+            <span className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', fontWeight: 600 }}>협력 항목:</span>
+            {COLLAB_FIELDS.map((cf) => (
+              <label key={cf.key} className="collab-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!filters[cf.key as keyof Filters]}
+                  onChange={(e) => set(cf.key as keyof Filters, e.target.checked as Filters[keyof Filters])}
+                />
+                {cf.label}
+              </label>
+            ))}
+            <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>※ 선택한 항목을 모두 만족하는 기업만 표시</span>
+          </div>
         </div>
       </form>
 
