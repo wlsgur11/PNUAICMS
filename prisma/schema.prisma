@@ -453,7 +453,7 @@ model AppUser {
   name          String?
   role          Role      @default(GENERAL)
   active        Boolean   @default(true) // false = 접근 차단
-  lastLoginAt   DateTime?
+  lastLoginAt   DateTime? // 마지막 접속. 이름과 달리 로그인 때만이 아니라 한 시간에 한 번 갱신 (lib/auth.ts)
   roleUpdatedBy String? // 역할을 바꾼 슈퍼관리자 email (Phase 4)
   roleUpdatedAt DateTime?
   createdAt     DateTime  @default(now())

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
-import { api } from '@/lib/client';
+import { api, localDate } from '@/lib/client';
 import { useMe } from '@/components/MeProvider';
 
 type Role = 'GENERAL' | 'ADMIN' | 'SUPER';
@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
                 <th style={{ width: 110 }}>이름</th>
                 <th style={{ width: 210 }}>역할</th>
                 <th style={{ width: 170 }}>접근</th>
-                <th style={{ width: 120 }}>최근 로그인</th>
+                <th style={{ width: 120 }}>마지막 접속</th>
               </tr>
             </thead>
             <tbody>
@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
                         </button>
                         <SaveTag st={st} field="active" />
                       </td>
-                      <td className="muted">{u.lastLoginAt ? u.lastLoginAt.slice(0, 10) : '-'}</td>
+                      <td className="muted">{u.lastLoginAt ? localDate(new Date(u.lastLoginAt)) : '-'}</td>
                     </tr>
                   );
                 })
