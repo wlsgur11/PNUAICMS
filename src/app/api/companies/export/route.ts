@@ -9,6 +9,7 @@ import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { COLLAB_FIELDS } from '@/lib/enums';
+import { kstDate } from '@/lib/kst';
 
 const COLLAB_KEYS = [
   'internship', 'industryProject', 'curriculumCommittee', 'guestLecture',
@@ -138,7 +139,7 @@ export async function GET(req: Request) {
   ws.views = [{ state: 'frozen', ySplit: 1 }];
 
   const arrayBuf = await wb.xlsx.writeBuffer();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = kstDate();
   const filename = `companies_${today}.xlsx`;
 
   return new Response(arrayBuf as ArrayBuffer, {

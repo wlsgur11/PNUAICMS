@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mutate as globalMutate } from 'swr';
 import { api } from '@/lib/client';
@@ -40,6 +40,8 @@ export type CompanyFormData = {
 export const EMPTY: CompanyFormData = { name: '', mou: false, status: '미접촉', priority: 'B', region: '부산' };
 
 export default function CompanyForm({ initial, mode }: { initial?: CompanyFormData; mode: 'create' | 'edit' }) {
+  // 라벨과 입력칸을 잇는 id. 한 화면에 폼이 여러 개라 컴포넌트마다 따로 만든다
+  const fid = useId();
   const router = useRouter();
   const [f, setF] = useState<CompanyFormData>(initial ?? EMPTY);
   const [dupMsg, setDupMsg] = useState('');
@@ -140,84 +142,84 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
 
       <div className="form-grid">
         <div className="form-field">
-          <label>기업명<span className="req">*</span></label>
-          <input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="예: ㈜부산에이아이" />
+          <label htmlFor={`${fid}-1`}>기업명<span className="req">*</span></label>
+          <input id={`${fid}-1`} value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="예: ㈜부산에이아이" />
           {dupMsg && <span className="err">{dupMsg}</span>}
         </div>
         <div className="form-field">
-          <label>사업참여연도</label>
-          <input type="number" value={f.joinYear ?? ''} onChange={(e) => set('joinYear', e.target.value ? Number(e.target.value) : null)} placeholder="예: 2026" />
+          <label htmlFor={`${fid}-2`}>사업참여연도</label>
+          <input id={`${fid}-2`} type="number" value={f.joinYear ?? ''} onChange={(e) => set('joinYear', e.target.value ? Number(e.target.value) : null)} placeholder="예: 2026" />
         </div>
         <div className="form-field">
-          <label>유형</label>
-          <select value={f.orgType ?? ''} onChange={(e) => set('orgType', e.target.value || null)}>
+          <label htmlFor={`${fid}-3`}>유형</label>
+          <select id={`${fid}-3`} value={f.orgType ?? ''} onChange={(e) => set('orgType', e.target.value || null)}>
             <option value="">선택</option>
             {ENUMS.ORG_TYPE.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div className="form-field">
-          <label>지역구분</label>
-          <select value={f.region ?? ''} onChange={(e) => set('region', e.target.value || null)}>
+          <label htmlFor={`${fid}-4`}>지역구분</label>
+          <select id={`${fid}-4`} value={f.region ?? ''} onChange={(e) => set('region', e.target.value || null)}>
             {ENUMS.REGION.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div className="form-field full">
-          <label>소재지(상세)</label>
-          <input value={f.addressDetail ?? ''} onChange={(e) => set('addressDetail', e.target.value)} />
+          <label htmlFor={`${fid}-5`}>소재지(상세)</label>
+          <input id={`${fid}-5`} value={f.addressDetail ?? ''} onChange={(e) => set('addressDetail', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>AI 기술분야</label>
-          <input value={f.aiField ?? ''} onChange={(e) => set('aiField', e.target.value)} placeholder="예: 컴퓨터비전, NLP" />
+          <label htmlFor={`${fid}-6`}>AI 기술분야</label>
+          <input id={`${fid}-6`} value={f.aiField ?? ''} onChange={(e) => set('aiField', e.target.value)} placeholder="예: 컴퓨터비전, NLP" />
         </div>
         <div className="form-field">
-          <label>주요산업분야</label>
-          <input value={f.mainIndustry ?? ''} onChange={(e) => set('mainIndustry', e.target.value)} />
+          <label htmlFor={`${fid}-7`}>주요산업분야</label>
+          <input id={`${fid}-7`} value={f.mainIndustry ?? ''} onChange={(e) => set('mainIndustry', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>홈페이지</label>
-          <input value={f.homepage ?? ''} onChange={(e) => set('homepage', e.target.value)} />
+          <label htmlFor={`${fid}-8`}>홈페이지</label>
+          <input id={`${fid}-8`} value={f.homepage ?? ''} onChange={(e) => set('homepage', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>매출규모</label>
-          <input value={f.revenueScale ?? ''} onChange={(e) => set('revenueScale', e.target.value)} />
+          <label htmlFor={`${fid}-9`}>매출규모</label>
+          <input id={`${fid}-9`} value={f.revenueScale ?? ''} onChange={(e) => set('revenueScale', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>평균연봉 <span className="hint">(공개 임금데이터)</span></label>
-          <input value={f.avgSalary ?? ''} onChange={(e) => set('avgSalary', e.target.value)} placeholder="자동채움: 지방공기업 평균임금" />
+          <label htmlFor={`${fid}-10`}>평균연봉 <span className="hint">(공개 임금데이터)</span></label>
+          <input id={`${fid}-10`} value={f.avgSalary ?? ''} onChange={(e) => set('avgSalary', e.target.value)} placeholder="자동채움: 지방공기업 평균임금" />
         </div>
         <div className="form-field">
-          <label>신입사원연봉 <span className="hint">(공개 임금데이터)</span></label>
-          <input value={f.newcomerSalary ?? ''} onChange={(e) => set('newcomerSalary', e.target.value)} />
+          <label htmlFor={`${fid}-11`}>신입사원연봉 <span className="hint">(공개 임금데이터)</span></label>
+          <input id={`${fid}-11`} value={f.newcomerSalary ?? ''} onChange={(e) => set('newcomerSalary', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>전공책임교수</label>
-          <input value={f.professor1 ?? ''} onChange={(e) => set('professor1', e.target.value)} />
+          <label htmlFor={`${fid}-12`}>전공책임교수</label>
+          <input id={`${fid}-12`} value={f.professor1 ?? ''} onChange={(e) => set('professor1', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>교육원 담당교수</label>
-          <input value={f.professor2 ?? ''} onChange={(e) => set('professor2', e.target.value)} />
+          <label htmlFor={`${fid}-13`}>교육원 담당교수</label>
+          <input id={`${fid}-13`} value={f.professor2 ?? ''} onChange={(e) => set('professor2', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>협력우선순위</label>
-          <select value={f.priority ?? ''} onChange={(e) => set('priority', e.target.value || null)}>
+          <label htmlFor={`${fid}-14`}>협력우선순위</label>
+          <select id={`${fid}-14`} value={f.priority ?? ''} onChange={(e) => set('priority', e.target.value || null)}>
             <option value="">선택</option>
             {ENUMS.PRIORITY.map((p) => <option key={p} value={p}>{p} 등급</option>)}
           </select>
         </div>
         <div className="form-field">
-          <label>진행상태</label>
-          <select value={f.status ?? '미접촉'} onChange={(e) => set('status', e.target.value)}>
+          <label htmlFor={`${fid}-15`}>진행상태</label>
+          <select id={`${fid}-15`} value={f.status ?? '미접촉'} onChange={(e) => set('status', e.target.value)}>
             {ENUMS.STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="form-field full">
-          <label>특이사항</label>
-          <textarea value={f.summary ?? ''} onChange={(e) => set('summary', e.target.value)} placeholder="컨택 시 참고할 특이사항을 적어두세요. 예: 접촉 시 주의할 점, 다른 교수님과 연관된 기업, 과거 협력 이력 등" />
+          <label htmlFor={`${fid}-16`}>특이사항</label>
+          <textarea id={`${fid}-16`} value={f.summary ?? ''} onChange={(e) => set('summary', e.target.value)} placeholder="컨택 시 참고할 특이사항을 적어두세요. 예: 접촉 시 주의할 점, 다른 교수님과 연관된 기업, 과거 협력 이력 등" />
         </div>
         <div className="form-field full">
-          <label>다른 표기 <span className="hint">(실적 엑셀 매칭용, 한 줄에 하나)</span></label>
+          <label htmlFor={`${fid}-17`}>다른 표기 <span className="hint">(실적 엑셀 매칭용, 한 줄에 하나)</span></label>
           {/* 줄 단위로 받는다. 쉼표로 받으면 'M&D(부산, 기장)' 같은 이름이 잘린다 */}
-          <textarea
+          <textarea id={`${fid}-17`}
             value={(f.aliases ?? []).join('\n')}
             onChange={(e) => set('aliases', e.target.value.split('\n'))}
             onBlur={(e) => set('aliases', e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
