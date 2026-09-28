@@ -17,6 +17,7 @@ import {
 } from '@/lib/dashboard-shape';
 import { COLLAB_FIELDS } from '@/lib/enums';
 import { isJunkValue } from '@/lib/list-filters';
+import { KST_MS, kstDate } from '@/lib/kst';
 
 // AUTH_BYPASS=true 일 때 Next 가 이 라우트를 정적 캐시하는 것을 막는다.
 export const dynamic = 'force-dynamic';
@@ -60,7 +61,6 @@ function bump(m: Map<string, number>, v: string | null) {
 const toList = (m: Map<string, number>) =>
   [...m.entries()].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count);
 
-const KST_MS = 9 * 3600e3;
 /** 그 시각이 속한 주의 월요일 (yyyy-MM-dd, 한국 시각). 서버 시간대가 UTC 라 9시간을 직접 더한다 */
 function kstWeekStart(t: number): string {
   const d = new Date(t + KST_MS);
@@ -435,7 +435,7 @@ export async function GET(req: Request) {
       return a.lastContact.localeCompare(b.lastContact);
     });
     // 반년. 컨택 주기가 학기 단위라 한 학기를 통째로 건너뛴 셈이 되는 길이다
-    const halfYearAgo = new Date(Date.now() - 182 * 864e5).toISOString().slice(0, 10);
+    const halfYearAgo = kstDate(new Date(Date.now() - 182 * 864e5));
 
     // 연구실별 과제 수.
     // Lab 의 식별키가 (교수명|연구실명) 이라, 엑셀 연구실명 칸이 밀려 숫자가 들어오면

@@ -9,6 +9,7 @@ import { nextCode } from '@/lib/codes';
 import { companyCreateSchema } from '@/lib/validation';
 import { lookupCompany } from '@/lib/lookup';
 import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
+import { kstDate } from '@/lib/kst';
 
 export async function GET(req: Request) {
   return handle(async () => {
@@ -160,7 +161,7 @@ export async function POST(req: Request) {
       const code = await nextCode(tx, 'company');
       const note =
         auto && auto.sources.length > 0
-          ? `[자동조회 ${new Date().toISOString().slice(0, 10)}] 대표:${auto.ceo || '?'} / 설립:${auto.foundedAt || '?'} / 출처:${auto.sources.join(',')}`
+          ? `[자동조회 ${kstDate()}] 대표:${auto.ceo || '?'} / 설립:${auto.foundedAt || '?'} / 출처:${auto.sources.join(',')}`
           : input.note || null;
 
       return tx.company.create({

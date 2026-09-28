@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
@@ -36,6 +36,8 @@ export const EMPTY_STUDENT: StudentFormData = {
 };
 
 export default function StudentForm({ initial, mode }: { initial?: StudentFormData; mode: 'create' | 'edit' }) {
+  // 라벨과 입력칸을 잇는 id. 한 화면에 폼이 여러 개라 컴포넌트마다 따로 만든다
+  const fid = useId();
   // 수정 중 학번을 고치면 입력값이 바뀐다. 요청 주소는 원래 학번이어야 해서 따로 잡아 둔다
   const originalNo = useRef(initial?.studentNo ?? '');
   const router = useRouter();
@@ -107,68 +109,68 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       <div className="card-title" style={{ marginBottom: 12 }}><span className="accent-bar" />학생 {mode === 'create' ? '등록' : '수정'}</div>
       <div className="form-grid">
         <div className="form-field">
-          <label>학번<span className="req">*</span></label>
-          <input value={f.studentNo} onChange={(e) => set('studentNo', e.target.value)} placeholder="예: 20201234" />
+          <label htmlFor={`${fid}-1`}>학번<span className="req">*</span></label>
+          <input id={`${fid}-1`} value={f.studentNo} onChange={(e) => set('studentNo', e.target.value)} placeholder="예: 20201234" />
           {mode === 'edit' && f.studentNo.trim() !== originalNo.current && (
             <span className="hint">저장하면 {originalNo.current} 에 달린 상담과 실적이 새 학번으로 함께 옮겨집니다.</span>
           )}
         </div>
         <div className="form-field">
-          <label>이름<span className="req">*</span></label>
-          <input value={f.name} onChange={(e) => set('name', e.target.value)} />
+          <label htmlFor={`${fid}-2`}>이름<span className="req">*</span></label>
+          <input id={`${fid}-2`} value={f.name} onChange={(e) => set('name', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>학과</label>
-          <input value={f.department} onChange={(e) => set('department', e.target.value)} placeholder="예: 정보컴퓨터공학부" />
+          <label htmlFor={`${fid}-3`}>학과</label>
+          <input id={`${fid}-3`} value={f.department} onChange={(e) => set('department', e.target.value)} placeholder="예: 정보컴퓨터공학부" />
         </div>
         <div className="form-field">
-          <label>전공</label>
-          <input value={f.major} onChange={(e) => set('major', e.target.value)} />
+          <label htmlFor={`${fid}-4`}>전공</label>
+          <input id={`${fid}-4`} value={f.major} onChange={(e) => set('major', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>학년</label>
-          <select value={f.grade} onChange={(e) => set('grade', Number(e.target.value))}>
+          <label htmlFor={`${fid}-5`}>학년</label>
+          <select id={`${fid}-5`} value={f.grade} onChange={(e) => set('grade', Number(e.target.value))}>
             {GRADES.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
           </select>
         </div>
         <div className="form-field">
-          <label>학점</label>
-          <input type="number" step="0.01" min="0" max="4.5" value={f.gpa} onChange={(e) => set('gpa', e.target.value)} />
+          <label htmlFor={`${fid}-6`}>학점</label>
+          <input id={`${fid}-6`} type="number" step="0.01" min="0" max="4.5" value={f.gpa} onChange={(e) => set('gpa', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>진로희망</label>
-          <select value={f.careerGoal} onChange={(e) => set('careerGoal', e.target.value)}>
+          <label htmlFor={`${fid}-7`}>진로희망</label>
+          <select id={`${fid}-7`} value={f.careerGoal} onChange={(e) => set('careerGoal', e.target.value)}>
             <option value="">선택</option>
             {ENUMS.CAREER_GOAL.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="form-field">
-          <label>전화번호{mode === 'create' && <span className="req">*</span>}</label>
-          <input value={f.phone} onChange={(e) => set('phone', e.target.value)} />
+          <label htmlFor={`${fid}-8`}>전화번호{mode === 'create' && <span className="req">*</span>}</label>
+          <input id={`${fid}-8`} value={f.phone} onChange={(e) => set('phone', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>이메일{mode === 'create' && <span className="req">*</span>}</label>
-          <input value={f.email} onChange={(e) => set('email', e.target.value)} />
+          <label htmlFor={`${fid}-9`}>이메일{mode === 'create' && <span className="req">*</span>}</label>
+          <input id={`${fid}-9`} value={f.email} onChange={(e) => set('email', e.target.value)} />
         </div>
         <div className="form-field">
-          <label>졸업일자</label>
-          <input type="date" value={f.graduationDate} onChange={(e) => set('graduationDate', e.target.value)} />
+          <label htmlFor={`${fid}-10`}>졸업일자</label>
+          <input id={`${fid}-10`} type="date" value={f.graduationDate} onChange={(e) => set('graduationDate', e.target.value)} />
         </div>
         <div className="form-field full">
-          <label>취업 기업명</label>
-          <input value={f.employmentCompany} onChange={(e) => set('employmentCompany', e.target.value)} placeholder="졸업 후 취업 기업명" />
+          <label htmlFor={`${fid}-11`}>취업 기업명</label>
+          <input id={`${fid}-11`} value={f.employmentCompany} onChange={(e) => set('employmentCompany', e.target.value)} placeholder="졸업 후 취업 기업명" />
         </div>
         <div className="form-field full">
-          <label>자격증 <span className="hint">(쉼표 구분)</span></label>
-          <input value={f.certificates} onChange={(e) => set('certificates', e.target.value)} placeholder="예: 정보처리기사, SQLD" />
+          <label htmlFor={`${fid}-12`}>자격증 <span className="hint">(쉼표 구분)</span></label>
+          <input id={`${fid}-12`} value={f.certificates} onChange={(e) => set('certificates', e.target.value)} placeholder="예: 정보처리기사, SQLD" />
         </div>
         <div className="form-field full">
-          <label>외국어 <span className="hint">(쉼표 구분)</span></label>
-          <input value={f.foreignLanguages} onChange={(e) => set('foreignLanguages', e.target.value)} placeholder="예: TOEIC 850" />
+          <label htmlFor={`${fid}-13`}>외국어 <span className="hint">(쉼표 구분)</span></label>
+          <input id={`${fid}-13`} value={f.foreignLanguages} onChange={(e) => set('foreignLanguages', e.target.value)} placeholder="예: TOEIC 850" />
         </div>
         <div className="form-field full">
-          <label>동아리 <span className="hint">(쉼표 구분)</span></label>
-          <input value={f.clubs} onChange={(e) => set('clubs', e.target.value)} placeholder="예: PULSE, 코딩동아리" />
+          <label htmlFor={`${fid}-14`}>동아리 <span className="hint">(쉼표 구분)</span></label>
+          <input id={`${fid}-14`} value={f.clubs} onChange={(e) => set('clubs', e.target.value)} placeholder="예: PULSE, 코딩동아리" />
         </div>
       </div>
 
@@ -185,15 +187,15 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
             </div>
             <div className="form-grid">
               <div className="form-field">
-                <label>유형</label>
-                <select value={it.internshipType} onChange={(e) => setInternship(i, 'internshipType', e.target.value)}>
+                <label htmlFor={`${fid}-${i}-15`}>유형</label>
+                <select id={`${fid}-${i}-15`} value={it.internshipType} onChange={(e) => setInternship(i, 'internshipType', e.target.value)}>
                   <option value="">선택</option>
                   {ENUMS.INTERNSHIP_TYPE.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
-              <div className="form-field"><label>기업체명</label><input value={it.companyName} onChange={(e) => setInternship(i, 'companyName', e.target.value)} /></div>
-              <div className="form-field"><label>기간(주)</label><input type="number" min="1" value={it.durationWeeks} onChange={(e) => setInternship(i, 'durationWeeks', e.target.value)} /></div>
-              <div className="form-field"><label>연월일</label><input type="date" value={it.activityDate} onChange={(e) => setInternship(i, 'activityDate', e.target.value)} /></div>
+              <div className="form-field"><label htmlFor={`${fid}-${i}-16`}>기업체명</label><input id={`${fid}-${i}-16`} value={it.companyName} onChange={(e) => setInternship(i, 'companyName', e.target.value)} /></div>
+              <div className="form-field"><label htmlFor={`${fid}-${i}-17`}>기간(주)</label><input id={`${fid}-${i}-17`} type="number" min="1" value={it.durationWeeks} onChange={(e) => setInternship(i, 'durationWeeks', e.target.value)} /></div>
+              <div className="form-field"><label htmlFor={`${fid}-${i}-18`}>연월일</label><input id={`${fid}-${i}-18`} type="date" value={it.activityDate} onChange={(e) => setInternship(i, 'activityDate', e.target.value)} /></div>
             </div>
           </div>
         ))}

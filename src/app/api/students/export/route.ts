@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { studentWhere, studentOrderBy } from '@/lib/list-filters';
 import { gradeLabel } from '@/lib/enums';
+import { kstDate } from '@/lib/kst';
 
 export async function GET(req: Request) {
   await requireRole('ADMIN');
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
   ws.views = [{ state: 'frozen', ySplit: 1 }];
 
   const buf = await wb.xlsx.writeBuffer();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = kstDate();
   return new Response(buf as ArrayBuffer, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import useSWR, { mutate as globalMutate } from 'swr';
@@ -357,6 +357,8 @@ export default function CompanyDetailPage() {
 function PersonModal({
   companyId, initial, onClose, onSaved,
 }: { companyId: string; initial?: Person | null; onClose: () => void; onSaved: () => void }) {
+  // 라벨과 입력칸을 잇는 id. 한 화면에 폼이 여러 개라 컴포넌트마다 따로 만든다
+  const fid = useId();
   const editing = !!initial?.id;
   const [f, setF] = useState({
     name: initial?.name ?? '',
@@ -393,13 +395,13 @@ function PersonModal({
   return (
     <Modal title={editing ? '실무자 수정' : '실무자 추가'} onClose={onClose} onSave={save} saving={saving}>
       <div className="form-grid">
-        <div className="form-field"><label>이름<span className="req">*</span></label><input value={f.name} onChange={(e) => set('name', e.target.value)} /></div>
-        <div className="form-field"><label>직책</label><input value={f.position} onChange={(e) => set('position', e.target.value)} /></div>
-        <div className="form-field"><label>부서</label><input value={f.dept} onChange={(e) => set('dept', e.target.value)} /></div>
-        <div className="form-field"><label>연락처</label><input value={f.phone} onChange={(e) => set('phone', e.target.value)} /></div>
-        <div className="form-field"><label>이메일</label><input value={f.email} onChange={(e) => set('email', e.target.value)} /></div>
-        <div className="form-field"><label>선호연락방식</label>
-          <select value={f.contactPref} onChange={(e) => set('contactPref', e.target.value)}>
+        <div className="form-field"><label htmlFor={`${fid}-1`}>이름<span className="req">*</span></label><input id={`${fid}-1`} value={f.name} onChange={(e) => set('name', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-2`}>직책</label><input id={`${fid}-2`} value={f.position} onChange={(e) => set('position', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-3`}>부서</label><input id={`${fid}-3`} value={f.dept} onChange={(e) => set('dept', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-4`}>연락처</label><input id={`${fid}-4`} value={f.phone} onChange={(e) => set('phone', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-5`}>이메일</label><input id={`${fid}-5`} value={f.email} onChange={(e) => set('email', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-6`}>선호연락방식</label>
+          <select id={`${fid}-6`} value={f.contactPref} onChange={(e) => set('contactPref', e.target.value)}>
             <option value="">선택</option>{ENUMS.CONTACT_PREF.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
         </div>
@@ -412,6 +414,7 @@ function PersonModal({
 function HistoryModal({
   companyId, persons, initial, onClose, onSaved,
 }: { companyId: string; persons: Person[]; initial?: History | null; onClose: () => void; onSaved: () => void }) {
+  const fid = useId();
   const editing = !!initial?.id;
   const [f, setF] = useState({
     contactDate: initial?.contactDate ?? today(),
@@ -451,25 +454,25 @@ function HistoryModal({
   return (
     <Modal title={editing ? '컨택 이력 수정' : '컨택 이력 추가'} onClose={onClose} onSave={save} saving={saving}>
       <div className="form-grid">
-        <div className="form-field"><label>컨택일자<span className="req">*</span></label><input type="date" value={f.contactDate} onChange={(e) => set('contactDate', e.target.value)} /></div>
-        <div className="form-field"><label>실무자</label>
-          <select value={f.personId ?? ''} onChange={(e) => set('personId', e.target.value)}>
+        <div className="form-field"><label htmlFor={`${fid}-1`}>컨택일자<span className="req">*</span></label><input id={`${fid}-1`} type="date" value={f.contactDate} onChange={(e) => set('contactDate', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-2`}>실무자</label>
+          <select id={`${fid}-2`} value={f.personId ?? ''} onChange={(e) => set('personId', e.target.value)}>
             <option value="">선택 안함</option>{persons.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
-        <div className="form-field"><label>담당교수</label><input value={f.professor} onChange={(e) => set('professor', e.target.value)} /></div>
-        <div className="form-field"><label>관심사업분야(사업단)</label>
-          <select value={f.business} onChange={(e) => set('business', e.target.value)}>
+        <div className="form-field"><label htmlFor={`${fid}-3`}>담당교수</label><input id={`${fid}-3`} value={f.professor} onChange={(e) => set('professor', e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-4`}>관심사업분야(사업단)</label>
+          <select id={`${fid}-4`} value={f.business} onChange={(e) => set('business', e.target.value)}>
             <option value="">선택 안함</option>{ENUMS.BUSINESS.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
         </div>
-        <div className="form-field"><label>컨택방식</label>
-          <select value={f.method} onChange={(e) => set('method', e.target.value)}>{ENUMS.CONTACT_METHOD.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+        <div className="form-field"><label htmlFor={`${fid}-5`}>컨택방식</label>
+          <select id={`${fid}-5`} value={f.method} onChange={(e) => set('method', e.target.value)}>{ENUMS.CONTACT_METHOD.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         </div>
-        <div className="form-field"><label>상태</label>
-          <select value={f.histStatus} onChange={(e) => set('histStatus', e.target.value)}>{ENUMS.HISTORY_STATUS.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+        <div className="form-field"><label htmlFor={`${fid}-6`}>상태</label>
+          <select id={`${fid}-6`} value={f.histStatus} onChange={(e) => set('histStatus', e.target.value)}>{ENUMS.HISTORY_STATUS.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         </div>
-        <div className="form-field full"><label>내용</label><textarea value={f.content} onChange={(e) => set('content', e.target.value)} /></div>
+        <div className="form-field full"><label htmlFor={`${fid}-7`}>내용</label><textarea id={`${fid}-7`} value={f.content} onChange={(e) => set('content', e.target.value)} /></div>
       </div>
     </Modal>
   );
@@ -477,6 +480,7 @@ function HistoryModal({
 
 /* ── 모달: 협업정보 수정 ── */
 function CollabModal({ companyId, collab, mou: mouInit, onClose, onSaved }: { companyId: string; collab: Collab | null; mou: boolean; onClose: () => void; onSaved: () => void }) {
+  const fid = useId();
   const init: Record<string, boolean> = {};
   COLLAB_FIELDS.forEach((cf) => (init[cf.key] = !!collab?.[cf.key]));
   const [f, setF] = useState(init);
@@ -511,16 +515,16 @@ function CollabModal({ companyId, collab, mou: mouInit, onClose, onSaved }: { co
         ))}
       </div>
       <div className="form-grid" style={{ marginTop: 18 }}>
-        <div className="form-field"><label>MOU 체결여부</label>
-          <select value={mou ? '1' : '0'} onChange={(e) => setMou(e.target.value === '1')}>
+        <div className="form-field"><label htmlFor={`${fid}-1`}>MOU 체결여부</label>
+          <select id={`${fid}-1`} value={mou ? '1' : '0'} onChange={(e) => setMou(e.target.value === '1')}>
             <option value="0">미체결</option>
             <option value="1">체결</option>
           </select>
         </div>
-        <div className="form-field"><label>요구역량</label><input value={requiredSkills} onChange={(e) => setRequiredSkills(e.target.value)} placeholder="예: Python, PyTorch" /></div>
-        <div className="form-field"><label>우대전공</label><input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder="예: 컴퓨터공학" /></div>
-        <div className="form-field"><label>수용가능인원(명)</label><input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="예: 3" /></div>
-        <div className="form-field full"><label>기타 메모</label><textarea value={memo} onChange={(e) => setMemo(e.target.value)} /></div>
+        <div className="form-field"><label htmlFor={`${fid}-2`}>요구역량</label><input id={`${fid}-2`} value={requiredSkills} onChange={(e) => setRequiredSkills(e.target.value)} placeholder="예: Python, PyTorch" /></div>
+        <div className="form-field"><label htmlFor={`${fid}-3`}>우대전공</label><input id={`${fid}-3`} value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder="예: 컴퓨터공학" /></div>
+        <div className="form-field"><label htmlFor={`${fid}-4`}>수용가능인원(명)</label><input id={`${fid}-4`} type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="예: 3" /></div>
+        <div className="form-field full"><label htmlFor={`${fid}-5`}>기타 메모</label><textarea id={`${fid}-5`} value={memo} onChange={(e) => setMemo(e.target.value)} /></div>
       </div>
     </Modal>
   );

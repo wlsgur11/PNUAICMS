@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate as globalMutate } from 'swr';
@@ -61,6 +61,8 @@ const rememberCounselor = (v: string) => { try { if (v.trim()) localStorage.setI
 function CounselingCard({ studentNo, rows, onChanged }: {
   studentNo: string; rows: Required<CounselingItem>[]; onChanged: () => void;
 }) {
+  // 라벨과 입력칸을 잇는 id. 한 화면에 폼이 여러 개라 컴포넌트마다 따로 만든다
+  const fid = useId();
   // null 이면 편집 중이 아니고, 'new' 면 새 상담, 그 외에는 고치고 있는 상담의 id
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ type: ENUMS.COUNSEL_TYPE[0] as string, counselDate: '', counselor: '', content: '' });
@@ -112,22 +114,22 @@ function CounselingCard({ studentNo, rows, onChanged }: {
     <div className="soft-card" style={{ padding: 12 }}>
       <div className="form-grid">
         <div className="form-field">
-          <label>상담 유형</label>
-          <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
+          <label htmlFor={`${fid}-1`}>상담 유형</label>
+          <select id={`${fid}-1`} value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
             {ENUMS.COUNSEL_TYPE.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div className="form-field">
-          <label>상담일자<span className="req">*</span></label>
-          <input type="date" value={form.counselDate} onChange={(e) => setForm((p) => ({ ...p, counselDate: e.target.value }))} />
+          <label htmlFor={`${fid}-2`}>상담일자<span className="req">*</span></label>
+          <input id={`${fid}-2`} type="date" value={form.counselDate} onChange={(e) => setForm((p) => ({ ...p, counselDate: e.target.value }))} />
         </div>
         <div className="form-field">
-          <label>상담자</label>
-          <input value={form.counselor} onChange={(e) => setForm((p) => ({ ...p, counselor: e.target.value }))} placeholder="예: 김교수" />
+          <label htmlFor={`${fid}-3`}>상담자</label>
+          <input id={`${fid}-3`} value={form.counselor} onChange={(e) => setForm((p) => ({ ...p, counselor: e.target.value }))} placeholder="예: 김교수" />
         </div>
         <div className="form-field full">
-          <label>상담내역</label>
-          <textarea rows={4} value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} />
+          <label htmlFor={`${fid}-4`}>상담내역</label>
+          <textarea id={`${fid}-4`} rows={4} value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} />
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
