@@ -73,10 +73,11 @@ function kstWeekStart(t: number): string {
  * 상담일은 만난 날이라 지난달 상담을 오늘 적으면 지난달로 들어가서, 입력이 끊겼는지
  * 알 수 없다. 상담과 컨택은 화면에서 한 건씩만 만들어져 만든 시각이 곧 사람이 입력한
  * 시각이다. 기업은 엑셀 가져오기로 수십 곳이 한 번에 들어오기도 한다. 그것도 등록이라
- * 그대로 세고, 화면이 줄마다 눈금을 따로 잡아 한 주가 튀어도 다른 줄이 눌리지 않게 한다.
+ * 그대로 센다.
  */
 async function loadActivity(role: Role): Promise<UserActivity> {
-  const WEEKS = 12;
+  // 지난주와 이번 주. 주별 막대를 뺀 뒤로 그 이상은 화면이 쓰지 않는다
+  const WEEKS = 2;
   const now = Date.now();
   const starts = Array.from({ length: WEEKS }, (_, i) => kstWeekStart(now - (WEEKS - 1 - i) * 7 * 864e5));
   const since = new Date(Date.parse(`${starts[0]}T00:00:00Z`) - KST_MS);

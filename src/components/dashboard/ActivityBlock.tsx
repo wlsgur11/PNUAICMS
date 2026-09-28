@@ -14,8 +14,6 @@ function ago(iso: string) {
   return days <= 0 ? '오늘' : days === 1 ? '어제' : `${days}일 전`;
 }
 
-const md = (ymd: string) => `${Number(ymd.slice(5, 7))}/${Number(ymd.slice(8, 10))}`;
-
 type Key = Exclude<keyof ActivityWeek, 'start'>;
 
 const INPUTS: { key: Key; label: string; unit: string; last: 'lastCounseling' | 'lastContact' | 'lastCompany' }[] = [
@@ -26,65 +24,21 @@ const INPUTS: { key: Key; label: string; unit: string; last: 'lastCounseling' | 
 
 const lastOf = (l: LastInput) => (l ? `마지막 입력 ${ago(l.at)}${l.by ? `, ${l.by}` : ''}` : '입력된 기록 없음');
 
-/**
- * 최근 12주 주별 막대. 칸의 남은 폭을 채우되 막대 하나는 24px 을 넘기지 않는다.
- * 폭에 맞춰 막대를 늘리면 넓은 화면에서 100px 이 넘는 벽돌이 되고, 막대 영역을 좁게
- * 묶으면 칸 오른쪽이 텅 빈다. 입력이 없는 주도 회색 짧은 막대로 남겨 12주가 이어진
- * 흐름으로 읽히게 한다.
- */
-function Spark({ weeks, k, label, unit }: { weeks: ActivityWeek[]; k: Key; label: string; unit: string }) {
-  const n = weeks.length;
-  const max = Math.max(1, ...weeks.map((w) => w[k]));
-  return (
-    <div style={{ flex: '1 1 140px', minWidth: 0 }}>
-      <div
-        role="img"
-        aria-label={`최근 12주 주별 ${label}. 이번 주 ${weeks[n - 1][k]}${unit}, 지난주 ${weeks[n - 2][k]}${unit}`}
-        style={{ display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 4, alignItems: 'end', height: 52 }}
-      >
-        {weeks.map((w, i) => {
-          const v = w[k];
-          return (
-            <span
-              key={w.start}
-              title={`${md(w.start)} 주: ${v}${unit}`}
-              style={{
-                justifySelf: 'center', width: '100%', maxWidth: 24,
-                height: v > 0 ? `${(v / max) * 100}%` : 2,
-                minHeight: v > 0 ? 3 : undefined,
-                borderRadius: 1,
-                background: v > 0 ? 'var(--chart-1)' : 'var(--border)',
-                // 이번 주는 아직 안 끝났다. 흐리게 두지 않으면 월요일마다 입력이 급감한 것으로 보인다
-                opacity: i === n - 1 ? 0.45 : 1,
-              }}
-            />
-          );
-        })}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
-        <span>{md(weeks[0].start)}</span>
-        <span>이번 주</span>
-      </div>
-    </div>
-  );
-}
-
 const inline = { display: 'flex', alignItems: 'baseline', gap: 8 } as const;
 const inlineNum = { fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 600, color: 'var(--text-1)' } as const;
 
 /**
  * 사용자 활동. 입력 세 칸이 주인공이다. 사용자가 몇 명뿐이라 접속자 수는 맥락이고,
- * 기록이 계속 쌓이고 있는지가 중요한 신호다. 입력이 몇 주째 0 이면 그게 먼저 보여야 한다.
+ * 기록이 계속 쌓이고 있는지가 중요한 신호다.
+ *
+ * 주별 막대를 붙였다가 뺐다. 입력이 드문 지금은 12주 중 한 주만 막대가 서서 숫자 이상을
+ * 말해 주지 못했다. 지난주 숫자와 마지막 입력일이면 끊겼는지는 충분히 보인다.
  *
  * 접속 두 값까지 같은 크기의 칸으로 두면 다섯 칸이 되어, 1280 노트북에서 4+1 로
- * 기업 등록 칸만 아랫줄에 떨어졌다. 입력 세 칸만 두면 노트북에서도 한 줄에 들어간다.
- * 칸 안에서는 숫자와 막대를 나란히 둔다. 위아래로 쌓으면 칸 오른쪽이 비고 카드만 길어진다.
- *
- * 입력 칸마다 눈금을 따로 잡는다. 기업은 엑셀로 수십 곳이 한 번에 들어오는 주가 있어서,
- * 눈금을 같이 쓰면 상담 막대가 바닥에 붙는다.
+ * 기업 등록 칸만 아랫줄에 떨어졌다. 그래서 위쪽 한 줄로 따로 둔다.
  */
 export default function ActivityBlock({ a }: { a: UserActivity }) {
-  const n = a.weeks.length;
+  const [prev, cur] = a.weeks;
 
   return (
     <div className="card dash-card">
@@ -92,7 +46,7 @@ export default function ActivityBlock({ a }: { a: UserActivity }) {
         <h2>사용자 활동</h2>
         <p>
           시스템이 실제로 쓰이고 있는지 봅니다. 입력은 상담일, 컨택일이 아니라 기록을 입력한 날
-          기준이고, 기업은 엑셀로 한꺼번에 등록한 것도 포함합니다.
+          기준이고 이번 주는 월요일부터 셉니다. 기업은 엑셀로 한꺼번에 등록한 것도 포함합니다.
         </p>
       </div>
 
@@ -120,23 +74,13 @@ export default function ActivityBlock({ a }: { a: UserActivity }) {
         borderTop: '1px solid var(--border)', paddingTop: 18,
       }}>
         {INPUTS.map((r) => (
-          <div key={r.key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 24px' }}>
-            {/* 숫자 쪽 폭을 고정한다. 글자 길이대로 두면 입력자 이름이 붙은 칸만 막대가
-                아래로 떨어져, 같은 화면에서 칸마다 모양이 달라진다 */}
-            <div style={{ flex: '0 0 150px' }}>
-              <div className="dash-metric-label">이번 주 {r.label}</div>
-              <div className="dash-metric-value"><CountUp end={a.weeks[n - 1][r.key]} /><span className="unit">{r.unit}</span></div>
-              <div className="dash-metric-sub">지난주 {a.weeks[n - 2][r.key]}{r.unit}</div>
-              <div className="dash-metric-sub" style={{ marginTop: 2 }}>{lastOf(a[r.last])}</div>
-            </div>
-            <Spark weeks={a.weeks} k={r.key} label={r.label} unit={r.unit} />
+          <div key={r.key}>
+            <div className="dash-metric-label">이번 주 {r.label}</div>
+            <div className="dash-metric-value"><CountUp end={cur[r.key]} /><span className="unit">{r.unit}</span></div>
+            <div className="dash-metric-sub">지난주 {prev[r.key]}{r.unit}</div>
+            <div className="dash-metric-sub" style={{ marginTop: 2 }}>{lastOf(a[r.last])}</div>
           </div>
         ))}
-      </div>
-
-      <div className="dash-note">
-        막대는 최근 12주 주별 입력입니다. 칸마다 눈금이 달라 칸끼리 막대 높이를 비교하면 안 됩니다.
-        회색은 입력이 없던 주, 흐린 마지막 막대는 진행 중인 이번 주입니다.
       </div>
     </div>
   );

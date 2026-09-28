@@ -141,7 +141,7 @@ export type UserActivity = {
   activeUsers7d: number;
   /** 권한 있는(일반이 아닌) 활성 계정 수 */
   totalUsers: number;
-  /** 최근 12주. 마지막 칸이 이번 주 */
+  /** [지난주, 이번 주] */
   weeks: ActivityWeek[];
   lastCounseling: LastInput;
   lastContact: LastInput;
