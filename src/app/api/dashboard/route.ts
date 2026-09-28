@@ -5,6 +5,7 @@
  *
  * 권한: 로그인만 필요. 단 일반(GENERAL) 에게는 민감한 블록을 비운다.
  */
+import type { Role } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
@@ -12,7 +13,7 @@ import {
   PIPELINE_STAGES,
   type DashboardData, type SwcuCell, type SwcuUnmet, type SwcuArea,
   type DistributionItem, type InternshipHeadcount, type InternshipComposition,
-  type ProjectHeadcount,
+  type ProjectHeadcount, type UserActivity,
 } from '@/lib/dashboard-shape';
 import { COLLAB_FIELDS } from '@/lib/enums';
 import { isJunkValue } from '@/lib/list-filters';
@@ -58,6 +59,57 @@ function bump(m: Map<string, number>, v: string | null) {
 }
 const toList = (m: Map<string, number>) =>
   [...m.entries()].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count);
+
+const KST_MS = 9 * 3600e3;
+/** 그 시각이 속한 주의 월요일 (yyyy-MM-dd, 한국 시각). 서버 시간대가 UTC 라 9시간을 직접 더한다 */
+function kstWeekStart(t: number): string {
+  const d = new Date(t + KST_MS);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * 사용자 활동. 입력 건수는 상담일, 컨택일이 아니라 기록을 만든 시각으로 센다.
+ * 상담일은 만난 날이라 지난달 상담을 오늘 적으면 지난달로 들어가서, 입력이 끊겼는지
+ * 알 수 없다. 두 기록 모두 화면에서 한 건씩만 만들어지고 엑셀로 한꺼번에 들어오는
+ * 길이 없어서, 만든 시각이 곧 사람이 입력한 시각이다.
+ */
+async function loadActivity(role: Role): Promise<UserActivity> {
+  const WEEKS = 12;
+  const now = Date.now();
+  const starts = Array.from({ length: WEEKS }, (_, i) => kstWeekStart(now - (WEEKS - 1 - i) * 7 * 864e5));
+  const since = new Date(Date.parse(`${starts[0]}T00:00:00Z`) - KST_MS);
+  const [users, counsel, contact, lastCounsel, lastContact] = await Promise.all([
+    prisma.appUser.findMany({ select: { email: true, name: true, role: true, active: true, lastLoginAt: true } }),
+    prisma.counseling.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.contactHistory.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.counseling.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } }),
+    prisma.contactHistory.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } }),
+  ]);
+
+  const weeks = starts.map((start) => ({ start, counselings: 0, contacts: 0 }));
+  const slot = new Map(starts.map((s, i) => [s, weeks[i]]));
+  for (const r of counsel) { const w = slot.get(kstWeekStart(r.createdAt.getTime())); if (w) w.counselings++; }
+  for (const r of contact) { const w = slot.get(kstWeekStart(r.createdAt.getTime())); if (w) w.contacts++; }
+
+  const nameOf = new Map(users.map((u) => [u.email, u.name || u.email.split('@')[0]]));
+  const last = (r: { createdAt: Date; createdBy: string | null } | null) => r && {
+    at: r.createdAt.toISOString(),
+    by: r.createdBy ? (nameOf.get(r.createdBy) ?? r.createdBy.split('@')[0]) : null,
+  };
+  const active = users.filter((u) => u.active);
+  // 권한 대기 계정은 데이터를 못 보니 '쓰는 사람' 에 넣지 않는다
+  const members = active.filter((u) => u.role !== 'GENERAL');
+  const weekAgo = now - 7 * 864e5;
+  return {
+    pendingUsers: role === 'SUPER' ? active.length - members.length : null,
+    activeUsers7d: members.filter((u) => u.lastLoginAt && u.lastLoginAt.getTime() >= weekAgo).length,
+    totalUsers: members.length,
+    weeks,
+    lastCounseling: last(lastCounsel),
+    lastContact: last(lastContact),
+  };
+}
 
 export async function GET(req: Request) {
   return handle(async () => {
@@ -238,6 +290,7 @@ export async function GET(req: Request) {
       internshipComposition: null,
       projectHeadcount: null,
       labs: null,
+      activity: null,
       recentHistories: [],
     };
 
@@ -248,7 +301,7 @@ export async function GET(req: Request) {
     const [
       byStatus, deptRows, divRows, regionRows, typeRows, divisions, recent,
       collabRows, studentTotal, studentGraduated, studentWithProject, studentWithIntern,
-      gradeRows, attentionRows, internRows, projectRows, labRows, followUpRows,
+      gradeRows, attentionRows, internRows, projectRows, labRows, followUpRows, activity,
     ] = await Promise.all([
       prisma.company.groupBy({ by: ['status'], where: { isActive: true }, _count: { _all: true } }),
       prisma.project.groupBy({ by: ['dept'], _count: { _all: true } }),
@@ -300,6 +353,7 @@ export async function GET(req: Request) {
           histories: { select: { contactDate: true }, orderBy: { contactDate: 'desc' }, take: 1 },
         },
       }),
+      loadActivity(user.role),
     ]);
 
     const collabCount = new Map<string, number>();
@@ -457,6 +511,7 @@ export async function GET(req: Request) {
         labCount: labAgg.size,
         unlinked: projectTotal - labbedTotal,
       },
+      activity,
       recentHistories: recent.map((h) => ({
         id: h.id, companyId: h.companyId, companyName: h.company.name,
         professor: h.professor || '', contactDate: h.contactDate,

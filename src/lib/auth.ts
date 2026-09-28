@@ -63,6 +63,12 @@ export async function getCurrentUser(): Promise<AppUserCtx | null> {
   }
 
   if (!user || !user.active) return null;
+  // 마지막 접속 시각. 세션이 살아 있는 동안에는 로그인이 다시 일어나지 않아서, 로그인
+  // 때만 적으면 가입한 날에서 멈춘다. 요청마다 적으면 매번 DB 쓰기가 생기니 한 시간에
+  // 한 번만 갱신하고, 응답이 이 쓰기를 기다리지도 않게 한다
+  if (!user.lastLoginAt || Date.now() - user.lastLoginAt.getTime() > 3600e3) {
+    void prisma.appUser.update({ where: { email }, data: { lastLoginAt: new Date() } }).catch(() => {});
+  }
   return { email: user.email, name: user.name || email, role: user.role };
 }
 
