@@ -130,7 +130,8 @@ export type FollowUp = {
 export type DistributionItem = { key: string; count: number; code?: string; version?: string };
 
 /** 한 주(한국 시각 월요일 시작)에 입력된 기록 수 */
-export type ActivityWeek = { start: string; counselings: number; contacts: number };
+export type ActivityWeek = { start: string; counselings: number; contacts: number; companies: number };
+export type LastInput = { at: string; by: string | null } | null;
 
 /** 사용자 활동. 성과가 아니라 시스템이 실제로 쓰이고 있는지 보는 값이다 */
 export type UserActivity = {
@@ -142,8 +143,9 @@ export type UserActivity = {
   totalUsers: number;
   /** 최근 12주. 마지막 칸이 이번 주 */
   weeks: ActivityWeek[];
-  lastCounseling: { at: string; by: string | null } | null;
-  lastContact: { at: string; by: string | null } | null;
+  lastCounseling: LastInput;
+  lastContact: LastInput;
+  lastCompany: LastInput;
 };
 
 /** 학생 관리 현황. 대시보드에 학생 지표가 하나도 없던 공백을 채운다 */

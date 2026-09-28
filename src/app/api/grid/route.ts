@@ -105,7 +105,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   return handle(async () => {
-    await requireRole('ADMIN');
+    const user = await requireRole('ADMIN');
     const body = await req.json();
     const rawRows: unknown[] = Array.isArray(body?.rows) ? body.rows : [];
     const results: { ok: boolean; id?: string; name: string; error?: string; reactivated?: boolean }[] = [];
@@ -160,7 +160,7 @@ export async function POST(req: Request) {
             } else {
               const code = await nextCode(tx, 'company');
               const created = await tx.company.create({
-                data: { code, name: r.name, ...companyData, collaboration: { create: collabData } },
+                data: { code, name: r.name, ...companyData, createdBy: user.email, collaboration: { create: collabData } },
               });
               companyId = created.id;
               results.push({ ok: true, id: companyId, name: r.name });

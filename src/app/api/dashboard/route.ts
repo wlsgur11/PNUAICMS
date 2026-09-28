@@ -71,26 +71,35 @@ function kstWeekStart(t: number): string {
 /**
  * 사용자 활동. 입력 건수는 상담일, 컨택일이 아니라 기록을 만든 시각으로 센다.
  * 상담일은 만난 날이라 지난달 상담을 오늘 적으면 지난달로 들어가서, 입력이 끊겼는지
- * 알 수 없다. 두 기록 모두 화면에서 한 건씩만 만들어지고 엑셀로 한꺼번에 들어오는
- * 길이 없어서, 만든 시각이 곧 사람이 입력한 시각이다.
+ * 알 수 없다. 상담과 컨택은 화면에서 한 건씩만 만들어져 만든 시각이 곧 사람이 입력한
+ * 시각이다. 기업은 엑셀 가져오기로 수십 곳이 한 번에 들어오기도 한다. 그것도 등록이라
+ * 그대로 세고, 화면이 줄마다 눈금을 따로 잡아 한 주가 튀어도 다른 줄이 눌리지 않게 한다.
  */
 async function loadActivity(role: Role): Promise<UserActivity> {
   const WEEKS = 12;
   const now = Date.now();
   const starts = Array.from({ length: WEEKS }, (_, i) => kstWeekStart(now - (WEEKS - 1 - i) * 7 * 864e5));
   const since = new Date(Date.parse(`${starts[0]}T00:00:00Z`) - KST_MS);
-  const [users, counsel, contact, lastCounsel, lastContact] = await Promise.all([
+  const recent = { where: { createdAt: { gte: since } }, select: { createdAt: true } } as const;
+  const latest = { orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } } as const;
+  const [users, counsel, contact, company, lastCounsel, lastContact, lastCompany] = await Promise.all([
     prisma.appUser.findMany({ select: { email: true, name: true, role: true, active: true, lastLoginAt: true } }),
-    prisma.counseling.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
-    prisma.contactHistory.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
-    prisma.counseling.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } }),
-    prisma.contactHistory.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } }),
+    prisma.counseling.findMany(recent),
+    prisma.contactHistory.findMany(recent),
+    prisma.company.findMany(recent),
+    prisma.counseling.findFirst(latest),
+    prisma.contactHistory.findFirst(latest),
+    prisma.company.findFirst(latest),
   ]);
 
-  const weeks = starts.map((start) => ({ start, counselings: 0, contacts: 0 }));
+  const weeks = starts.map((start) => ({ start, counselings: 0, contacts: 0, companies: 0 }));
   const slot = new Map(starts.map((s, i) => [s, weeks[i]]));
-  for (const r of counsel) { const w = slot.get(kstWeekStart(r.createdAt.getTime())); if (w) w.counselings++; }
-  for (const r of contact) { const w = slot.get(kstWeekStart(r.createdAt.getTime())); if (w) w.contacts++; }
+  const tally = (rows: { createdAt: Date }[], key: 'counselings' | 'contacts' | 'companies') => {
+    for (const r of rows) { const w = slot.get(kstWeekStart(r.createdAt.getTime())); if (w) w[key]++; }
+  };
+  tally(counsel, 'counselings');
+  tally(contact, 'contacts');
+  tally(company, 'companies');
 
   const nameOf = new Map(users.map((u) => [u.email, u.name || u.email.split('@')[0]]));
   const last = (r: { createdAt: Date; createdBy: string | null } | null) => r && {
@@ -108,6 +117,7 @@ async function loadActivity(role: Role): Promise<UserActivity> {
     weeks,
     lastCounseling: last(lastCounsel),
     lastContact: last(lastContact),
+    lastCompany: last(lastCompany),
   };
 }
 
