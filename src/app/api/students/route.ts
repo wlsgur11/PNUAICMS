@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
-import { studentWhere, studentOrderBy } from '@/lib/list-filters';
+import { studentWhere, studentOrderBy, counselCountFilter } from '@/lib/list-filters';
 import { studentCreateSchema } from '@/lib/validation';
 import type { StudentListRow } from '@/lib/student-shape';
 
@@ -43,11 +43,13 @@ export async function GET(req: Request) {
   return handle(async () => {
     await requireRole('ADMIN');
     const sp = new URL(req.url).searchParams;
-    const items = await prisma.student.findMany({
+    const found = await prisma.student.findMany({
       where: studentWhere(sp),
       orderBy: studentOrderBy(sp),
       include: { _count: { select: { counselings: true } } },
     });
+    const keep = counselCountFilter(sp);
+    const items = keep ? found.filter(keep) : found;
     const rows: StudentListRow[] = items.map((s) => ({
       studentNo: s.studentNo,
       studentName: s.name || s.nameMasked || '-',

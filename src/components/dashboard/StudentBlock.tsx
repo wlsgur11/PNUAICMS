@@ -55,7 +55,11 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
               <div className="dash-metric-value" style={{ color: s.needsAttention > 0 ? 'var(--red-600)' : 'var(--text-1)' }}>
                 <CountUp end={s.needsAttention} /><span className="unit">명</span>
               </div>
-              <div className="dash-metric-sub">3~4학년, 상담 2회 미만</div>
+              <div className="dash-metric-sub">
+                {s.needsAttention > 0
+                  ? <Link href="/students?counsel=관리필요" className="text-link">3~4학년, 상담 2회 미만 보기</Link>
+                  : '3~4학년, 상담 2회 미만'}
+              </div>
             </div>
           </div>
 

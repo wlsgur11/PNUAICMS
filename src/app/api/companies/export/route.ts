@@ -9,6 +9,8 @@ import ExcelJS from 'exceljs';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { COLLAB_FIELDS } from '@/lib/enums';
+import { kstDate } from '@/lib/kst';
+import { companyWhere } from '@/lib/list-filters';
 
 const COLLAB_KEYS = [
   'internship', 'industryProject', 'curriculumCommittee', 'guestLecture',
@@ -20,26 +22,7 @@ export async function GET(req: Request) {
   await requireRole('ADMIN');
   const sp = new URL(req.url).searchParams;
 
-  // ── 필터(목록 GET 과 동일 규칙) ──
-  const q = sp.get('q')?.trim();
-  const region = sp.get('region')?.trim();
-  const priority = sp.get('priority')?.trim();
-  const status = sp.get('status')?.trim();
-  const aiField = sp.get('aiField')?.trim();
-  const mou = sp.get('mou') === '1';
-  const includeInactive = sp.get('includeInactive') === '1';
-
-  const where: Record<string, unknown> = {};
-  if (!includeInactive) where.isActive = true;
-  if (q) where.name = { contains: q, mode: 'insensitive' };
-  if (region) where.region = region;
-  if (priority) where.priority = priority;
-  if (status) where.status = status;
-  if (aiField) where.aiField = { contains: aiField, mode: 'insensitive' };
-  if (mou) where.mou = true;
-  const collabConds: Record<string, true> = {};
-  for (const k of COLLAB_KEYS) if (sp.get(k) === '1') collabConds[k] = true;
-  if (Object.keys(collabConds).length) where.collaboration = { is: collabConds };
+  const where = companyWhere(sp); // 목록 GET 과 같은 함수
 
   const companies = await prisma.company.findMany({
     where,
@@ -138,7 +121,7 @@ export async function GET(req: Request) {
   ws.views = [{ state: 'frozen', ySplit: 1 }];
 
   const arrayBuf = await wb.xlsx.writeBuffer();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = kstDate();
   const filename = `companies_${today}.xlsx`;
 
   return new Response(arrayBuf as ArrayBuffer, {

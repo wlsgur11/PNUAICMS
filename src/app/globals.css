@@ -617,6 +617,26 @@ a {
   margin-top: 0;
 }
 
+/* 학생 상세. 넓은 화면에서는 상담을 오른쪽에 두어 기본 정보와 나란히 본다. 상담이 주 업무인데
+   기본 정보 카드가 490px 이라 1280 노트북에서 상담 목록이 화면 아래로 밀렸다.
+   좁은 화면은 한 줄로 쌓고 순서는 기본 정보, 상담, 나머지 그대로다.
+   카드 사이 간격은 gap 으로만 준다. .card+.card 에 맡기면 사업 참여 묶음 앞뒤가 0 으로 붙었다 */
+.student-detail {
+  display: grid;
+  gap: 20px;
+  grid-template-areas: "info" "counsel" "programs" "projects" "intern";
+}
+.student-detail > .card + .card { margin-top: 0; }
+@media (min-width: 1200px) {
+  .student-detail {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-areas: "info counsel" "programs counsel" "projects counsel" "intern counsel";
+    /* 상담이 왼쪽보다 길면 남는 높이를 마지막 줄이 받는다. 안 그러면 왼쪽 카드 사이가 벌어진다 */
+    grid-template-rows: auto auto auto 1fr;
+    align-items: start;
+  }
+}
+
 .card-head {
   display: flex;
   align-items: center;
