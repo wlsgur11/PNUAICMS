@@ -276,6 +276,19 @@ a {
   margin-top: 1px;
 }
 
+/* 약어 풀이. 사이드바 폭(글자 220px)에 한 줄로 안 들어가 두 줄로 접힌다 */
+.brand-full {
+  font-size: calc(10px * var(--fs, 1));
+  line-height: 1.45;
+  color: var(--text-3);
+  margin: -6px 0 16px;
+}
+.brand-full b {
+  font-weight: 600;
+  color: var(--text-2);
+  margin-right: 2px;
+}
+
 .brand-divider {
   height: 1px;
   background: var(--sidebar-border);
@@ -509,7 +522,8 @@ a {
     padding: 0;
   }
 
-  :root[data-sidebar="collapsed"] .brand-text {
+  :root[data-sidebar="collapsed"] .brand-text,
+  :root[data-sidebar="collapsed"] .brand-full {
     display: none;
   }
 
@@ -1393,6 +1407,7 @@ table.data-table {
   }
 
   .brand-sub,
+  .brand-full,
   .brand-divider,
   .sidebar-collapse {
     display: none;
