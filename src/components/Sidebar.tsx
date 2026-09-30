@@ -137,6 +137,10 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
           <div className="brand-sub">부산대 AI융합교육원</div>
         </div>
       </div>
+      {/* AICMS 가 무엇의 약자인지. C 는 산학협력(Cooperation). 로고 옆은 폭이 좁아 아래에 따로 둔다 */}
+      <div className="brand-full">
+        <b>AICMS</b> Artificial Intelligence Cooperation Management System
+      </div>
       <button
         type="button"
         className="sidebar-collapse"
