@@ -11,7 +11,7 @@ type Props = {
 };
 
 export const metadata = {
-  title: 'AI 산학협력 관리 시스템 - 부산대학교 AI융합교육원',
+  title: '산학협력 AI 관리 시스템 - 부산대학교 AI융합교육원',
   description: '기업 정보와 산학협력·인턴십 실적, 학생 이력을 한곳에서 관리합니다.',
 };
 
@@ -128,7 +128,7 @@ export default async function LoginPage({ searchParams }: Props) {
           <a className="lp-brand" href="#top">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-pnu.png" alt="" className="lp-brand-logo" />
-            <span className="lp-brand-name">AI 산학협력 관리 시스템</span>
+            <span className="lp-brand-name">산학협력 AI 관리 시스템</span>
           </a>
           <nav className="lp-nav-links">
             {NAV.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
@@ -143,7 +143,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <div className="lp-hero-in">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">부산대학교 AI융합교육원</p>
-            <h1 className="lp-h1">기업을 찾고, 실적을 쌓고,<br />학생을 잇는다</h1>
+            <h1 className="lp-h1">산학협력 AI 관리 시스템</h1>
             <p className="lp-lead">
               산학협력 기업 정보부터 실적 집계, 학생 상담 이력까지 한 화면에서 이어집니다.
               엑셀로 흩어져 있던 기록을 한곳에 모아 두고, 목표 대비 어디까지 왔는지 바로 확인합니다.
