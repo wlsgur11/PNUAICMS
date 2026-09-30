@@ -12,7 +12,7 @@ import { getCurrentUser } from '@/lib/auth';
 import pkg from '../../package.json';
 
 export const metadata: Metadata = {
-  title: 'AI 산학협력 관리 시스템',
+  title: '산학협력 AI 관리 시스템',
   description: 'AI기업 인턴십·취업연계·산학협력 관리',
 };
 

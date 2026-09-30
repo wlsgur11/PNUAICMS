@@ -133,7 +133,7 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
       <div className="brand">
         <img className="brand-logo" src="/emblem.png" alt="부산대학교" width={32} height={32} />
         <div className="brand-text">
-          <div className="brand-name">AI 산학협력 관리</div>
+          <div className="brand-name">산학협력 AI 관리</div>
           <div className="brand-sub">부산대 AI융합교육원</div>
         </div>
       </div>
