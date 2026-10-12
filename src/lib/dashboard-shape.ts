@@ -4,6 +4,8 @@
  * 대시보드 API 응답 타입. 라우트와 화면 컴포넌트가 같은 정의를 본다.
  * 컴포넌트는 이 타입의 자기 몫만 props 로 받고 직접 fetch 하지 않는다.
  */
+import type { BackupStatus } from './backup-status';
+export type { BackupStatus, BackupRun } from './backup-status';
 
 /** 목표 대비 한 항목 (산학협력 / 인턴십). target·achieved 는 0~1 소수 비율, students 는 참여 학부생 명수. */
 export type GoalMetric = {
@@ -139,6 +141,8 @@ export type UserActivity = {
   pendingUsers: number | null;
   /** 권한 있는 계정 중 최근 7일 안에 접속한 수 */
   activeUsers7d: number;
+  /** 서버 백업과 복구 검증 결과. 손쓸 수 있는 슈퍼관리자에게만, 운영 서버에서만 온다 */
+  backup: BackupStatus | null;
   /** 권한 있는(일반이 아닌) 활성 계정 수 */
   totalUsers: number;
   /** [지난주, 이번 주] */

@@ -16,6 +16,10 @@ services:
     # 127.0.0.1 만 바인딩: 외부 평문 접근(http://IP:3000) 차단, Caddy(호스트, localhost:3000)만 도달.
     ports:
       - '127.0.0.1:3000:3000'
+    # 백업, 복구 검증 결과 한 줄짜리 파일만 읽기 전용으로 붙인다(대시보드 표시용).
+    # 덤프가 있는 상위 폴더는 붙이지 않는다. 폴더는 deploy.sh 가 미리 만든다
+    volumes:
+      - ${HOME}/cms-backups/status:/backup-status:ro
     depends_on:
       - db
 
