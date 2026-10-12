@@ -18,6 +18,7 @@ import {
 import { COLLAB_FIELDS } from '@/lib/enums';
 import { isJunkValue, FOLLOWUP_DONE, followupCutoff, NEEDS_COUNSEL_WHERE, NEEDS_COUNSEL_MAX } from '@/lib/list-filters';
 import { KST_MS } from '@/lib/kst';
+import { loadBackupStatus } from '@/lib/backup-status';
 
 // AUTH_BYPASS=true 일 때 Next 가 이 라우트를 정적 캐시하는 것을 막는다.
 export const dynamic = 'force-dynamic';
@@ -83,7 +84,7 @@ async function loadActivity(role: Role): Promise<UserActivity> {
   const since = new Date(Date.parse(`${starts[0]}T00:00:00Z`) - KST_MS);
   const recent = { where: { createdAt: { gte: since } }, select: { createdAt: true } } as const;
   const latest = { orderBy: { createdAt: 'desc' }, select: { createdAt: true, createdBy: true } } as const;
-  const [users, counsel, contact, company, lastCounsel, lastContact, lastCompany] = await Promise.all([
+  const [users, counsel, contact, company, lastCounsel, lastContact, lastCompany, backup] = await Promise.all([
     prisma.appUser.findMany({ select: { email: true, name: true, role: true, active: true, lastLoginAt: true } }),
     prisma.counseling.findMany(recent),
     prisma.contactHistory.findMany(recent),
@@ -91,6 +92,7 @@ async function loadActivity(role: Role): Promise<UserActivity> {
     prisma.counseling.findFirst(latest),
     prisma.contactHistory.findFirst(latest),
     prisma.company.findFirst(latest),
+    role === 'SUPER' ? loadBackupStatus() : Promise.resolve(null),
   ]);
 
   const weeks = starts.map((start) => ({ start, counselings: 0, contacts: 0, companies: 0 }));
@@ -114,6 +116,7 @@ async function loadActivity(role: Role): Promise<UserActivity> {
   return {
     pendingUsers: role === 'SUPER' ? active.length - members.length : null,
     activeUsers7d: members.filter((u) => u.lastLoginAt && u.lastLoginAt.getTime() >= weekAgo).length,
+    backup,
     totalUsers: members.length,
     weeks,
     lastCounseling: last(lastCounsel),

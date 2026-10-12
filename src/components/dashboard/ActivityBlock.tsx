@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import CountUp from '@/components/CountUp';
-import type { ActivityWeek, LastInput, UserActivity } from '@/lib/dashboard-shape';
+import type { ActivityWeek, BackupRun, LastInput, UserActivity } from '@/lib/dashboard-shape';
 
 /** 달력 날짜로 며칠 전인지. 어제 밤에 적은 것을 아침에 보면 '어제' 여야 한다 */
 function ago(iso: string) {
@@ -23,6 +23,20 @@ const INPUTS: { key: Key; label: string; unit: string; last: 'lastCounseling' | 
 ];
 
 const lastOf = (l: LastInput) => (l ? `마지막 입력 ${ago(l.at)}${l.by ? `, ${l.by}` : ''}` : '입력된 기록 없음');
+
+/** 백업은 매일 03시, 복구 검증은 04시에 돈다. 하루 반이 지나도 새 기록이 없으면 멈춘 것 */
+const STALE_MS = 36 * 3600e3;
+const hhmm = (iso: string) => {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+function runState(r: BackupRun | null, okWord: string): { bad: boolean; text: string } {
+  if (!r) return { bad: true, text: '기록 없음' };
+  const when = `${ago(r.at)} ${hhmm(r.at)}`;
+  if (!r.ok) return { bad: true, text: `실패 (${when})` };
+  if (Date.now() - Date.parse(r.at) > STALE_MS) return { bad: true, text: `멈춤 (마지막 ${when})` };
+  return { bad: false, text: `${okWord} (${when})` };
+}
 
 const inline = { display: 'flex', alignItems: 'baseline', gap: 8 } as const;
 const inlineNum = { fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 600, color: 'var(--text-1)' } as const;
@@ -67,6 +81,16 @@ export default function ActivityBlock({ a }: { a: UserActivity }) {
           <span className="dash-num" style={inlineNum}>{a.activeUsers7d}명</span>
           <span className="dash-metric-sub" style={{ marginTop: 0 }}>권한 있는 계정 {a.totalUsers}명 중</span>
         </div>
+        {/* DB 가 서버 한 대뿐이라 백업이 유일한 안전장치다. 로그 파일만 보면 멈춰도 모른다 */}
+        {a.backup && ([['백업', a.backup.backup, '정상'], ['복구 검증', a.backup.verify, '통과']] as const).map(([label, r, okWord]) => {
+          const s = runState(r, okWord);
+          return (
+            <div key={label} style={inline} title={r?.detail || undefined}>
+              <span className="dash-metric-label" style={{ marginBottom: 0 }}>{label}</span>
+              <span style={{ fontSize: 'calc(14px * var(--fs, 1))', fontWeight: 600, color: s.bad ? 'var(--red-600)' : 'var(--text-1)' }}>{s.text}</span>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{
