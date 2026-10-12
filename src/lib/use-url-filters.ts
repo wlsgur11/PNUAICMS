@@ -29,8 +29,21 @@ export function filterParams<T extends FilterShape>(f: T): URLSearchParams {
   return p;
 }
 
+/**
+ * 목록 화면이 마지막으로 보던 주소(조건 포함). 상세의 '목록' 버튼이 이리로 돌아간다.
+ * 뒤로가기에 기대면, 상세에서 수정하고 저장한 뒤에는 목록이 아니라 수정 화면으로 돌아갔다.
+ */
+const listKey = (path: string) => `list:${path}`;
+function rememberList() {
+  try { sessionStorage.setItem(listKey(window.location.pathname), window.location.pathname + window.location.search); } catch { /* 저장소를 막아 둔 브라우저 */ }
+}
+export function listHref(path: string): string {
+  try { return sessionStorage.getItem(listKey(path)) ?? path; } catch { return path; }
+}
+
 export function useUrlFilters<T extends FilterShape>(empty: T, delayMs = 250) {
   const sp = useSearchParams();
+  useEffect(rememberList, []);
 
   // URL 쿼리 → 필터. 없는 키는 empty 의 기본값을 쓴다(예: sort=name_asc).
   const parse = (): T => {
@@ -54,6 +67,7 @@ export function useUrlFilters<T extends FilterShape>(empty: T, delayMs = 250) {
     setApplied(f);
     const qs = filterParams(f).toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+    rememberList();
   }, []);
 
   // 필터가 바뀌면 자동 반영. 실제로 달라진 게 없으면(첫 렌더, 반영 직후) 아무것도 하지 않아

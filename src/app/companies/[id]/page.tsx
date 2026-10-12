@@ -10,6 +10,7 @@ import PageHeader from '@/components/PageHeader';
 import HistoryDetailModal, { type HistoryDetail } from '@/components/HistoryDetailModal';
 import { COLLAB_FIELDS, ENUMS } from '@/lib/enums';
 import { clickKeys } from '@/lib/a11y';
+import { listHref } from '@/lib/use-url-filters';
 
 /** 변경 후 기업 목록·대시보드 캐시도 함께 무효화 */
 function revalidateAllCompanies() {
@@ -108,15 +109,13 @@ export default function CompanyDetailPage() {
     <>
       <PageHeader title="기업 상세 정보" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-        {/* 목록의 검색 조건을 유지하려면 새로 /companies 로 가는 대신 뒤로 가야 한다.
-            (직접 URL 로 들어온 경우엔 히스토리가 없으므로 href 로 그냥 이동) */}
+        {/* 목록이 마지막으로 보던 조건으로 돌아간다. 뒤로가기를 쓰면 기본정보를 수정한 뒤에는
+            목록이 아니라 수정 화면으로 돌아갔다. href 는 저장된 주소가 없을 때의 기본값 */}
         <Link
           className="back-link"
           href="/companies"
           style={{ marginBottom: 0 }}
-          onClick={(e) => {
-            if (window.history.length > 1) { e.preventDefault(); router.back(); }
-          }}
+          onClick={(e) => { e.preventDefault(); router.push(listHref('/companies')); }}
         >
           ← 목록으로 돌아가기
         </Link>
@@ -342,7 +341,7 @@ export default function CompanyDetailPage() {
           setEditHistory({
             id: h.id, version: h.version, contactDate: h.contactDate ?? today(),
             histStatus: h.histStatus ?? '논의중', content: h.content ?? '',
-            method: h.method ?? '미팅', professor: h.professor ?? '',
+            method: h.method ?? undefined, professor: h.professor ?? '',
             business: h.business ?? null,
             personId: h.personId ?? null,
           });
@@ -421,7 +420,8 @@ function HistoryModal({
     personId: initial?.personId ?? '',
     professor: initial?.professor ?? '',
     business: initial?.business ?? '',
-    method: initial?.method ?? '미팅',
+    // 새 이력은 '미팅' 으로 시작한다. 고칠 때는 비어 있던 값을 그대로 둔다(예전엔 '미팅' 으로 바뀌어 저장됐다)
+    method: initial ? (initial.method ?? '') : '미팅',
     content: initial?.content ?? '',
     histStatus: initial?.histStatus ?? '논의중',
   });
@@ -432,7 +432,7 @@ function HistoryModal({
     if (!f.contactDate) { toast('컨택일자는 필수입니다.', 'error'); return; }
     setSaving(true);
     // 사업단 미선택('')은 null 로 보낸다 (enum 검증 통과용)
-    const payload = { ...f, business: f.business || null };
+    const payload = { ...f, business: f.business || null, method: f.method || null };
     try {
       if (editing && initial?.id) {
         await api(`/api/histories/${initial.id}`, {
@@ -467,7 +467,9 @@ function HistoryModal({
           </select>
         </div>
         <div className="form-field"><label htmlFor={`${fid}-5`}>컨택방식</label>
-          <select id={`${fid}-5`} value={f.method} onChange={(e) => set('method', e.target.value)}>{ENUMS.CONTACT_METHOD.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+          <select id={`${fid}-5`} value={f.method} onChange={(e) => set('method', e.target.value)}>
+            <option value="">선택 안함</option>{ENUMS.CONTACT_METHOD.map((x) => <option key={x} value={x}>{x}</option>)}
+          </select>
         </div>
         <div className="form-field"><label htmlFor={`${fid}-6`}>상태</label>
           <select id={`${fid}-6`} value={f.histStatus} onChange={(e) => set('histStatus', e.target.value)}>{ENUMS.HISTORY_STATUS.map((x) => <option key={x} value={x}>{x}</option>)}</select>
@@ -534,7 +536,9 @@ function CollabModal({ companyId, collab, mou: mouInit, onClose, onSaved }: { co
 function Modal({ title, children, onClose, onSave, saving }: { title: string; children: React.ReactNode; onClose: () => void; onSave: () => void; saving: boolean }) {
   return (
     <div className="modal-root">
-      <div className="modal-backdrop" onClick={onClose} />
+      {/* 바깥을 눌러도 닫지 않는다. 컨택 내용을 길게 적다가 바깥을 잘못 누르면 확인 없이 다 사라졌다.
+          닫기는 '취소' 로만 한다 */}
+      <div className="modal-backdrop" />
       <div className="modal-card">
         <h3 className="modal-title">{title}</h3>
         {children}
