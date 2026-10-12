@@ -37,6 +37,8 @@ read -rp $'\n이 이미지로 배포할까요? (y/N) ' ans
 
 # 5) 해당 SHA 이미지 pull + 무중단에 가깝게 교체
 export TAG="${TARGET}"
+# 앱에 붙이는 백업 상태 폴더. 없으면 도커가 root 소유로 만들어 백업 스크립트가 못 쓴다
+mkdir -p "$HOME/cms-backups/status"
 ${COMPOSE} pull
 ${COMPOSE} up -d
 echo "${TARGET}" > .deployed-sha

@@ -9,10 +9,20 @@
 #
 # 주의: 덤프에 학생 실명과 연락처가 들어있다. 같은 디스크에만 두면
 #       디스크가 죽을 때 백업도 함께 죽는다. 외부로 복사하는 것을 권장한다.
+#
+# 결과는 ~/cms-backups/status/backup.json 에 한 줄로 남긴다. 앱이 이 폴더만 읽기 전용으로
+# 붙여서 대시보드에 보여 준다. 로그 파일만 있으면 실패해도 아무도 모른다.
 # ─────────────────────────────────────────────────────────
 set -euo pipefail
 cd "$(dirname "$0")"
 BACKUP_DIR="$HOME/cms-backups"; mkdir -p "$BACKUP_DIR"
+STATUS_DIR="$BACKUP_DIR/status"; mkdir -p "$STATUS_DIR"
+# 반쯤 쓴 파일을 앱이 읽지 않도록 임시 파일에 쓰고 옮긴다
+status() {
+  printf '{"ok":%s,"at":"%s","detail":"%s"}\n' "$1" "$(date -Iseconds)" "$2" > "$STATUS_DIR/backup.json.tmp"
+  mv "$STATUS_DIR/backup.json.tmp" "$STATUS_DIR/backup.json"
+}
+trap 'status false "백업 실패. backup.log 확인"' ERR
 TS=$(date +%Y%m%d-%H%M%S)
 PGPW="$(grep '^POSTGRES_PASSWORD=' .env | tail -1 | sed 's/^POSTGRES_PASSWORD=//')"
 docker exec -e PGPASSWORD="$PGPW" cms_db pg_dump -U cms -h 127.0.0.1 -d cms --no-owner --no-acl -Fc -f /tmp/cms-$TS.dump
@@ -21,4 +31,5 @@ docker exec cms_db rm -f /tmp/cms-$TS.dump
 # docker cp 는 644 로 떨어진다. 개인정보가 든 파일이라 주인만 읽게 조인다.
 chmod 600 "$BACKUP_DIR/cms-$TS.dump"
 find "$BACKUP_DIR" -name 'cms-*.dump' -mtime +14 -delete
+status true "cms-$TS.dump, $(du -h "$BACKUP_DIR/cms-$TS.dump" | cut -f1)"
 echo "$(date) backup OK: cms-$TS.dump"

@@ -13,29 +13,50 @@
 # 운영 DB 는 건드리지 않는다. 읽는 것은 덤프 파일과 cms_db 의 버전 문자열뿐이고,
 # 복원은 포트를 열지 않은 별도 컨테이너 안에서만 일어난다. 끝나면 지운다.
 #
-# cron 예시 (매주 월요일 04시, 백업 03시 다음):
-#   0 4 * * 1 /home/swedu-5/cms/verify-backup.sh >> /home/swedu-5/cms-backups/verify.log 2>&1
+# 결과는 ~/cms-backups/status/verify.json 에 남기고 앱 대시보드가 보여 준다.
+# 최신 덤프가 이틀보다 오래됐으면 복원이 되더라도 실패로 친다. 백업 cron 이 멈춰도
+# 옛 덤프는 계속 복원되니, 이걸 안 보면 '검증 통과' 가 매일 찍힌다.
+#
+# cron (매일 04시, 백업 03시 다음):
+#   0 4 * * * /home/swedu-5/cms/verify-backup.sh >> /home/swedu-5/cms-backups/verify.log 2>&1
 # ─────────────────────────────────────────────────────────
 set -euo pipefail
 cd "$(dirname "$0")"
 
 BACKUP_DIR="${BACKUP_DIR:-$HOME/cms-backups}"
+STATUS_DIR="$BACKUP_DIR/status"; mkdir -p "$STATUS_DIR"
+CHECK_CT=cms_restore_check
 DUMP="${1:-}"
+
+# 어디서 끝나든 결과를 남긴다. 실패 경로는 exit 전에 MSG 만 채운다
+OK=false
+MSG="검증이 중간에 멈췄습니다. verify.log 확인"
+cleanup() { docker rm -f "$CHECK_CT" >/dev/null 2>&1 || true; }
+finish() {
+  cleanup
+  printf '{"ok":%s,"at":"%s","detail":"%s"}\n' "$OK" "$(date -Iseconds)" "$MSG" > "$STATUS_DIR/verify.json.tmp"
+  mv "$STATUS_DIR/verify.json.tmp" "$STATUS_DIR/verify.json"
+}
+trap finish EXIT
+
 if [ -z "$DUMP" ]; then
   DUMP="$(ls -1t "$BACKUP_DIR"/cms-*.dump 2>/dev/null | head -1 || true)"
+  if [ -n "$DUMP" ] && [ $(( $(date +%s) - $(date -r "$DUMP" +%s) )) -gt $(( 48 * 3600 )) ]; then
+    MSG="최근 이틀 안에 만든 백업이 없습니다 (마지막 $(date -r "$DUMP" '+%m/%d %H:%M')). 백업 cron 확인"
+    echo "✗ $MSG"
+    exit 1
+  fi
 fi
 if [ -z "$DUMP" ] || [ ! -f "$DUMP" ]; then
-  echo "✗ 덤프를 찾을 수 없습니다 ($BACKUP_DIR)"
+  MSG="덤프를 찾을 수 없습니다"
+  echo "✗ $MSG ($BACKUP_DIR)"
   exit 1
 fi
 
-CHECK_CT=cms_restore_check
 # 운영과 같은 메이저 버전으로 띄운다. 버전이 다르면 복원이 되더라도 실제
 # 복구 상황을 재현한 것이 아니다. cms_db 가 없으면(관리자 PC 등) 17 로 둔다.
 PGMAJOR="$(docker exec cms_db postgres --version 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo 17)"
 
-cleanup() { docker rm -f "$CHECK_CT" >/dev/null 2>&1 || true; }
-trap cleanup EXIT
 cleanup
 
 echo "덤프      : $DUMP"
@@ -65,7 +86,7 @@ for i in $(seq 1 30); do
   echo -n "."
   sleep 1
   # && 로 쓰면 i 가 30 이 아닐 때 반복문 본문이 1 로 끝나 set -e 가 스크립트를 죽인다
-  if [ "$i" = 30 ]; then echo; echo "✗ 검증용 DB 가 뜨지 않았습니다"; exit 1; fi
+  if [ "$i" = 30 ]; then MSG="검증용 DB 가 뜨지 않았습니다"; echo; echo "✗ $MSG"; exit 1; fi
 done
 echo " 완료"
 echo
@@ -112,8 +133,11 @@ echo
 # 핵심 표에 행이 하나도 없으면 덤프는 열렸어도 내용이 비었다는 뜻이다
 COMPANIES="$(q "select count(*) from companies")"
 if [ "${TABLES:-0}" -lt 5 ] || [ "${COMPANIES:-0}" -lt 1 ] || [ "$FAIL" = 1 ]; then
-  echo "✗ 복구 검증 실패. 이 덤프로는 복구할 수 없습니다 (pg_restore 종료코드 $RESTORE_RC)"
+  MSG="$(basename "$DUMP") 로는 복구할 수 없습니다 (pg_restore 종료코드 $RESTORE_RC)"
+  echo "✗ 복구 검증 실패. $MSG"
   exit 1
 fi
 
+OK=true
+MSG="$(basename "$DUMP"), 표 ${TABLES}개, 기업 ${COMPANIES}곳 복원"
 echo "✓ 복구 검증 통과. 이 덤프로 복구할 수 있습니다"
