@@ -108,17 +108,18 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
     if (!f.name.trim()) { toast('기관명은 필수입니다.', 'error'); return; }
     if (mode === 'create' && dupBlocks) { toast('이미 등록된(활성) 기관입니다.', 'error'); return; }
     setSaving(true);
+    // 저장 뒤에는 replace 로 상세에 간다. push 면 뒤로가기가 방금 저장한 폼으로 돌아간다
     try {
       if (mode === 'create') {
         const r = await api<{ id: string; reactivated?: boolean }>('/api/companies', { method: 'POST', body: JSON.stringify(f) });
         toast(r.reactivated ? '비활성 상태였던 기관을 다시 활성화했습니다.' : '등록되었습니다.', 'success');
         invalidateCompaniesCache();
-        router.push(`/companies/${r.id}`);
+        router.replace(`/companies/${r.id}`);
       } else {
         await api(`/api/companies/${f.id}`, { method: 'PUT', body: JSON.stringify(f) });
         toast('수정되었습니다.', 'success');
         invalidateCompaniesCache();
-        router.push(`/companies/${f.id}`);
+        router.replace(`/companies/${f.id}`);
       }
     } catch (e) {
       toast((e as Error).message, 'error');

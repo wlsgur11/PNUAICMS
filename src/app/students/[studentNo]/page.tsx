@@ -8,6 +8,8 @@ import PageHeader from '@/components/PageHeader';
 import { api, today } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import { clickKeys } from '@/lib/a11y';
+import { listHref } from '@/lib/use-url-filters';
+import { confirmLeave, useLeaveGuard } from '@/lib/use-leave-guard';
 import { ENUMS, gradeLabel } from '@/lib/enums';
 import type { StudentDetail, CounselingItem } from '@/lib/student-shape';
 
@@ -66,22 +68,30 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   // null 이면 편집 중이 아니고, 'new' 면 새 상담, 그 외에는 고치고 있는 상담의 id
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ type: ENUMS.COUNSEL_TYPE[0] as string, counselDate: '', counselor: '', content: '' });
+  // 편집을 연 순간의 값. 이것과 달라졌으면 저장 안 된 내용이 있는 것
+  const [opened, setOpened] = useState('');
   const [saving, setSaving] = useState(false);
+  const dirty = editing !== null && JSON.stringify(form) !== opened;
+  useLeaveGuard(dirty);
+
+  /** 다른 상담을 열면 지금 적던 내용이 그 자리에서 바뀐다. 먼저 묻는다 */
+  const canSwitch = () => !dirty || confirm('작성 중인 상담 내용이 사라집니다. 계속할까요?');
+  const begin = (id: string, f: typeof form) => { setForm(f); setOpened(JSON.stringify(f)); setEditing(id); };
 
   const openNew = () => {
+    if (!canSwitch()) return;
     // 상담은 보통 그날, 같은 사람이 적는다. 날짜와 상담자를 미리 채워 두면 손이 덜 간다.
     // 상담자는 로그인 계정이 아니라 마지막에 적은 이름을 쓴다. 조교가 대신 넣는 경우가 있다
-    setForm({
+    begin('new', {
       type: ENUMS.COUNSEL_TYPE[0],
       counselDate: today(),
       counselor: lastCounselor(),
       content: '',
     });
-    setEditing('new');
   };
   const openEdit = (c: Required<CounselingItem>) => {
-    setForm({ type: c.type || ENUMS.COUNSEL_TYPE[0], counselDate: c.counselDate || '', counselor: c.counselor || '', content: c.content || '' });
-    setEditing(c.id);
+    if (!canSwitch()) return;
+    begin(c.id, { type: c.type || ENUMS.COUNSEL_TYPE[0], counselDate: c.counselDate || '', counselor: c.counselor || '', content: c.content || '' });
   };
 
   async function save() {
@@ -222,9 +232,9 @@ export default function StudentDetailPage({ params }: { params: { studentNo: str
         title={`${s.name || s.studentNo} 학생`}
         right={
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn" onClick={() => router.push('/students')}>목록</button>
+            <button className="btn" onClick={() => { if (confirmLeave()) router.push(listHref('/students')); }}>목록</button>
             <button className="btn" onClick={() => { window.location.href = `/api/students/${s.studentNo}/export`; }}>Excel</button>
-            <button className="btn btn-primary" onClick={() => router.push(`/students/${s.studentNo}/edit`)}>정보 수정</button>
+            <button className="btn btn-primary" onClick={() => { if (confirmLeave()) router.push(`/students/${s.studentNo}/edit`); }}>정보 수정</button>
             <button className="btn btn-danger" onClick={remove}>삭제</button>
           </div>
         }

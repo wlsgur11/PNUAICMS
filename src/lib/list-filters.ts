@@ -74,7 +74,8 @@ export function studentWhere(sp: URLSearchParams): Prisma.StudentWhereInput {
   const and: Prisma.StudentWhereInput[] = [];
   const dept = sp.get('department'); if (dept) and.push({ department: dept });
   const major = sp.get('major'); if (major) and.push({ major: major });
-  const grade = sp.get('grade'); if (grade) and.push({ grade: Number(grade) });
+  // 'none' 은 학년 미입력. 실적 엑셀로 들어온 학생은 거의 다 비어 있어서 채울 대상을 뽑을 때 쓴다
+  const grade = sp.get('grade'); if (grade) and.push({ grade: grade === 'none' ? null : Number(grade) });
   const career = sp.get('careerGoal'); if (career) and.push({ careerGoal: career });
 
   const status = sp.get('status'); // '재학' | '졸업'
