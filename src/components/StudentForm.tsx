@@ -14,7 +14,7 @@ export type StudentFormData = {
   name: string;
   department: string;
   major: string;
-  grade: number;
+  grade: string; // '' = 미입력. 실적 엑셀로 들어온 학생 대부분이 비어 있다
   gpa: string;
   careerGoal: string;
   phone: string;
@@ -30,7 +30,7 @@ export type StudentFormData = {
 };
 
 export const EMPTY_STUDENT: StudentFormData = {
-  studentNo: '', name: '', department: '', major: '', grade: 1, gpa: '', careerGoal: '',
+  studentNo: '', name: '', department: '', major: '', grade: '', gpa: '', careerGoal: '',
   phone: '', email: '', certificates: '', foreignLanguages: '', clubs: '', graduationDate: '', employmentCompany: '',
   swPrograms: [], bootcampPrograms: [], internships: [],
 };
@@ -69,7 +69,7 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
       name: f.name.trim(),
       department: f.department.trim() || null,
       major: f.major.trim() || null,
-      grade: Number(f.grade),
+      grade: f.grade === '' ? null : Number(f.grade),
       gpa: f.gpa === '' ? null : Number(f.gpa),
       careerGoal: f.careerGoal || null,
       phone: f.phone.trim() || null,
@@ -87,15 +87,16 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
     };
 
     setSaving(true);
+    // 저장 뒤에는 replace 로 상세에 간다. push 면 뒤로가기가 방금 저장한 폼으로 돌아간다
     try {
       if (mode === 'create') {
         await api('/api/students', { method: 'POST', body: JSON.stringify(payload) });
         toast('등록되었습니다.', 'success');
-        router.push(`/students/${f.studentNo.trim()}`);
+        router.replace(`/students/${f.studentNo.trim()}`);
       } else {
         await api(`/api/students/${originalNo.current}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast('수정되었습니다.', 'success');
-        router.push(`/students/${f.studentNo.trim()}`);
+        router.replace(`/students/${f.studentNo.trim()}`);
       }
     } catch (e) {
       toast((e as Error).message, 'error');
@@ -129,7 +130,9 @@ export default function StudentForm({ initial, mode }: { initial?: StudentFormDa
         </div>
         <div className="form-field">
           <label htmlFor={`${fid}-5`}>학년</label>
-          <select id={`${fid}-5`} value={f.grade} onChange={(e) => set('grade', Number(e.target.value))}>
+          {/* 미입력 칸이 없으면 학년을 모르는 학생도 수정할 때마다 1학년으로 저장됐다 */}
+          <select id={`${fid}-5`} value={f.grade} onChange={(e) => set('grade', e.target.value)}>
+            <option value="">미입력</option>
             {GRADES.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
           </select>
         </div>

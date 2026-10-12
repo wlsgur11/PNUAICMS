@@ -15,7 +15,7 @@ export default function EditStudentPage({ params }: { params: { studentNo: strin
     name: s.name ?? '',
     department: s.department ?? '',
     major: s.major ?? '',
-    grade: s.grade ?? 1,
+    grade: s.grade == null ? '' : String(s.grade),
     gpa: s.gpa == null ? '' : String(s.gpa),
     careerGoal: s.careerGoal ?? '',
     phone: s.phone ?? '',

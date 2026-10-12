@@ -50,6 +50,7 @@ function StudentsPageInner() {
           <select value={filters.grade} onChange={(e) => set('grade', e.target.value)}>
             <option value="">학년 전체</option>
             {GRADES.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+            <option value="none">학년 미입력</option>
           </select>
           <select value={filters.status} onChange={(e) => set('status', e.target.value)}>
             <option value="">재학/졸업 전체</option>
