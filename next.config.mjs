@@ -15,6 +15,8 @@ const nextConfig = {
   // 최소 의존성만 담은 독립 실행 번들을 만들어줘 전환이 매끄럽다.
   output: 'standalone',
   reactStrictMode: true,
+  // next/image 를 쓰지 않으므로 /_next/image 최적화 경로를 닫는다 (Next 14 이미지 최적화 RCE 완화)
+  images: { unoptimized: true },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
