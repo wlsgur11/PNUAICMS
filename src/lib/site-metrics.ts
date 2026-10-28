@@ -14,6 +14,13 @@ export type SiteMetric = {
   users?: boolean;
 };
 
+/** 이 서비스로 운영한 교육원 사업 하나. 상세 창 '사업별 운영 실적' 에 한 줄씩 나온다 */
+export type SiteProgram = {
+  name: string;
+  period: string;
+  result: string;
+};
+
 export type SiteCard = {
   name: string;
   url: string;
@@ -29,6 +36,7 @@ export type SiteCard = {
   /** 카드를 눌렀을 때 상세 창에만 보일 설명과 숫자 */
   description?: string;
   details?: SiteMetric[];
+  programs?: SiteProgram[];
   /** 숫자를 뽑은 날짜 (YYYY-MM-DD) */
   asOf: string | null;
 };
@@ -38,18 +46,30 @@ export const SITE_METRICS: SiteCard[] = [
     name: '코드플레이스',
     url: 'https://code.pusan.ac.kr',
     summary: '교과목 코딩 실습과 자동 채점 환경',
-    since: null,
+    since: '2024년',
     headline: { label: '누적 제출', value: 53195, unit: '건' },
     metrics: [
       { label: '가입자', value: 938, unit: '명', users: true },
       { label: '등록 문제', value: 473, unit: '개' },
-      { label: 'AI 조교 사용', value: 327, unit: '회' },
-      { label: '대회 운영', value: 29, unit: '회' },
+      { label: '대회와 수업 실습 운영', value: 14, unit: '회' },
+      { label: 'AI 조교 사용 학생', value: 30, unit: '명' },
       { label: '활용 교과목', value: null, unit: '개' },
     ],
-    usedIn: ['기초컴퓨터프로그래밍 (교양필수)', 'TECHWEEK 프로그래밍 대회'],
+    usedIn: ['기초컴퓨터프로그래밍 (교양필수)', '알고리즘', 'TECHWEEK 프로그래밍 경진대회', '여름 부트캠프 코딩 테스트'],
     features: ['자동 채점', 'AI 조교 힌트', '대회 운영'],
-    description: '교과목 실습 문제를 올리면 학생 코드를 바로 채점합니다. 막힌 학생에게 AI 조교가 정답 대신 힌트를 주고, 교내 프로그래밍 대회도 같은 환경에서 운영합니다.',
+    description: '교과목 실습 문제를 올리면 학생 코드를 바로 채점합니다. 막힌 학생에게 AI 조교가 정답 대신 힌트를 주고, 교내 프로그래밍 대회도 같은 환경에서 운영합니다. AI 조교는 외부 API 없이 교내 GPU 서버에서 돌아갑니다.',
+    // 아래 값은 2026-10-27 코드플레이스 성장지표 집계(시험용 대회 제외)에서 가져왔다
+    details: [
+      { label: '누적 해결 문제', value: 3609, unit: '개' },
+      { label: '대회 참가 연인원', value: 746, unit: '명' },
+      { label: 'AI 조교 사용 (2026)', value: 148, unit: '회' },
+    ],
+    programs: [
+      { name: '기초컴퓨터프로그래밍 (교양필수) 실습', period: '2024-2학기 ~ 2025-2학기, 3학기', result: 'C, Python 문제 약 100개씩 운영. 참가 연인원 425명, 제출 29,484건' },
+      { name: '알고리즘 수업 문제 풀이와 중간고사', period: '2025-1학기 ~ 2026-1학기', result: '4회 운영. 참가 연인원 140명, 제출 8,007건' },
+      { name: 'CSE TECHWEEK 프로그래밍 경진대회', period: '2024 ~ 2026, 매년', result: '3회 운영. 참가 연인원 138명, 제출 1,627건. 2026년 대회 응답 p95 0.13초' },
+      { name: '여름계절학기 부트캠프 참가자 코딩 테스트', period: '2026년 5월', result: 'AI스프린트, NVIDIA 딥러닝 PBL 선발. 43명 응시, 제출 192건' },
+    ],
     asOf: '2026-10-28',
   },
   {
@@ -87,6 +107,12 @@ export const SITE_METRICS: SiteCard[] = [
     usedIn: [],
     features: ['실습 VM 제공', 'AI API 키 발급', '기관별 워크스페이스', '교내 IP 신청'],
     description: '수업과 프로젝트에 필요한 실습 VM 과 AI API 키를 신청만 하면 바로 받습니다. 기관별 워크스페이스로 사용량과 승인을 나눠 관리합니다.',
+    // 관리자 대시보드 '가상머신 할당 현황' 의 전체 용량 (10/28 화면)
+    details: [
+      { label: '제공 가능 vCPU', value: 56, unit: '개' },
+      { label: '제공 가능 메모리', value: 193, unit: 'GiB' },
+      { label: '제공 가능 디스크', value: 1632, unit: 'GiB' },
+    ],
     asOf: '2026-10-28',
   },
   {

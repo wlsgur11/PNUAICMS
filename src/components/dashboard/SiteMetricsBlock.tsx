@@ -106,6 +106,24 @@ function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolea
           {site.description ?? site.summary}
         </div>
 
+        {/* 숫자보다 먼저 '어떤 사업을 이 서비스로 돌렸나' 를 보여 준다 */}
+        {site.programs && site.programs.length > 0 && (
+          <div style={{ marginTop: 18 }}>
+            <div className="info-label" style={{ marginBottom: 8 }}>사업별 운영 실적</div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {site.programs.map((p) => (
+                <div key={p.name} style={{ border: '1px solid var(--slate-200)', borderRadius: 'var(--radius-sm)', padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 600, fontSize: 'calc(14px * var(--fs, 1))' }}>{p.name}</span>
+                    <span style={{ fontSize: small, color: 'var(--text-3)' }}>{p.period}</span>
+                  </div>
+                  <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 4, lineHeight: 1.6 }}>{p.result}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 18 }}>
           {all.map((m) => (
             <div key={m.label} style={{ background: 'var(--slate-50)', border: '1px solid var(--slate-200)', borderRadius: 'var(--radius-sm)', padding: '12px 14px' }}>
