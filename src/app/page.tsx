@@ -63,6 +63,30 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다 */}
+      {data.students && (
+        <FadeContent>
+          <SiteMetricsBlock aicms={{
+            name: 'AICMS',
+            url: 'https://aicms.pusan.ac.kr',
+            summary: '산학협력 기업, 학생, 실적 관리',
+            since: null,
+            headline: { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
+            metrics: [
+              { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
+              { label: '관리 학생', value: data.students.total, unit: '명' },
+              { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
+              { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
+              { label: 'SW중심대학 지표 달성', value: data.goals.swcu.met, unit: `/${data.goals.swcu.total}개` },
+            ],
+            usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
+            features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
+            asOf: null,
+          }} />
+          <div className="dash-section">산학협력 목표와 실적</div>
+        </FadeContent>
+      )}
+
       <FadeContent>
         <div className="dash-grid-7-5">
           <GoalCard
@@ -77,19 +101,6 @@ export default function DashboardPage() {
           <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
         </div>
       </FadeContent>
-
-      {data.students && (
-        <FadeContent delay={50}>
-          <div className="dash-section">교육원 운영 사이트</div>
-          <SiteMetricsBlock aicms={[
-            { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
-            { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
-            { label: '관리 학생', value: data.students.total, unit: '명' },
-            { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
-            { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
-          ]} />
-        </FadeContent>
-      )}
 
       {data.pipeline && data.distribution && (
         <>

@@ -4,55 +4,116 @@ import CountUp from '@/components/CountUp';
 import { SITE_METRICS, type SiteCard, type SiteMetric } from '@/lib/site-metrics';
 
 /**
- * 교육원 운영 사이트 실적. 사이트마다 카드 하나에 핵심 숫자를 모은다.
- * 다른 사이트 숫자는 손으로 넣은 값이라 카드마다 기준일을 적는다.
- * AICMS 카드만 이 시스템 DB 에서 바로 계산한 값이다.
+ * 교육원 운영 서비스. 맨 위에 서비스 수와 이용자 합계를 두고, 아래에 서비스마다
+ * 카드 하나씩 대표 숫자, 세부 숫자, 활용처, 주요 기능을 모은다.
+ * 다른 사이트 숫자는 손으로 넣은 값이라 카드마다 기준일을 적고, AICMS 만 실시간이다.
  */
+const small = 'calc(12px * var(--fs, 1))';
+
+function Num({ m, size }: { m: SiteMetric; size?: 'lg' }) {
+  if (m.value == null) return <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>-</span>;
+  return (
+    <>
+      <CountUp end={m.value} />
+      <span className={size === 'lg' ? 'unit' : undefined}
+            style={size === 'lg' ? undefined : { fontSize: '0.7em', fontWeight: 400, color: 'var(--text-3)', marginLeft: 2 }}>
+        {m.unit}
+      </span>
+    </>
+  );
+}
+
 function SiteCardView({ site, live }: { site: SiteCard; live?: boolean }) {
   return (
-    <div className="card">
-      <div className="card-title"><span className="accent-bar" />{site.name}</div>
-      <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 4 }}>
-        {site.summary}
+    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div className="card-title" style={{ margin: 0 }}><span className="accent-bar" />{site.name}</div>
+        <span className="tag tag-slate" style={{ padding: '2px 8px', fontSize: 'calc(11px * var(--fs, 1))' }}>
+          {site.since ? `${site.since}부터 운영` : '운영 중'}
+        </span>
       </div>
-      <dl style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', margin: '12px 0 0' }}>
+      <div style={{ fontSize: small, color: 'var(--text-2)', marginTop: 4 }}>{site.summary}</div>
+
+      <div style={{ marginTop: 16 }}>
+        <div className="dash-metric-label">{site.headline.label}</div>
+        <div className="dash-metric-value"><Num m={site.headline} size="lg" /></div>
+      </div>
+
+      <dl style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', margin: '14px 0 0', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
         {site.metrics.map((m) => (
-          <Metric key={m.label} m={m} />
+          <div key={m.label} style={{ display: 'contents' }}>
+            <dt style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{m.label}</dt>
+            <dd style={{ margin: 0, textAlign: 'right', fontWeight: 600, fontSize: 'calc(15px * var(--fs, 1))', fontVariantNumeric: 'tabular-nums' }}>
+              <Num m={m} />
+            </dd>
+          </div>
         ))}
       </dl>
-      <div className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', marginTop: 12, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-        <a href={site.url} target="_blank" rel="noreferrer" className="muted">{site.url.replace('https://', '')}</a>
+
+      {site.usedIn.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: small, color: 'var(--text-3)', marginBottom: 6 }}>활용</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {site.usedIn.map((u) => (
+              <span key={u} className="tag tag-slate" style={{ padding: '3px 8px', fontWeight: 500 }}>{u}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {site.features.length > 0 && (
+        <div style={{ marginTop: 12, fontSize: small, color: 'var(--text-2)', lineHeight: 1.6 }}>
+          <span style={{ color: 'var(--text-3)', marginRight: 6 }}>주요 기능</span>
+          {site.features.join(', ')}
+        </div>
+      )}
+
+      <div style={{ marginTop: 'auto', paddingTop: 14, display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
+        <a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{site.url.replace('https://', '')}</a>
         <span>{live ? '실시간' : site.asOf ? `${site.asOf} 기준` : '집계 전'}</span>
       </div>
     </div>
   );
 }
 
-function Metric({ m }: { m: SiteMetric }) {
+function Summary({ label, value, unit, note }: { label: string; value: number | null; unit: string; note?: string }) {
   return (
-    <>
-      <dt className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))', alignSelf: 'center' }}>{m.label}</dt>
-      <dd style={{ margin: 0, textAlign: 'right', fontWeight: 700, fontSize: 'calc(18px * var(--fs, 1))', fontVariantNumeric: 'tabular-nums' }}>
-        {m.value == null
-          ? <span className="muted" style={{ fontWeight: 400 }}>-</span>
-          : <><CountUp end={m.value} /><span className="muted" style={{ fontSize: '0.7em', fontWeight: 400, marginLeft: 2 }}>{m.unit}</span></>}
-      </dd>
-    </>
+    <div>
+      <div className="dash-metric-label">{label}</div>
+      <div className="dash-metric-value"><Num m={{ label, value, unit }} size="lg" /></div>
+      {note && <div className="dash-metric-sub" style={{ marginTop: 4 }}>{note}</div>}
+    </div>
   );
 }
 
-export default function SiteMetricsBlock({ aicms }: { aicms: SiteMetric[] }) {
-  const self: SiteCard = {
-    name: 'AICMS',
-    url: 'https://aicms.pusan.ac.kr',
-    summary: '산학협력 기업, 학생, 실적 관리',
-    asOf: null,
-    metrics: aicms,
-  };
+export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
+  const sites = [...SITE_METRICS, aicms];
+  const userValues = sites
+    .flatMap((s) => [s.headline, ...s.metrics])
+    .filter((m) => m.users && m.value != null)
+    .map((m) => m.value as number);
+  const usedIn = new Set(sites.flatMap((s) => s.usedIn));
+
   return (
-    <div className="dash-grid-auto">
-      {SITE_METRICS.map((s) => <SiteCardView key={s.name} site={s} />)}
-      <SiteCardView site={self} live />
-    </div>
+    <>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
+          <div style={{ minWidth: 220 }}>
+            <div className="card-title" style={{ margin: 0 }}><span className="accent-bar" />교육원 운영 서비스</div>
+            <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>
+              AI융합교육원이 직접 개발하고 교내 서버에서 운영하는 서비스입니다.
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32 }}>
+            <Summary label="운영 서비스" value={sites.length} unit="개" />
+            <Summary label="서비스 이용자" value={userValues.length ? userValues.reduce((a, b) => a + b, 0) : null} unit="명" note="서비스별 합계, 중복 포함" />
+            <Summary label="활용 교과목, 사업" value={usedIn.size} unit="개" />
+          </div>
+        </div>
+      </div>
+      <div className="dash-grid-auto">
+        {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} />)}
+      </div>
+    </>
   );
 }
