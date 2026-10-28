@@ -40,7 +40,8 @@ function SiteCardView({ site, live }: { site: SiteCard; live?: boolean }) {
       </div>
 
       <dl style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', margin: '14px 0 0', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-        {site.metrics.map((m) => (
+        {/* 아직 못 뽑은 세부 숫자는 '-' 로 두면 미완성처럼 보여서 숨긴다. 대표 숫자는 늘 보인다 */}
+        {site.metrics.filter((m) => m.value != null).map((m) => (
           <div key={m.label} style={{ display: 'contents' }}>
             <dt style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{m.label}</dt>
             <dd style={{ margin: 0, textAlign: 'right', fontWeight: 600, fontSize: 'calc(15px * var(--fs, 1))', fontVariantNumeric: 'tabular-nums' }}>
