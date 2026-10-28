@@ -19,6 +19,7 @@ import ProjectHeadcountCard from '@/components/dashboard/ProjectHeadcountCard';
 import LabRankCard from '@/components/dashboard/LabRankCard';
 import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
+import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import type { DashboardData } from '@/lib/dashboard-shape';
 
 export default function DashboardPage() {
@@ -76,6 +77,19 @@ export default function DashboardPage() {
           <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
         </div>
       </FadeContent>
+
+      {data.students && (
+        <FadeContent delay={50}>
+          <div className="dash-section">교육원 운영 사이트</div>
+          <SiteMetricsBlock aicms={[
+            { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
+            { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
+            { label: '관리 학생', value: data.students.total, unit: '명' },
+            { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
+            { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
+          ]} />
+        </FadeContent>
+      )}
 
       {data.pipeline && data.distribution && (
         <>
