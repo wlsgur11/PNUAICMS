@@ -148,7 +148,7 @@ export const SITE_METRICS: SiteCard[] = [
       { label: '수상 팀', value: 36, unit: '팀' },
     ],
     programs: [
-      { name: 'PNU 창의융합AI해커톤', period: '제5회 2024 ~ 제7회 2026', result: '53팀, 결과물 204건, 수상 33팀. 2026년 대회 81명 참가' },
+      { name: 'PNU 창의융합AI해커톤', period: '제5회 2024 ~ 제7회 2026', result: '53팀, 결과물 204건. 수상 33팀 (대상 5, 최우수상 5, 우수상 9, 장려상 14). 2026년 대회 81명 참가' },
       { name: '정보컴퓨터공학부 졸업과제', period: '2023, 2025, 2026', result: '144팀, 결과물 191건 공개' },
       { name: '카카오테크 캠퍼스', period: '2기 2024, 3기 2025', result: '11팀, 결과물 11건, 수상 1팀' },
       { name: 'PNU AI 부스터 1기', period: '2025년 3~8월', result: '8팀, 결과물 32건' },
