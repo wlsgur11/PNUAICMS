@@ -1877,3 +1877,8 @@ a.dash-list-row:hover { background: var(--slate-50); }
   .dash-bar > span { transition: none; }
 }
 .dash-num { font-variant-numeric: tabular-nums; }
+
+/* 대시보드 운영 서비스 카드. 눌러서 상세를 연다 */
+.site-card { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+.site-card:hover { border-color: var(--slate-300); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+.site-card:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }

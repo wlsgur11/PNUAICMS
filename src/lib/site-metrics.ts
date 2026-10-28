@@ -26,6 +26,9 @@ export type SiteCard = {
   /** 활용 교과목, 사업 */
   usedIn: string[];
   features: string[];
+  /** 카드를 눌렀을 때 상세 창에만 보일 설명과 숫자 */
+  description?: string;
+  details?: SiteMetric[];
   /** 숫자를 뽑은 날짜 (YYYY-MM-DD) */
   asOf: string | null;
 };
@@ -46,6 +49,7 @@ export const SITE_METRICS: SiteCard[] = [
     ],
     usedIn: ['기초컴퓨터프로그래밍 (교양필수)', 'TECHWEEK 프로그래밍 대회'],
     features: ['자동 채점', 'AI 조교 힌트', '대회 운영'],
+    description: '교과목 실습 문제를 올리면 학생 코드를 바로 채점합니다. 막힌 학생에게 AI 조교가 정답 대신 힌트를 주고, 교내 프로그래밍 대회도 같은 환경에서 운영합니다.',
     asOf: '2026-10-28',
   },
   {
@@ -63,6 +67,7 @@ export const SITE_METRICS: SiteCard[] = [
     ],
     usedIn: ['AI 부트캠프', '마일스톤 장학', 'AI 해커톤', '생성형 AI PBL', '온디바이스 AI PBL'],
     features: ['마일스톤 실적 관리', '부트캠프 신청과 이수', '이수증 발급', 'AI 진로 설계'],
+    description: '학생이 AI 관련 활동을 마일스톤으로 쌓고 장학 실적으로 신청합니다. 부트캠프 공고, 신청, 이수 승인, 이수증 발급까지 한곳에서 처리합니다.',
     asOf: '2026-10-28',
   },
   {
@@ -81,6 +86,7 @@ export const SITE_METRICS: SiteCard[] = [
     ],
     usedIn: [],
     features: ['실습 VM 제공', 'AI API 키 발급', '기관별 워크스페이스', '교내 IP 신청'],
+    description: '수업과 프로젝트에 필요한 실습 VM 과 AI API 키를 신청만 하면 바로 받습니다. 기관별 워크스페이스로 사용량과 승인을 나눠 관리합니다.',
     asOf: '2026-10-28',
   },
   {
@@ -97,6 +103,7 @@ export const SITE_METRICS: SiteCard[] = [
     ],
     usedIn: ['AI 해커톤', '졸업과제', '카카오테크캠퍼스', 'PNU AI Booster'],
     features: ['프로젝트 팀 관리', '보고서 제출과 피드백', '자문위원 평가', '사업별 결과물 공개'],
+    description: '해커톤, 졸업과제 같은 프로젝트 사업의 팀 구성부터 보고서 제출, 자문위원 평가, 결과물 공개까지 관리합니다.',
     asOf: '2026-10-28',
   },
 ];

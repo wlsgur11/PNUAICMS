@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import CountUp from '@/components/CountUp';
 import { SITE_METRICS, type SiteCard, type SiteMetric } from '@/lib/site-metrics';
 
@@ -23,9 +25,11 @@ function Num({ m, size }: { m: SiteMetric; size?: 'lg' }) {
   );
 }
 
-function SiteCardView({ site, live }: { site: SiteCard; live?: boolean }) {
+function SiteCardView({ site, live, onOpen }: { site: SiteCard; live?: boolean; onOpen: () => void }) {
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="card site-card" role="button" tabIndex={0} onClick={onOpen}
+         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+         style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div className="card-title" style={{ margin: 0 }}><span className="accent-bar" />{site.name}</div>
         <span className="tag tag-slate" style={{ padding: '2px 8px', fontSize: 'calc(11px * var(--fs, 1))' }}>
@@ -70,10 +74,69 @@ function SiteCardView({ site, live }: { site: SiteCard; live?: boolean }) {
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 14, display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
-        <a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>{site.url.replace('https://', '')}</a>
-        <span>{live ? '실시간' : site.asOf ? `${site.asOf} 기준` : '집계 전'}</span>
+        <a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}
+           onClick={(e) => e.stopPropagation()}>{site.url.replace('https://', '')} ↗</a>
+        <span>{live ? '실시간' : site.asOf ? `${site.asOf} 기준` : '집계 전'} · 자세히</span>
       </div>
     </div>
+  );
+}
+
+/* 카드를 누르면 뜨는 상세. 카드에서 숨긴 숫자와 상세 전용 숫자까지 모두 보여 준다 */
+function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolean; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const all = [site.headline, ...site.metrics, ...(site.details ?? [])].filter((m) => m.value != null);
+  // FadeContent 의 will-change: transform 안에서는 position: fixed 가 화면 기준이 아니라서 body 로 뺀다
+  return createPortal(
+    <div className="modal-root">
+      <div className="modal-backdrop" onClick={onClose} />
+      <div className="modal-card" role="dialog" aria-modal="true" aria-label={site.name}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h3 className="modal-title" style={{ margin: 0 }}>{site.name}</h3>
+          <span className="tag tag-slate" style={{ padding: '2px 8px', fontSize: 'calc(11px * var(--fs, 1))' }}>
+            {site.since ? `${site.since}부터 운영` : '운영 중'}
+          </span>
+        </div>
+        <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 6, lineHeight: 1.7 }}>
+          {site.description ?? site.summary}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 18 }}>
+          {all.map((m) => (
+            <div key={m.label} style={{ background: 'var(--slate-50)', border: '1px solid var(--slate-200)', borderRadius: 'var(--radius-sm)', padding: '12px 14px' }}>
+              <div style={{ fontSize: small, color: 'var(--text-3)' }}>{m.label}</div>
+              <div style={{ fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 700, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+                {(m.value as number).toLocaleString()}
+                <span style={{ fontSize: '0.6em', fontWeight: 400, color: 'var(--text-3)', marginLeft: 2 }}>{m.unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="info-list" style={{ marginTop: 18 }}>
+          {site.usedIn.length > 0 && (
+            <div className="info-row"><span className="info-label">활용</span>
+              <span className="info-value" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {site.usedIn.map((u) => <span key={u} className="tag tag-slate" style={{ padding: '3px 8px' }}>{u}</span>)}
+              </span>
+            </div>
+          )}
+          <div className="info-row"><span className="info-label">주요 기능</span><span className="info-value">{site.features.join(', ')}</span></div>
+          <div className="info-row"><span className="info-label">기준</span><span className="info-value">{live ? '실시간 (AICMS DB)' : site.asOf ? `${site.asOf} 각 서비스 DB 기준` : '집계 전'}</span></div>
+        </div>
+
+        <div className="form-actions">
+          <a className="btn" href={site.url} target="_blank" rel="noreferrer">사이트 열기 ↗</a>
+          <button className="btn btn-primary" onClick={onClose}>닫기</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -114,6 +177,7 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
     .filter((m) => m.users && m.value != null)
     .map((m) => m.value as number);
   const usedIn = new Set(sites.flatMap((s) => s.usedIn));
+  const [open, setOpen] = useState<SiteCard | null>(null);
 
   return (
     <>
@@ -123,8 +187,9 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
         usedIn={usedIn.size}
       />
       <div className="dash-grid-sites">
-        {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} />)}
+        {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} onOpen={() => setOpen(s)} />)}
       </div>
+      {open && <SiteDetailModal site={open} live={open.name === aicms.name} onClose={() => setOpen(null)} />}
     </>
   );
 }
