@@ -77,36 +77,31 @@ function SiteCardView({ site, live }: { site: SiteCard; live?: boolean }) {
   );
 }
 
-/* 요약 칸. 사이드바와 같은 짙은 바탕으로 그리드 첫 칸에 둔다. 새 색을 들이지 않고
-   구역의 시작을 알리려는 것이라, 글자는 흰색과 그 투명도 단계만 쓴다 */
-const dim = 'rgba(255, 255, 255, 0.62)';
-const line = 'rgba(255, 255, 255, 0.12)';
-
-function SummaryRow({ label, value, unit, note }: { label: string; value: number | null; unit: string; note?: string }) {
+/* 맨 위 가로 요약. 왼쪽에 구역 제목, 오른쪽에 숫자 셋을 세로 구분선으로 나눈다 */
+function SummaryStat({ label, value, unit, note, first }: { label: string; value: number | null; unit: string; note?: string; first?: boolean }) {
   return (
-    <div style={{ padding: '14px 0', borderTop: `1px solid ${line}` }}>
-      <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: dim }}>{label}</div>
-      <div style={{ fontSize: 'calc(34px * var(--fs, 1))', fontWeight: 600, lineHeight: 1.1, marginTop: 4, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
-        {value == null ? '-' : <CountUp end={value} />}
-        <span style={{ fontSize: '0.5em', fontWeight: 400, color: dim, marginLeft: 3 }}>{unit}</span>
-      </div>
-      {note && <div style={{ fontSize: 'calc(11px * var(--fs, 1))', color: dim, marginTop: 2 }}>{note}</div>}
+    <div style={{ padding: '0 28px', borderLeft: first ? undefined : '1px solid var(--border)', minWidth: 150 }}>
+      <div className="dash-metric-label">{label}</div>
+      <div className="dash-metric-value"><Num m={{ label, value, unit }} size="lg" /></div>
+      <div className="dash-metric-sub" style={{ marginTop: 4, minHeight: '1.5em' }}>{note}</div>
     </div>
   );
 }
 
-function SummaryCard({ services, users, usedIn }: { services: number; users: number | null; usedIn: number }) {
+function SummaryBar({ services, users, usedIn }: { services: number; users: number | null; usedIn: number }) {
   return (
-    <div className="card" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)', color: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: dim, letterSpacing: '0.02em' }}>부산대학교 AI융합교육원</div>
-      <div style={{ fontSize: 'calc(22px * var(--fs, 1))', fontWeight: 700, marginTop: 6 }}>교육원 운영 서비스</div>
-      <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: dim, marginTop: 8, lineHeight: 1.6 }}>
-        교육원이 직접 개발하고 교내 서버에서 운영하는 서비스입니다.
+    <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+      <div style={{ minWidth: 260, flex: '1 1 260px' }}>
+        <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)' }}>부산대학교 AI융합교육원</div>
+        <div style={{ fontSize: 'calc(22px * var(--fs, 1))', fontWeight: 700, marginTop: 4, color: 'var(--text-1)' }}>교육원 운영 서비스</div>
+        <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>
+          교육원이 직접 개발하고 교내 서버에서 운영하는 서비스입니다.
+        </div>
       </div>
-      <div style={{ marginTop: 'auto', paddingTop: 20 }}>
-        <SummaryRow label="운영 서비스" value={services} unit="개" />
-        <SummaryRow label="서비스 이용자" value={users} unit="명" note="서비스별 합계, 중복 포함" />
-        <SummaryRow label="활용 교과목, 사업" value={usedIn} unit="개" />
+      <div style={{ display: 'flex', flexWrap: 'wrap', rowGap: 16 }}>
+        <SummaryStat first label="운영 서비스" value={services} unit="개" />
+        <SummaryStat label="서비스 이용자" value={users} unit="명" note="서비스별 합계, 중복 포함" />
+        <SummaryStat label="활용 교과목, 사업" value={usedIn} unit="개" />
       </div>
     </div>
   );
@@ -120,15 +115,16 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
     .map((m) => m.value as number);
   const usedIn = new Set(sites.flatMap((s) => s.usedIn));
 
-  // 요약 칸 1 + 사이트 5 = 6칸이라 3열에서 두 줄이 꽉 찬다
   return (
-    <div className="dash-grid-auto">
-      <SummaryCard
+    <>
+      <SummaryBar
         services={sites.length}
         users={userValues.length ? userValues.reduce((a, b) => a + b, 0) : null}
         usedIn={usedIn.size}
       />
-      {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} />)}
-    </div>
+      <div className="dash-grid-sites">
+        {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} />)}
+      </div>
+    </>
   );
 }
