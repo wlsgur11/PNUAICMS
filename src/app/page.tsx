@@ -81,6 +81,16 @@ export default function DashboardPage() {
             ],
             usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
             features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
+            description: '산학협력 기업 컨택부터 과제, 인턴십 실적, 학생 이력과 상담까지 한곳에서 관리하고, SW중심대학 성과지표를 실적에서 바로 계산합니다.',
+            details: [
+              { label: `${data.year}년 산학 과제`, value: data.totals.projects.value, unit: '건' },
+              { label: `${data.year}년 인턴십`, value: data.totals.internships.value, unit: '건' },
+              { label: 'MOU 체결', value: data.totals.mou.value, unit: '건' },
+              { label: `${data.year}년 신규 컨택`, value: data.pipeline?.newThisYear ?? null, unit: '곳' },
+              { label: '과제 참여 학생', value: data.students.projectParticipants, unit: '명' },
+              { label: '인턴십 참여 학생', value: data.students.internParticipants, unit: '명' },
+              { label: '과제 수행 연구실', value: data.labs?.labCount ?? null, unit: '곳' },
+            ],
             asOf: null,
           }} />
           <div className="dash-section">산학협력 목표와 실적</div>
