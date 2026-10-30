@@ -48,7 +48,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
   const [dupBlocks, setDupBlocks] = useState(false); // 활성 동명 기업이면 등록 차단
   const [looking, setLooking] = useState(false);
   const [saving, setSaving] = useState(false);
-  const dupTimer = useRef<ReturnType<typeof setTimeout>>();
+  const dupTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const set = (k: keyof CompanyFormData, v: unknown) => setF((p) => ({ ...p, [k]: v }));
 

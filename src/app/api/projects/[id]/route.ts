@@ -5,9 +5,10 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const it = await prisma.project.findUnique({

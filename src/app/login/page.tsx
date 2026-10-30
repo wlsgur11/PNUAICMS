@@ -7,7 +7,7 @@ import LandingReveal from '@/components/LandingReveal';
 import './landing.css';
 
 type Props = {
-  searchParams: { callbackUrl?: string; error?: string };
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 };
 
 export const metadata = {
@@ -99,7 +99,8 @@ const FAMILY = [
   { label: '인프런', host: 'inflearn.com/@pnuswedu', href: 'https://inflearn.com/@pnuswedu' },
 ];
 
-export default async function LoginPage({ searchParams }: Props) {
+export default async function LoginPage(props: Props) {
+  const searchParams = await props.searchParams;
   const callbackUrl = searchParams.callbackUrl || '/';
   const error = searchParams.error;
 

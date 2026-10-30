@@ -10,9 +10,10 @@ import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { counselingSchema } from '@/lib/validation';
 
-type Ctx = { params: { studentNo: string } };
+type Ctx = { params: Promise<{ studentNo: string }> };
 
-export async function POST(req: Request, { params }: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const parsed = counselingSchema.safeParse(await req.json());
