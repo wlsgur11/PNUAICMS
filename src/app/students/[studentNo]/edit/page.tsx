@@ -1,11 +1,13 @@
 'use client';
+import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import StudentForm, { type StudentFormData } from '@/components/StudentForm';
 import type { StudentDetail } from '@/lib/student-shape';
 
-export default function EditStudentPage({ params }: { params: { studentNo: string } }) {
-  const { data: s, error, isLoading } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
+export default function EditStudentPage() {
+  const { studentNo } = useParams<{ studentNo: string }>();
+  const { data: s, error, isLoading } = useSWR<StudentDetail>(`/api/students/${studentNo}`);
   if (isLoading && !s) return <div className="loading">불러오는 중…</div>;
   if (!s) return <div className="empty">{error ? (error as Error).message : '학생을 찾을 수 없습니다.'}</div>;
 

@@ -9,9 +9,10 @@ import { nextCode } from '@/lib/codes';
 import { historyCreateSchema } from '@/lib/validation';
 import { syncLastContact } from '@/lib/contact-sync';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const histories = await prisma.contactHistory.findMany({
@@ -23,7 +24,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
 }
 
-export async function POST(req: Request, { params }: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const parsed = historyCreateSchema.safeParse(await req.json());
