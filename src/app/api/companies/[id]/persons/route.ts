@@ -8,9 +8,10 @@ import { ok, fail, handle } from '@/lib/http';
 import { nextCode } from '@/lib/codes';
 import { personCreateSchema } from '@/lib/validation';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const persons = await prisma.contactPerson.findMany({
@@ -21,7 +22,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
 }
 
-export async function POST(req: Request, { params }: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const parsed = personCreateSchema.safeParse(await req.json());

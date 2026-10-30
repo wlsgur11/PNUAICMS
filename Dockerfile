@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────────────────
 
 # 1) 의존성 설치
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 # prisma 엔진 등이 필요로 하는 openssl
 RUN apk add --no-cache libc6-compat openssl
@@ -14,7 +14,7 @@ COPY prisma ./prisma
 RUN npm ci
 
 # 2) 빌드 (alpine 위에서 빌드 → prisma 쿼리엔진이 런타임(alpine)과 동일 타깃)
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
@@ -23,7 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx prisma generate && npm run build
 
 # 3) 런타임 (최소 산출물 + 비루트 실행)
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache openssl
 ENV NODE_ENV=production \

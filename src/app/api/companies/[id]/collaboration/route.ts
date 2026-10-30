@@ -6,9 +6,10 @@ import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { collaborationSchema } from '@/lib/validation';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(req: Request, { params }: Ctx) {
+export async function PUT(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const parsed = collaborationSchema.safeParse(await req.json());

@@ -7,9 +7,10 @@ import { requireRole } from '@/lib/auth';
 import { ok, fail, handle } from '@/lib/http';
 import { personUpdateSchema } from '@/lib/validation';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(req: Request, { params }: Ctx) {
+export async function PUT(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const parsed = personUpdateSchema.safeParse(await req.json());
@@ -26,7 +27,8 @@ export async function PUT(req: Request, { params }: Ctx) {
   });
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     await prisma.contactPerson.update({ where: { id: params.id }, data: { isActive: false, version: { increment: 1 } } });

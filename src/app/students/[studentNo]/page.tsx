@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import useSWR, { mutate as globalMutate } from 'swr';
 import PageHeader from '@/components/PageHeader';
 import { api, today } from '@/lib/client';
@@ -188,10 +188,11 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   );
 }
 
-export default function StudentDetailPage({ params }: { params: { studentNo: string } }) {
+export default function StudentDetailPage() {
+  const { studentNo } = useParams<{ studentNo: string }>();
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const { data: s, error, isLoading, mutate: reload } = useSWR<StudentDetail>(`/api/students/${params.studentNo}`);
+  const { data: s, error, isLoading, mutate: reload } = useSWR<StudentDetail>(`/api/students/${studentNo}`);
   const { data: projectDetail } = useSWR<ProjectDetail>(
     selectedProjectId ? `/api/projects/${selectedProjectId}` : null
   );

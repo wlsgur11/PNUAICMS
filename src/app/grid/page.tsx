@@ -8,10 +8,14 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ColGroupDef, CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import useSWR, { mutate as globalMutate } from 'swr';
+
+// ag-grid 33 부터 모듈 등록이 필요하다. 테마는 기존 CSS(ag-theme-quartz)를 그대로 쓰려고 legacy 로 둔다
+ModuleRegistry.registerModules([AllCommunityModule]);
 import { api } from '@/lib/client';
 import { toast } from '@/components/Toaster';
 import PageHeader from '@/components/PageHeader';
@@ -330,6 +334,7 @@ export default function GridPage() {
       }}>
         <AgGridReact<GridRow>
           ref={gridRef}
+          theme="legacy"
           rowData={rows}
           columnDefs={columnDefs}
           defaultColDef={{ resizable: true, sortable: false }}

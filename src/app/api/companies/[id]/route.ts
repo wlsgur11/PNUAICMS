@@ -9,9 +9,10 @@ import { ok, fail, handle } from '@/lib/http';
 import { companyUpdateSchema } from '@/lib/validation';
 import { autoLinkRecords, findAliasConflict } from '@/lib/company-autolink';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const company = await prisma.company.findUnique({
@@ -64,7 +65,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
 }
 
-export async function PUT(req: Request, { params }: Ctx) {
+export async function PUT(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const body = await req.json();
@@ -97,7 +99,8 @@ export async function PUT(req: Request, { params }: Ctx) {
   });
 }
 
-export async function DELETE(req: Request, { params }: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const hard = new URL(req.url).searchParams.get('hard') === '1';

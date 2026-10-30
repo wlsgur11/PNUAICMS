@@ -9,9 +9,10 @@ import { ok, fail, handle, ConflictError } from '@/lib/http';
 import { studentUpdateSchema } from '@/lib/validation';
 import { toProgramList, type StudentDetail } from '@/lib/student-shape';
 
-type Ctx = { params: { studentNo: string } };
+type Ctx = { params: Promise<{ studentNo: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const s = await prisma.student.findUnique({
@@ -81,7 +82,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
 }
 
-export async function PUT(req: Request, { params }: Ctx) {
+export async function PUT(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     const user = await requireRole('ADMIN');
     const parsed = studentUpdateSchema.safeParse(await req.json());
@@ -164,7 +166,8 @@ export async function PUT(req: Request, { params }: Ctx) {
  * 손으로 넣은 값이라 되살릴 길이 없고, 산학·인턴십 실적 연결은 실적 엑셀을 다시
  * 올리면 돌아온다. 무엇이 사라지는지 세어서 돌려주고 화면에서 먼저 보여 준다.
  */
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const s = await prisma.student.findUnique({

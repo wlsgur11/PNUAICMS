@@ -8,9 +8,10 @@ import { ok, fail, handle } from '@/lib/http';
 import { historyUpdateSchema } from '@/lib/validation';
 import { syncLastContact } from '@/lib/contact-sync';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(req: Request, { params }: Ctx) {
+export async function PUT(req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const parsed = historyUpdateSchema.safeParse(await req.json());
@@ -44,7 +45,8 @@ export async function PUT(req: Request, { params }: Ctx) {
   });
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   return handle(async () => {
     await requireRole('ADMIN');
     const before = await prisma.contactHistory.findUnique({

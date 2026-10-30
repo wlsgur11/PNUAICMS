@@ -7,9 +7,10 @@ import { requireRole } from '@/lib/auth';
 import { toProgramList } from '@/lib/student-shape';
 import { gradeLabel } from '@/lib/enums';
 
-type Ctx = { params: { studentNo: string } };
+type Ctx = { params: Promise<{ studentNo: string }> };
 
-export async function GET(_req: Request, { params }: Ctx) {
+export async function GET(_req: Request, ctx: Ctx) {
+  const params = await ctx.params;
   await requireRole('ADMIN');
   const s = await prisma.student.findUnique({
     where: { studentNo: params.studentNo },
