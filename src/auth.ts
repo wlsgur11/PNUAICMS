@@ -31,8 +31,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  // 로그인 화면이 따로 없다. 대시보드가 첫 화면이자 로그인 입구이고, 실패하면 ?error= 를 달고 돌아온다
   pages: {
-    signIn: '/login',
+    signIn: '/',
+    error: '/',
   },
   callbacks: {
     // 도메인 + allowlist 검증. hd 파라미터는 힌트일 뿐이라 서버에서도 한 번 더 확인.
@@ -50,19 +52,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.name) session.user.name = token.name as string;
       return session;
     },
-    // middleware.ts 에서 사용. 미인증 시 signIn 페이지로 리다이렉트.
+    // middleware.ts 에서 사용. 미인증이면 signIn 페이지(/)로 callbackUrl 을 달아 돌려보낸다.
     async authorized({ auth: session, request }) {
       if (AUTH_BYPASS) return true;
-      const isLoggedIn = !!session?.user;
-      const { pathname } = request.nextUrl;
-      // /login 은 미인증 상태에서 접근 가능. 이미 로그인했으면 홈으로.
-      if (pathname === '/login') {
-        if (isLoggedIn) {
-          return Response.redirect(new URL('/', request.url));
-        }
-        return true;
-      }
-      return isLoggedIn;
+      const { pathname, search } = request.nextUrl;
+      // 예전 로그인 주소. 북마크와 오류 리다이렉트가 남아 있을 수 있어 대시보드로 넘긴다
+      if (pathname === '/login') return Response.redirect(new URL(`/${search}`, request.url));
+      // 대시보드는 로그인 없이 열린다. API 가 로그인 전에는 집계만 내려 준다(api/dashboard)
+      if (pathname === '/' || pathname === '/api/dashboard') return true;
+      return !!session?.user;
     },
   },
 });
