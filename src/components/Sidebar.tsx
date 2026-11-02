@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Role } from '@prisma/client';
 import ThemeToggle from './ThemeToggle';
 import UiScale from './UiScale';
 import { Icon, type IconName } from './icons';
+import LoginButton from './LoginButton';
 
 type Item = { href: string; label: string };
 type Group = { key: string; label: string; icon: IconName; items: Item[] };
@@ -82,8 +83,8 @@ type Props = {
 
 export default function Sidebar({ userEmail, userName, role, logoutSlot, version }: Props) {
   const pathname = usePathname();
-  // 일반(GENERAL) 사용자는 대시보드만. 데이터 그룹 메뉴는 숨긴다.
-  const isGeneral = role === 'GENERAL';
+  // 로그인 전과 일반(GENERAL) 사용자는 대시보드만. 데이터 그룹 메뉴는 숨긴다.
+  const dashboardOnly = !role || role === 'GENERAL';
 
   const allHrefs = [DASHBOARD.href, ...GROUPS.flatMap((g) => g.items.map((i) => i.href))];
   const activeHref = (() => {
@@ -126,8 +127,6 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
     else setFamilyOpen((o) => !o);
   };
 
-  if (pathname === '/login') return null;
-
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -158,7 +157,7 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
           <span>{DASHBOARD.label}</span>
         </Link>
 
-        {!isGeneral && GROUPS.map((g) => (
+        {!dashboardOnly && GROUPS.map((g) => (
           <div key={g.key} className="nav-group">
             <button type="button" className={`nav-group-header${openKeys.has(g.key) ? ' open' : ''}`} onClick={() => onGroup(g.key)} title={g.label}>
               <span className="nav-icon"><Icon name={g.icon} /></span>
@@ -214,12 +213,17 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
       <div className="sidebar-bottom">
         <UiScale />
         <ThemeToggle />
-        {userEmail && (
+        {userEmail ? (
           <div className="sidebar-user">
             <div className="user-name">{userName || userEmail.split('@')[0]}</div>
             <div className="user-email">{userEmail}</div>
             {logoutSlot}
           </div>
+        ) : (
+          // LoginButton 이 주소창 값(callbackUrl)을 읽어서 Suspense 로 감싼다
+          <Suspense fallback={null}>
+            <div className="sidebar-login"><LoginButton label="로그인" /></div>
+          </Suspense>
         )}
         <div className="sidebar-footer">v{version ?? '0.0.0'} @2026</div>
       </div>
