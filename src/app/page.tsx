@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
 import FadeContent from '@/components/FadeContent';
@@ -21,10 +21,13 @@ import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import GuideBlock from '@/components/dashboard/GuideBlock';
+import LoginCta from '@/components/dashboard/LoginCta';
 import type { DashboardData } from '@/lib/dashboard-shape';
 
 export default function DashboardPage() {
   const me = useMe();
+  // 대시보드는 로그인 전에도 열린다. 그때와 일반 계정은 API 가 집계만 준다
+  const isPublic = !me;
   const isGeneral = me?.role === 'GENERAL';
   // 연도를 안 고르면 서버가 가장 최근 연도를 쓴다. 고른 뒤에는 URL 로 넘겨
   // 목표 대비, 증감, SW중심대학 지표, 연도별 실적이 모두 그 연도를 따른다
@@ -64,42 +67,45 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 권한을 기다리는 일반 계정은 볼 데이터가 없으니 안내를 펼쳐 둔다 */}
+      {/* 로그인 화면이 따로 없어서 로그인은 여기서 한다. ?error= 를 읽어 Suspense 로 감싼다 */}
+      {isPublic && <Suspense fallback={null}><LoginCta /></Suspense>}
+
+      {/* 권한을 기다리는 일반 계정은 볼 데이터가 적으니 안내를 펼쳐 둔다. 로그인 전에는 접어 둬서
+          첫 화면에 실적 숫자가 먼저 보이게 한다 */}
       <GuideBlock open={isGeneral} />
 
-      {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다 */}
-      {data.students && (
-        <FadeContent>
-          <SiteMetricsBlock aicms={{
-            name: 'AICMS',
-            url: 'https://aicms.pusan.ac.kr',
-            summary: '산학협력 기업, 학생, 실적 관리',
-            since: null,
-            headline: { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
-            metrics: [
-              { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
-              { label: '관리 학생', value: data.students.total, unit: '명' },
-              { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
-              { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
-              { label: 'SW중심대학 지표 달성', value: data.goals.swcu.met, unit: `/${data.goals.swcu.total}개` },
-            ],
-            usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
-            features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
-            description: '산학협력 기업 컨택부터 과제, 인턴십 실적, 학생 이력과 상담까지 한곳에서 관리하고, SW중심대학 성과지표를 실적에서 바로 계산합니다.',
-            details: [
-              { label: `${data.year}년 산학 과제`, value: data.totals.projects.value, unit: '건' },
-              { label: `${data.year}년 인턴십`, value: data.totals.internships.value, unit: '건' },
-              { label: 'MOU 체결', value: data.totals.mou.value, unit: '건' },
-              { label: `${data.year}년 신규 컨택`, value: data.pipeline?.newThisYear ?? null, unit: '곳' },
-              { label: '과제 참여 학생', value: data.students.projectParticipants, unit: '명' },
-              { label: '인턴십 참여 학생', value: data.students.internParticipants, unit: '명' },
-              { label: '과제 수행 연구실', value: data.labs?.labCount ?? null, unit: '곳' },
-            ],
-            asOf: null,
-          }} />
-          <div className="dash-section">산학협력 목표와 실적</div>
-        </FadeContent>
-      )}
+      {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다.
+          로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
+      <FadeContent>
+        <SiteMetricsBlock aicms={{
+          name: 'AICMS',
+          url: 'https://aicms.pusan.ac.kr',
+          summary: '산학협력 기업, 학생, 실적 관리',
+          since: null,
+          headline: { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
+          metrics: [
+            { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
+            { label: '관리 학생', value: data.students?.total ?? null, unit: '명' },
+            { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
+            { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
+            { label: 'SW중심대학 지표 달성', value: data.goals.swcu.met, unit: `/${data.goals.swcu.total}개` },
+          ],
+          usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
+          features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
+          description: '산학협력 기업 컨택부터 과제, 인턴십 실적, 학생 이력과 상담까지 한곳에서 관리하고, SW중심대학 성과지표를 실적에서 바로 계산합니다.',
+          details: [
+            { label: `${data.year}년 산학 과제`, value: data.totals.projects.value, unit: '건' },
+            { label: `${data.year}년 인턴십`, value: data.totals.internships.value, unit: '건' },
+            { label: 'MOU 체결', value: data.totals.mou.value, unit: '건' },
+            { label: `${data.year}년 신규 컨택`, value: data.pipeline?.newThisYear ?? null, unit: '곳' },
+            { label: '과제 참여 학생', value: data.students?.projectParticipants ?? null, unit: '명' },
+            { label: '인턴십 참여 학생', value: data.students?.internParticipants ?? null, unit: '명' },
+            { label: '과제 수행 연구실', value: data.labs?.labCount ?? null, unit: '곳' },
+          ],
+          asOf: null,
+        }} />
+        <div className="dash-section">산학협력 목표와 실적</div>
+      </FadeContent>
 
       <FadeContent>
         <div className="dash-grid-7-5">

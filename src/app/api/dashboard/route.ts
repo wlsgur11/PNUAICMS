@@ -3,11 +3,12 @@
  *   대시보드 한 화면에 필요한 모든 집계를 한 번에 내려준다.
  *   (예전에는 /api/dashboard 와 /api/year-stats 를 따로 불렀다)
  *
- * 권한: 로그인만 필요. 단 일반(GENERAL) 에게는 민감한 블록을 비운다.
+ * 권한: 로그인 없이 열린다(대시보드가 첫 화면). 로그인 전과 일반(GENERAL) 에게는 건수와 비율 같은
+ *   집계만 주고, 기업명, 사람 이름, 상담 같은 블록은 비운다.
  */
 import type { Role } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { ok, handle } from '@/lib/http';
 import {
   PIPELINE_STAGES,
@@ -127,7 +128,7 @@ async function loadActivity(role: Role): Promise<UserActivity> {
 
 export async function GET(req: Request) {
   return handle(async () => {
-    const user = await requireUser();
+    const user = await getCurrentUser();
     const sp = new URL(req.url).searchParams;
 
     // 실적 현황판 전 연도를 한 번에 읽는다. 선택 연도와 전년 값, 달성률 추이가
@@ -294,7 +295,7 @@ export async function GET(req: Request) {
         internTargetCSE: stat?.internTargetCSE ?? null, internTargetDS: stat?.internTargetDS ?? null,
       },
       partnerCompanies,
-      // 아래 null 필드는 일반(GENERAL) 전용 기본값. 권한 분기에서 전부 덮어써야 한다
+      // 아래 null 필드는 로그인 전과 일반(GENERAL) 전용 기본값. 권한 분기에서 전부 덮어써야 한다
       pipeline: null,
       distribution: null,
       collaboration: null,
@@ -308,8 +309,8 @@ export async function GET(req: Request) {
       recentHistories: [],
     };
 
-    // 일반 사용자는 요약까지만 본다
-    if (user.role === 'GENERAL') return ok(base);
+    // 로그인 전과 일반 사용자는 요약까지만 본다
+    if (!user || user.role === 'GENERAL') return ok(base);
 
     // 쏠림 진단(dept/division/type)은 특정 연도가 아니라 전체 연도 누적 경향을 보려는 것이라 year 필터를 걸지 않는다.
     const [

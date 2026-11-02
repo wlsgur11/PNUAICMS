@@ -551,6 +551,7 @@ a {
   :root[data-sidebar="collapsed"] .nav-hint,
   :root[data-sidebar="collapsed"] .nav-ext-arrow,
   :root[data-sidebar="collapsed"] .sidebar-user,
+  :root[data-sidebar="collapsed"] .sidebar-login,
   :root[data-sidebar="collapsed"] .sidebar-footer,
   :root[data-sidebar="collapsed"] .theme-toggle span {
     display: none;
@@ -1919,3 +1920,36 @@ a.dash-list-row:hover { background: var(--slate-50); }
 .guide-features { margin: 0; display: grid; gap: 12px 20px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 .guide-roles { margin: 0; display: grid; gap: 10px; }
 .card + .guide { margin-top: 0; }
+
+/* 구글 로그인 버튼. 사이드바 아래와 대시보드 로그인 안내에 쓴다 */
+.login-btn {
+  width: 100%; padding: 11px 14px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  border: 1px solid var(--slate-300); border-radius: var(--radius-sm);
+  background: var(--white); color: var(--text-1);
+  font-size: calc(14px * var(--fs, 1)); font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background .15s ease, box-shadow .15s ease;
+}
+.login-btn:hover { background: var(--slate-50); box-shadow: var(--shadow-md); }
+.login-btn:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }
+.login-btn svg { flex-shrink: 0; }
+.sidebar-login { margin-bottom: 10px; }
+/* 사이드바는 글자색 토큰이 밝은 색으로 바뀌어 있어서, 흰 버튼 위 글자색을 직접 정한다 */
+.sidebar-login .login-btn { padding: 9px 12px; font-size: calc(13px * var(--fs, 1)); background: #fff; color: #1f2a37; border-color: transparent; }
+.sidebar-login .login-btn:hover { background: #eef1f6; }
+
+/* 대시보드 로그인 안내 (로그인 전) */
+.login-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-bottom: 16px; }
+.login-cta-text { flex: 1 1 360px; }
+.login-cta-action { flex: 0 1 320px; min-width: 260px; }
+.login-cta-notes {
+  margin: 8px 0 0; padding-left: 18px;
+  font-size: calc(12.5px * var(--fs, 1)); color: var(--text-2); line-height: 1.7;
+  word-break: keep-all;
+}
+.login-cta-error {
+  margin-bottom: 10px; padding: 9px 12px; border-radius: var(--radius-sm);
+  background: var(--danger-soft-bg); color: var(--danger-soft-text);
+  font-size: calc(13px * var(--fs, 1));
+}
+.login-cta + .guide { margin-top: 0; }

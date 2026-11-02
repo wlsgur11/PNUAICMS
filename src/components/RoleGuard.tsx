@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useMe } from './MeProvider';
 
 /** 일반(GENERAL) 사용자가 접근 가능한 경로. 그 외는 대시보드로 돌려보낸다. */
-const GENERAL_ALLOWED = new Set(['/', '/login']);
+const GENERAL_ALLOWED = new Set(['/']);
 
 /**
  * 클라이언트 측 라우트 가드(사용성용). 일반 사용자가 데이터 페이지로 직접 이동하면
