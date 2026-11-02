@@ -20,6 +20,7 @@ import LabRankCard from '@/components/dashboard/LabRankCard';
 import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
+import GuideBlock from '@/components/dashboard/GuideBlock';
 import type { DashboardData } from '@/lib/dashboard-shape';
 
 export default function DashboardPage() {
@@ -62,6 +63,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* 권한을 기다리는 일반 계정은 볼 데이터가 없으니 안내를 펼쳐 둔다 */}
+      <GuideBlock open={isGeneral} />
 
       {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다 */}
       {data.students && (

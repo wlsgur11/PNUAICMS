@@ -1882,3 +1882,40 @@ a.dash-list-row:hover { background: var(--slate-50); }
 .site-card { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
 .site-card:hover { border-color: var(--slate-300); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
 .site-card:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }
+
+/* 대시보드 이용 안내. <details> 라 평소엔 제목 줄만 보인다 */
+.guide { margin-bottom: 16px; padding: 18px 24px; }
+.guide-summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  cursor: pointer; list-style: none;
+}
+.guide-summary::-webkit-details-marker { display: none; }
+.guide-summary::after {
+  content: '펼치기'; flex-shrink: 0;
+  font-size: calc(12px * var(--fs, 1)); color: var(--text-3);
+}
+.guide[open] .guide-summary::after { content: '접기'; }
+.guide-summary:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 4px; border-radius: var(--radius-sm); }
+.guide-hint { flex: 1; font-size: calc(12px * var(--fs, 1)); color: var(--text-3); }
+.guide-body {
+  display: grid; gap: 24px; margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--slate-200);
+  word-break: keep-all; overflow-wrap: break-word;
+}
+@media (min-width: 1200px) {
+  .guide-body { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr) minmax(0, 4fr); }
+}
+.guide-h { margin: 0 0 12px; font-size: calc(14px * var(--fs, 1)); font-weight: 700; color: var(--text-1); }
+.guide-lead { margin: 0 0 12px; font-size: calc(13px * var(--fs, 1)); color: var(--text-2); line-height: 1.6; }
+.guide-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.guide-steps li { display: flex; gap: 12px; }
+.guide-no { flex-shrink: 0; font-size: calc(12px * var(--fs, 1)); font-weight: 700; color: var(--indigo-600); padding-top: 2px; }
+.guide-steps strong,
+.guide-features dt,
+.guide-roles dt { font-size: calc(13px * var(--fs, 1)); font-weight: 600; color: var(--text-1); }
+.guide-steps p,
+.guide-features dd,
+.guide-roles dd { margin: 2px 0 0; font-size: calc(13px * var(--fs, 1)); color: var(--text-2); line-height: 1.6; }
+.guide-features { margin: 0; display: grid; gap: 12px 20px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.guide-roles { margin: 0; display: grid; gap: 10px; }
+.card + .guide { margin-top: 0; }
