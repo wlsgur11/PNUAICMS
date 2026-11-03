@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (file.size > MAX_UPLOAD_BYTES) return fail('파일이 너무 큽니다. 최대 10MB까지 업로드할 수 있습니다.', 413);
     const fileName = file instanceof File ? file.name : undefined;
     const buf = await file.arrayBuffer();
-    const parsed = parseSwcu(readSheets(buf), fileName);
+    const parsed = parseSwcu(readSheets(buf, { legacyEmptyCells: true }), fileName);
     if (dryRun) {
       return ok({
         year: parsed.year,
