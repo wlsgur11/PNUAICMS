@@ -157,16 +157,11 @@ function parseYearStat(rows: string[][], year: number): ParsedYearStat | null {
     if (rows[i].some((c) => (c || '').includes('달성치'))) { row = rows[i + 1] ?? null; break; }
   }
   const at = (r: string[] | null, i: number) => (r ? num(r[i] || '') : null);
-  // ⚠️ 목표치는 col 4/10 에서 읽는다 (5/11 아님). 이유: 목표치 셀(F/L열) 바로 앞 빈 셀이
-  //    self-closing(<c r="E.."/>)로 들어 있고, records-xlsx 의 <c>…</c> 정규식이 이 빈 셀을
-  //    여는 태그로 오인해 다음 칸(F/L)의 <v> 값을 앞칸(E/K = index 4/10)으로 흡수한다.
-  //    그래서 "앱 파서 기준" 목표치는 4/10 에 잡힌다. openpyxl 등 정식 파서로는 5/11 로 보이지만
-  //    실제 적재값과 다르므로 5/11 로 바꾸지 말 것. (달성 6/12·참여 7/13 은 정상 칸)
   return {
     year, enrolledCSE, enrolledDS,
     industryTargetCSE, industryTargetDS, internTargetCSE, internTargetDS,
-    industryTargetRatio: at(row, 4), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
-    internshipTargetRatio: at(row, 10), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
+    industryTargetRatio: at(row, 5), industryAchievedRatio: at(row, 6), industryStudents: at(row, 7),
+    internshipTargetRatio: at(row, 11), internshipAchievedRatio: at(row, 12), internshipStudents: at(row, 13),
   };
 }
 
@@ -190,8 +185,10 @@ function parseProjectSheet(
     const row = rows[r];
     const get = (i: number) => (i >= 0 ? (row[i] || '').trim() : '');
     const seqRaw = get(ci.seq);
-    // 새 프로젝트는 '연번'이 짧은 순번일 때만. 6자리+ 숫자는 학번(연속 학생 행)이라 새 프로젝트 아님.
-    const isNew = !!seqRaw && !/\d{6,}/.test(seqRaw);
+    // 새 프로젝트는 '연번'이 짧은 순번일 때. 6자리+ 숫자는 학번(연속 학생 행)이라 새 프로젝트 아님.
+    // 24년 시트처럼 연번 칸이 통째로 빈 시트도 있어서, 연번이 비어 있어도 연구주제가 있으면 새 과제로 본다
+    // (학생만 이어지는 행은 연구주제 칸이 비어 있다)
+    const isNew = seqRaw ? !/\d{6,}/.test(seqRaw) : !!get(ci.title);
     if (isNew) {
       cur = {
         year, dept, category,
