@@ -67,18 +67,23 @@ function expandSci(v: string): string {
 }
 
 /** sheetN.xml → 행 배열 (열 위치 맞춰 빈칸 채움) */
-function parseSheet(xml: string, shared: string[]): string[][] {
+function parseSheet(xml: string, shared: string[], legacy: boolean): string[][] {
   const rows: string[][] = [];
-  const rowRe = /<row[^>]*\br="(\d+)"[^>]*>([\s\S]*?)<\/row>/g;
+  // 서식만 있는 빈 칸과 빈 행은 <c r="O62" s="5"/>, <row r="3"/> 처럼 스스로 닫힌다.
+  // 이걸 <c ...>...</c> 로만 찾으면 빈 칸이 다음 칸의 값까지 삼켜서, 공유문자열 번호(923 같은)나
+  // 옆 칸의 학번이 빈 칸 자리에 들어간다. 스스로 닫힌 형태를 먼저 따로 받는다.
+  // 빈 행은 예전처럼 건너뛴다. 행 번호를 기준으로 읽는 파서(전체 현황, 성과지표)가 있어서다
+  const rowRe = legacy ? /<row\b([^>]*?)>([\s\S]*?)<\/row>/g : /<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g;
   let rm: RegExpExecArray | null;
   while ((rm = rowRe.exec(xml))) {
+    if (rm[2] === undefined) continue;
     const inner = rm[2];
     const cells: string[] = [];
-    const cRe = /<c\b([^>]*?)>([\s\S]*?)<\/c>/g;
+    const cRe = legacy ? /<c\b([^>]*?)>([\s\S]*?)<\/c>/g : /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cm: RegExpExecArray | null;
     while ((cm = cRe.exec(inner))) {
       const attrs = cm[1];
-      const body = cm[2];
+      const body = cm[2] ?? '';
       const refM = attrs.match(/\br="([A-Z]+\d+)"/);
       if (!refM) continue;
       const idx = colToIndex(refM[1]);
@@ -105,7 +110,12 @@ function parseSheet(xml: string, shared: string[]): string[][] {
   return rows;
 }
 
-export function readSheets(buf: ArrayBuffer): SheetRows[] {
+/**
+ * legacyEmptyCells: 빈 칸을 옆 칸 값으로 잘못 채우던 예전 방식으로 읽는다. 성과지표 업로드(swcu-parse)는
+ * 그 결과에 맞춰 열 위치와 지표 순서를 고정해 둬서 이 방식이 필요하다.
+ * ponytail: swcu-parse 를 바른 읽기 기준으로 다시 맞추면 이 옵션을 지운다
+ */
+export function readSheets(buf: ArrayBuffer, opts: { legacyEmptyCells?: boolean } = {}): SheetRows[] {
   const zip = new AdmZip(Buffer.from(buf));
   const read = (path: string): string => {
     const e = zip.getEntry(path);
@@ -130,7 +140,7 @@ export function readSheets(buf: ArrayBuffer): SheetRows[] {
     if (!target) continue;
     const path = target.startsWith('/') ? target.slice(1) : `xl/${target}`;
     const xml = read(path);
-    sheets.push({ name, rows: parseSheet(xml, shared) });
+    sheets.push({ name, rows: parseSheet(xml, shared, !!opts.legacyEmptyCells) });
   }
   return sheets;
 }
