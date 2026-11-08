@@ -132,13 +132,9 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
       <div className="brand">
         <img className="brand-logo" src="/emblem.png" alt="부산대학교" width={32} height={32} />
         <div className="brand-text">
-          <div className="brand-name">산학협력 AI 관리</div>
+          <div className="brand-name">PNU-ICEx</div>
           <div className="brand-sub">부산대 AI융합교육원</div>
         </div>
-      </div>
-      {/* AICMS 가 무엇의 약자인지. C 는 산학협력(Cooperation). 로고 옆은 폭이 좁아 아래에 따로 둔다 */}
-      <div className="brand-full">
-        <b>AICMS</b> Artificial Intelligence Cooperation Management System
       </div>
       <button
         type="button"
