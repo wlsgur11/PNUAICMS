@@ -12,7 +12,8 @@ import { getCurrentUser } from '@/lib/auth';
 import pkg from '../../package.json';
 
 export const metadata: Metadata = {
-  title: '산학협력 AI 관리 시스템',
+  // 현장평가 동안 잠시 PNU-ICEx 로 부른다. 평가 뒤 대시보드를 ICEx 로 떼어 내면 AICMS 이름으로 되돌린다
+  title: 'PNU-ICEx',
   description: 'AI기업 인턴십·취업연계·산학협력 관리',
 };
 
