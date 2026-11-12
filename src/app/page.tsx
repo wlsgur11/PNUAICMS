@@ -20,6 +20,7 @@ import LabRankCard from '@/components/dashboard/LabRankCard';
 import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
+import SwcuSlidesBlock from '@/components/dashboard/SwcuSlidesBlock';
 import GuideBlock from '@/components/dashboard/GuideBlock';
 import LoginCta from '@/components/dashboard/LoginCta';
 import type { DashboardData } from '@/lib/dashboard-shape';
@@ -104,6 +105,8 @@ export default function DashboardPage() {
           ],
           asOf: null,
         }} />
+        <div className="dash-section">AI대학과 신기술 특화 트랙</div>
+        <SwcuSlidesBlock />
         <div className="dash-section">산학협력 목표와 실적</div>
       </FadeContent>
 
