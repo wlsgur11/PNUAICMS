@@ -139,8 +139,8 @@ export const studentCreateSchema = z.object({
   // 신규 등록은 연락처를 받는다. 상담하면서 적어 두시려고 필수로 둔 칸이다.
   // 수정에서는 studentUpdateSchema 가 다시 풀어 준다. 실적 엑셀에서 들어온 학생은
   // 연락처가 비어 있는데, 거기까지 막으면 학과·학년조차 못 고친다
-  phone: z.string({ required_error: '전화번호는 필수입니다.' }).trim().min(1, '전화번호는 필수입니다.'),
-  email: z.string({ required_error: '이메일은 필수입니다.' }).trim().min(1, '이메일은 필수입니다.'),
+  phone: z.string({ error: '전화번호는 필수입니다.' }).trim().min(1, '전화번호는 필수입니다.'),
+  email: z.string({ error: '이메일은 필수입니다.' }).trim().min(1, '이메일은 필수입니다.'),
   certificates: z.array(z.string().trim()).optional().default([]),
   foreignLanguages: z.array(z.string().trim()).optional().default([]),
   clubs: z.array(z.string().trim()).optional().default([]),
@@ -156,8 +156,13 @@ export const studentCreateSchema = z.object({
 // 수정은 학번 변경 불가 → studentNo 제외. version 은 낙관적 락이라 필수.
 export const studentUpdateSchema = studentCreateSchema.omit({ studentNo: true, counselings: true }).partial().extend({
   version: z.coerce
-    .number({ invalid_type_error: '수정 요청에 버전 정보가 없습니다. 새로고침 후 다시 시도하세요.' })
+    .number({ error: '수정 요청에 버전 정보가 없습니다. 새로고침 후 다시 시도하세요.' })
     .int(),
+  // zod 4 는 partial 로 빠진 칸에도 default 를 채운다. create 의 default([]) 가 그대로 남으면
+  // 이 칸을 안 보낸 수정 요청이 자격증, 어학, 동아리를 빈 배열로 덮어 지운다
+  certificates: z.array(z.string().trim()).optional(),
+  foreignLanguages: z.array(z.string().trim()).optional(),
+  clubs: z.array(z.string().trim()).optional(),
   name: z.string().trim().min(1, '이름은 필수입니다.').optional(),
   // 학번을 고칠 수 있게 한다. 교수님이 진짜 학번을 모르실 때 임의로 넣어 두시는데,
   // 기본키라 한번 넣으면 못 고쳐서 지우고 다시 만드는 수밖에 없었다(상담도 함께 날아갔다)
