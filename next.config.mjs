@@ -15,6 +15,8 @@ const nextConfig = {
   // 최소 의존성만 담은 독립 실행 번들을 만들어줘 전환이 매끄럽다.
   output: 'standalone',
   reactStrictMode: true,
+  // 응답 헤더 X-Powered-By: Next.js 를 끈다. 어떤 프레임워크인지 밖에 알릴 이유가 없다
+  poweredByHeader: false,
   // next/image 를 쓰지 않으므로 /_next/image 최적화 경로를 닫는다 (이미지 최적화 RCE 취약점이 반복돼 계속 닫아 둔다)
   images: { unoptimized: true },
   async headers() {
