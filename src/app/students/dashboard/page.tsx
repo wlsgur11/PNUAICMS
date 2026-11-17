@@ -17,14 +17,12 @@ type Stats = {
   departmentCounts: { label: string; count: number }[]; careerCounts: { label: string; count: number }[];
 };
 
-function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
+// 숫자 한 칸. 아이콘 없이 회색 이름 아래 숫자. 칸들은 한 카드 안에서 1px 선으로 나뉜다
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ fontSize: 'calc(28px * var(--fs, 1))' }}>{icon}</div>
-      <div>
-        <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{label}</div>
-        <div style={{ fontSize: 'calc(26px * var(--fs, 1))', fontWeight: 700 }}><CountUp end={value} /><span className="muted" style={{ fontSize: 'calc(14px * var(--fs, 1))', fontWeight: 400 }}>명</span></div>
-      </div>
+    <div className="kpi-cell">
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-value"><CountUp end={value} /><span className="kpi-unit">명</span></div>
     </div>
   );
 }
@@ -56,12 +54,12 @@ export default function StudentDashboardPage() {
     <>
       <PageHeader title="학생 현황" />
       <FadeContent>
-      <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
-        <StatCard label="전체 학생" value={data.total} icon="🎓" />
-        <StatCard label="3학년 이상(재학)" value={data.highGrade} icon="📈" />
-        <StatCard label="졸업생" value={data.graduated} icon="🎉" />
-        <StatCard label="산학 참여" value={data.projectParticipants} icon="🔬" />
-        <StatCard label="인턴십 참여" value={data.internParticipants} icon="💼" />
+      <div className="card kpi-strip">
+        <StatCard label="전체 학생" value={data.total} />
+        <StatCard label="3학년 이상(재학)" value={data.highGrade} />
+        <StatCard label="졸업생" value={data.graduated} />
+        <StatCard label="산학 참여" value={data.projectParticipants} />
+        <StatCard label="인턴십 참여" value={data.internParticipants} />
       </div>
       </FadeContent>
 

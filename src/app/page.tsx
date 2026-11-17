@@ -45,12 +45,13 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title="산학협력 성과"
+        sub={goalFinding(data)}
         extra={data.years.length > 1 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>연도</span>
             {data.years.map((y) => (
               <button key={y} type="button"
-                      className={`btn btn-sm${y === data.year ? ' btn-primary' : ''}`}
+                      className={`btn btn-sm${y === data.year ? ' btn-on' : ''}`}
                       onClick={() => setYear(y)}>
                 {y}
               </button>
@@ -191,4 +192,20 @@ export default function DashboardPage() {
 
     </>
   );
+}
+
+// 제목 아래 한 줄. 올해 목표 대비 어디까지 왔는지를 실제 값으로 말한다. 값이 없는 항목은 뺀다
+function goalFinding(d: DashboardData): string | null {
+  const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const part = (name: string, m: DashboardData['goals']['industry']) =>
+    m.achieved == null ? null
+      : m.target == null ? `${name} ${pct(m.achieved)}`
+      : `${name} ${pct(m.achieved)}(목표 ${pct(m.target)}${m.achieved >= m.target ? ' 달성' : ''})`;
+  const s = d.goals.swcu;
+  const parts = [
+    part('산학협력 참여율', d.goals.industry),
+    part('인턴십 참여율', d.goals.internship),
+    s.total > 0 ? `SW중심대학 지표 ${s.met}/${s.total}개 달성` : null,
+  ].filter(Boolean);
+  return parts.length ? `${d.year}년 ${parts.join(', ')}` : null;
 }

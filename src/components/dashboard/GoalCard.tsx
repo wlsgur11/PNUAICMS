@@ -139,8 +139,8 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
             {mode === 'count' ? '연도별 산학협력, 인턴십 건수' : '연도별 목표 대비 달성률'}
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
-            <button type="button" className={`btn btn-sm${mode === 'count' ? ' btn-primary' : ''}`} onClick={() => setMode('count')}>건수</button>
-            <button type="button" className={`btn btn-sm${mode === 'ratio' ? ' btn-primary' : ''}`} onClick={() => setMode('ratio')}>달성률</button>
+            <button type="button" className={`btn btn-sm${mode === 'count' ? ' btn-on' : ''}`} onClick={() => setMode('count')}>건수</button>
+            <button type="button" className={`btn btn-sm${mode === 'ratio' ? ' btn-on' : ''}`} onClick={() => setMode('ratio')}>달성률</button>
           </div>
         </div>
         {mode === 'count' ? <TrendChart data={trend} /> : <GoalTrendChart data={goalTrend} />}

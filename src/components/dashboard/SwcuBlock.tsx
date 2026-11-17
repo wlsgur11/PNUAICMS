@@ -97,7 +97,7 @@ function MetTrend({ trend, year }: { trend: SwcuTrendPoint[]; year: number }) {
             }}>
               {t.met}<span style={{ color: 'var(--text-3)', fontWeight: 400 }}>/{t.total}</span>
             </div>
-            <div style={{ fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)' }}>{t.year}</div>
+            <div style={{ fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>{t.year}</div>
           </div>
         ))}
       </div>

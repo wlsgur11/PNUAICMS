@@ -55,7 +55,7 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
         <span style={{ flex: 1 }}>{title}{unit ? <span className="muted" style={{ fontWeight: 400 }}> ({unit})</span> : ''}</span>
         {latestKmac?.verifyResult && (
           <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', fontWeight: 400 }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{latestKmac.verifyResult}</span>
+            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(11px * var(--fs, 1))' }}>{latestKmac.verifyResult}</span>
           </span>
         )}
       </div>
@@ -74,7 +74,7 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
               {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />}
               <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
               <text x={x + bw / 2} y={baseY + 16} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
-              {s.target != null && <text x={x + bw / 2} y={baseY + 32} textAnchor="middle" fontSize={10} fill="var(--slate-400)">목표 {fmt(s.target, unit)}</text>}
+              {s.target != null && <text x={x + bw / 2} y={baseY + 32} textAnchor="middle" fontSize={12} fill="var(--slate-400)">목표 {fmt(s.target, unit)}</text>}
             </g>
           );
         })}
@@ -212,7 +212,7 @@ export default function SwcuDashboardPage() {
                         {normTarget != null && <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
                         {ind.verifyResult && (
                           <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{ind.verifyResult}</span>
+                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(11px * var(--fs, 1))' }}>{ind.verifyResult}</span>
                           </span>
                         )}
                       </td>
@@ -231,7 +231,7 @@ export default function SwcuDashboardPage() {
           <div className="card-title"><span className="accent-bar" />총괄 원시값 (자세히 보기)</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {years.map((y) => (
-              <button key={y.year} className={`btn btn-sm${y.year === activeRawYear ? ' btn-primary' : ''}`} onClick={() => setRawYear(y.year)}>{y.year}</button>
+              <button key={y.year} className={`btn btn-sm${y.year === activeRawYear ? ' btn-on' : ''}`} onClick={() => setRawYear(y.year)}>{y.year}</button>
             ))}
           </div>
         </div>

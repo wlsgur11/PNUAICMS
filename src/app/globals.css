@@ -1,168 +1,170 @@
 /* ─────────────────────────────────────────────────────────
-   부울경 AI기업 관리 시스템 v2 — 전역 스타일
-   디자인 톤: 견고한 기관 시스템 (블루그레이 + 블루 강조)
-     · 라이트/다크 테마: 모든 색을 CSS 변수로, :root 와 [data-theme=dark] 두 벌
+   산학협력 AI 관리 시스템 — 전역 스타일
+   방향(2026-11-17): taste-skill 의 accent ladder. AIPMS 와 같은 계열이다.
+     · 부산대 엠블럼 파랑(#0658a0) 한 색으로 사다리를 만든다. 진한 파랑은 작은 표시
+       (주 버튼, 데이터, 선택된 메뉴 아이콘)에만, 넓은 면은 옅은 단계만 쓴다
+     · 사이드바는 화면 바탕과 같은 면에 두고 1px 선으로만 나눈다
+     · 쉬고 있는 카드는 그림자 없이 테두리만. 그림자는 떠 있는 것(메뉴, 대화상자)에만
+     · 글자 회색은 흰 바탕에서 4.5:1 을 넘는 것만 쓴다
      · 변수명(--slate-, --indigo-, --white 계열)은 유지하고 값만 테마별로 재지정
    ───────────────────────────────────────────────────────── */
 
 :root {
-  /* 강조(블루) 계열 — 기존 --indigo-* 이름 유지, 값은 블루로 재지정 */
-  --indigo-900: #1f3a5f;
-  --indigo-800: #234a7a;
-  --indigo-700: #2357b0;
-  --indigo-600: #2f6bd1;
-  --indigo-500: #4f8bf0;
-  --indigo-100: #dbe7fb;
-  --indigo-50: #eaf1fc;
+  /* 부산대 파랑 사다리. 이름은 예전 --indigo-* 그대로 */
+  --indigo-900: #053c6e;
+  --indigo-800: #054a87;
+  --indigo-700: #054a87;
+  --indigo-600: #0658a0;
+  --indigo-500: #3b7cc0;
+  --indigo-100: #d4e4f4;
+  --indigo-50: #eef4fb;
 
-  /* 중립(블루그레이) 계열 — 기존 --slate-* 이름 유지 */
-  --slate-900: #1f2a37;
-  --slate-700: #46505e;
-  --slate-500: #6b7480;
-  --slate-400: #8893a4;
-  --slate-300: #cdd4de;
-  --slate-200: #e3e8ef;
-  --slate-100: #eef1f6;
-  --slate-50: #f4f6fa;
+  /* 중립 회색. 파랑 기운을 거의 뺀 회색이라 파랑이 데이터에서만 읽힌다 */
+  --slate-900: #111827;
+  --slate-700: #374151;
+  --slate-600: #4b5563;
+  --slate-500: #5f6672;
+  --slate-400: #6b7280;
+  --slate-300: #d1d5db;
+  --slate-200: #e5e7eb;
+  --slate-100: #f1f3f6;
+  --slate-50: #f7f9fc;
 
-  --red-600: #dc2626;
-  --green-600: #16a34a;
-  --green-50: #eafaf0;
+  --red-600: #c4242a;
+  --green-600: #247b50;
+  --green-50: #dcfce7;
 
   --white: #ffffff;
-  /* 표면(surface). 다크에서 어두운 표면으로 재정의됨 */
   --radius: 8px;
   --radius-sm: 6px;
-  /* 카드는 테두리로 구분한다. 그림자는 떠 있는 것(팝오버, 호버)에만 남긴다 */
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-  --sidebar-w: 260px;
+  /* 카드는 테두리로 구분한다. 그림자는 떠 있는 것(팝오버, 대화상자)에만 남긴다 */
+  --shadow: none;
+  --shadow-md: 0 12px 32px rgba(16, 24, 40, 0.16);
+  --sidebar-w: 240px;
 
   /* 시맨틱 토큰 */
-  --app-bg: #f4f6fa;
+  --app-bg: #f7f9fc;
   --surface: #ffffff;
-  --border: #e3e8ef;
-  --text-1: #1f2a37;
-  --text-2: #5b6473;
-  --text-3: #8893a4;
-  --accent: #2f6bd1;
-  --accent-strong: #2357b0;
-  --accent-soft: #e3ecfb;
-  --accent-on-soft: #1f53b0;
-  /* 사이드바는 라이트에서도 짙게 둔다. 사이드바·본문배경·카드가 전부 옅은
-     회색이면 세 층이 한 덩어리로 보여서 어디가 어디인지 안 읽힌다 */
-  --sidebar-bg: #1b2532;
-  --sidebar-border: #2c3848;
+  --border: #e5e7eb;
+  --text-1: #111827;
+  --text-2: #5f6672;
+  --text-3: #6b7280;
+  --accent: #0658a0;
+  --accent-strong: #054a87;
+  --accent-soft: #eef4fb;
+  --accent-on-soft: #053c6e;
+  /* 사이드바는 바탕과 같은 면. 1px 선 하나로만 본문과 나눈다 */
+  --sidebar-bg: #f7f9fc;
+  --sidebar-border: #e5e7eb;
 
-  /* 주 버튼. 강조색 대신 배경을 뒤집어 눈에 띄게 한다.
-     파랑은 차트와 숫자가 독점해야 시선이 거기로 간다 */
-  --solid-bg: #1f2a37;
+  /* 주 버튼. 화면마다 하나만 파랑으로 채운다 */
+  --solid-bg: #0658a0;
   --solid-text: #ffffff;
-  --solid-bg-hover: #2c3948;
+  --solid-bg-hover: #054a87;
 
-  /* 소프트 칩(뱃지/태그/스탯아이콘) */
-  --info-soft-bg: #e3ecfb;
-  --info-soft-text: #1f53b0;
-  --success-soft-bg: #e6f6ec;
-  --success-soft-text: #15803d;
-  --danger-soft-bg: #fdeaea;
-  --danger-soft-text: #c0322f;
-  --neutral-soft-bg: #eef1f6;
-  --neutral-soft-text: #5b6473;
-  --amber-soft-bg: #fbf0d8;
-  --amber-soft-text: #a05a07;
+  /* 옅은 짝(뱃지, 태그). 옅은 면 위에 같은 색의 진한 글자 */
+  --info-soft-bg: #eef4fb;
+  --info-soft-text: #053c6e;
+  --success-soft-bg: #dcfae5;
+  --success-soft-text: #14532d;
+  --danger-soft-bg: #ffedea;
+  --danger-soft-text: #831c1e;
+  --neutral-soft-bg: #f1f3f6;
+  --neutral-soft-text: #4b5563;
+  --amber-soft-bg: #fffbeb;
+  --amber-soft-text: #92400e;
 
   /* 차트 토큰.
      계열(series)과 강도(scale)를 분리한다. 계열은 '다른 항목' 이고 강도는 '더 큰 값' 인데,
      한 벌로 섞어 쓰면 색이 다른 것이 값이 큰 것으로 읽힌다.
      컴포넌트가 --accent 나 생색을 직접 쓰지 않고 이 층만 본다. 다크 대비 조정도 여기서 한다 */
   --chart-1: var(--accent);      /* 주 계열: 산학협력 */
-  --chart-2: var(--slate-400);   /* 보조 계열: 인턴십 */
-  --chart-track: var(--slate-100); /* 막대 뒤 트랙 */
+  --chart-2: #8a94a3;            /* 보조 계열: 인턴십. 회색이라 주 계열과 다투지 않는다 */
+  --chart-track: #e5edf6;        /* 막대 뒤 트랙. 파랑의 옅은 단계 */
   --chart-grid: var(--slate-200);  /* 축 눈금선. 데이터보다 연해야 한다 */
   --chart-met: var(--green-600);
   --chart-unmet: var(--red-600);
   --chart-na: var(--slate-300);  /* 판정 불가(목표치 없음) */
 
-  /* 순차 스케일. 01 = 가장 약함, 05 = 가장 강함. 분포 막대처럼 순위만 읽히면 되는 곳에 쓴다 */
-  --chart-scale-05: #2f6bd1;
-  --chart-scale-04: #7ba3e0;
-  --chart-scale-03: #a9c3ea;
-  --chart-scale-02: #cdd4de;
-  --chart-scale-01: #e3e8ef;
+  /* 순차 스케일. 01 = 가장 약함, 05 = 가장 강함. 같은 파랑의 단계라 색이 아니라 진하기로 읽힌다 */
+  --chart-scale-05: #0658a0;
+  --chart-scale-04: #4a86c2;
+  --chart-scale-03: #8db4dc;
+  --chart-scale-02: #c4d9ee;
+  --chart-scale-01: #e5edf6;
 
   /* 불완전 데이터(미기재, 진행중 연도)용 사선. .chart-gap 이 쓴다 */
-  --chart-gap-bg: #f4f6fa;
-  --chart-gap-fg: #cdd4de;
+  --chart-gap-bg: #f7f9fc;
+  --chart-gap-fg: #d1d5db;
 }
 
+/* 다크는 남색 없이 무채색 단계로만. 파랑은 밝은 단계로 올려 대비를 맞춘다 */
 :root[data-theme="dark"] {
-  --indigo-900: #0f1722;
-  --indigo-800: #15202e;
-  --indigo-700: #6fa1f3;
-  --indigo-600: #4f8bf0;
-  --indigo-500: #6fa1f3;
-  --indigo-100: #9fbdf0;
-  --indigo-50: rgba(79, 139, 240, 0.16);
+  --indigo-900: #c4dcf3;
+  --indigo-800: #8bbbe8;
+  --indigo-700: #8bbbe8;
+  --indigo-600: #6aa6e0;
+  --indigo-500: #6aa6e0;
+  --indigo-100: #1f3550;
+  --indigo-50: #172434;
 
-  --slate-900: #e6ebf2;
-  --slate-700: #c2cad6;
-  --slate-500: #aeb9c8;
-  --slate-400: #8593a6;
-  --slate-300: #3f4a59;
-  --slate-200: #343f4d;
-  --slate-100: #2b3543;
-  --slate-50: #283242;
+  --slate-900: #f2f2f2;
+  --slate-700: #d0d0d0;
+  --slate-600: #bdbdbd;
+  --slate-500: #b4b4b4;
+  --slate-400: #949494;
+  --slate-300: #444444;
+  --slate-200: #2e2e2e;
+  --slate-100: #232323;
+  --slate-50: #1d1d1d;
 
-  --red-600: #f1797a;
-  --green-600: #5fcf97;
-  --green-50: rgba(95, 207, 151, 0.14);
+  --red-600: #f0787d;
+  --green-600: #4fc487;
+  --green-50: #13291d;
 
-  --white: #232c38;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --white: #1a1a1a;
+  --shadow: none;
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.6);
 
-  --app-bg: #1b222c;
-  --surface: #232c38;
-  --border: #343f4d;
-  --text-1: #e6ebf2;
-  --text-2: #aeb9c8;
-  --text-3: #8593a6;
-  --accent: #4f8bf0;
-  --accent-strong: #6fa1f3;
-  --accent-soft: rgba(79, 139, 240, 0.18);
-  --accent-on-soft: #cfe0fb;
-  /* 다크에서도 사이드바가 제일 어둡다. 본문 배경(#1b222c)보다 밝게 두면
-     라이트에서 고친 '세 층이 한 덩어리' 가 여기서 그대로 재현된다 */
-  --sidebar-bg: #0f141c;
-  --sidebar-border: #26313f;
+  --app-bg: #111111;
+  --surface: #1a1a1a;
+  --border: #2e2e2e;
+  --text-1: #f2f2f2;
+  --text-2: #b4b4b4;
+  --text-3: #949494;
+  --accent: #6aa6e0;
+  --accent-strong: #8bbbe8;
+  --accent-soft: #172434;
+  --accent-on-soft: #c4dcf3;
+  --sidebar-bg: #111111;
+  --sidebar-border: #2e2e2e;
 
-  /* 다크에서는 반대로 밝은 버튼이 눈에 띈다 */
-  --solid-bg: #e6ebf2;
-  --solid-text: #1b222c;
-  --solid-bg-hover: #f4f7fb;
+  /* 다크에서는 밝은 파랑 위에 검은 글자 */
+  --solid-bg: #6aa6e0;
+  --solid-text: #0b0b0b;
+  --solid-bg-hover: #8bbbe8;
 
-  --info-soft-bg: rgba(79, 139, 240, 0.18);
-  --info-soft-text: #bcd6fb;
-  --success-soft-bg: rgba(95, 207, 151, 0.16);
+  --info-soft-bg: #172434;
+  --info-soft-text: #c4dcf3;
+  --success-soft-bg: #13291d;
   --success-soft-text: #8fe0b4;
-  --danger-soft-bg: rgba(241, 121, 122, 0.16);
-  --danger-soft-text: #f1a3a3;
-  --neutral-soft-bg: #2b3543;
-  --neutral-soft-text: #aeb9c8;
-  --amber-soft-bg: rgba(214, 160, 74, 0.18);
-  --amber-soft-text: #e6c07a;
+  --danger-soft-bg: #2c1719;
+  --danger-soft-text: #f5a3a6;
+  --neutral-soft-bg: #232323;
+  --neutral-soft-text: #b4b4b4;
+  --amber-soft-bg: #2a2011;
+  --amber-soft-text: #fcd34d;
 
-  /* --chart-1/2/track/met/unmet/na 는 참조하는 변수가 위에서 이미 뒤집혀 그대로 따라간다.
-     아래는 생색이라 따라가지 못하는 것만 다시 잡는다 */
-  --chart-scale-05: #4f8bf0;
-  --chart-scale-04: #3f6dae;
-  --chart-scale-03: #34557f;
-  --chart-scale-02: #3f4a59;
-  --chart-scale-01: #343f4d;
+  --chart-2: #8a8a8a;
+  --chart-track: #1f3550;
+  --chart-scale-05: #6aa6e0;
+  --chart-scale-04: #4a7fb3;
+  --chart-scale-03: #345a80;
+  --chart-scale-02: #24394f;
+  --chart-scale-01: #1c2733;
 
-  --chart-gap-bg: #2b3543;
-  --chart-gap-fg: #4b5666;
+  --chart-gap-bg: #1d1d1d;
+  --chart-gap-fg: #444444;
 }
 
 * {
@@ -211,20 +213,10 @@ a {
 :root[data-sidebar="collapsed"] .ui-scale { display: none; }
 
 /* ── 사이드바 ── */
-/* 사이드바 안에서만 쓰는 색. 아래 규칙들이 전부 --text-*, --accent-* 를 보고
-   있어서 여기서 값만 갈아끼우면 규칙을 하나도 안 고쳐도 어두운 배경에 맞는다 */
+/* 사이드바는 바탕과 같은 면이다. 선택된 메뉴만 파랑의 옅은 면과 진한 글자로 표시하고,
+   아이콘 하나만 진한 파랑이다 */
 .sidebar {
-  --text-1: #eef2f8;
-  --text-2: #b4c0d0;
-  --text-3: #8492a5;
-  /* 네비 활성 표시에도 파랑을 안 쓴다. 본문의 차트·숫자만 파랑이어야
-     화면에서 파랑이 '여기 봐라' 로 읽힌다 */
-  --accent: #eef2f8;
-  --accent-soft: rgba(255, 255, 255, 0.10);
-  --accent-on-soft: #ffffff;
-  --neutral-soft-bg: rgba(255, 255, 255, 0.08);
-  --neutral-soft-text: #b4c0d0;
-  --slate-100: rgba(255, 255, 255, 0.08);
+  --nav-hover: rgba(17, 24, 39, 0.05);
 
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -249,15 +241,18 @@ a {
   padding: 0 6px;
 }
 
-/* 엠블럼 원본이 짙은 남색이라 어두운 사이드바에서 묻힌다. 흰 실루엣으로 뒤집는다 */
+/* 엠블럼은 원본 색 그대로. 다크에서만 짙은 남색이 묻혀서 흰 실루엣으로 뒤집는다 */
 .brand-logo {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
   object-fit: contain;
+}
+:root[data-theme="dark"] .brand-logo {
   filter: brightness(0) invert(1);
   opacity: 0.92;
 }
+:root[data-theme="dark"] .sidebar { --nav-hover: rgba(255, 255, 255, 0.06); }
 
 .brand-text {
   line-height: 1.25;
@@ -325,7 +320,7 @@ a {
 }
 
 .nav-item:hover {
-  background: rgba(120, 140, 170, 0.12);
+  background: var(--nav-hover);
   color: var(--text-1);
 }
 
@@ -372,7 +367,7 @@ a {
 }
 
 .nav-group-header:hover {
-  background: rgba(120, 140, 170, 0.12);
+  background: var(--nav-hover);
   color: var(--text-1);
 }
 
@@ -414,7 +409,7 @@ a {
 .nav-hint {
   flex-shrink: 0;
   white-space: nowrap;
-  font-size: calc(10px * var(--fs, 1));
+  font-size: calc(11px * var(--fs, 1));
   font-weight: 500;
   padding: 1px 6px;
   border-radius: var(--radius-sm);
@@ -446,13 +441,13 @@ a {
 }
 
 .theme-toggle:hover {
-  background: rgba(120, 140, 170, 0.12);
+  background: var(--nav-hover);
   color: var(--text-1);
 }
 
 .sidebar-user {
   padding: 12px;
-  background: rgba(120, 140, 170, 0.10);
+  background: var(--slate-100);
   border-radius: var(--radius-sm);
   margin-bottom: 10px;
 }
@@ -492,7 +487,7 @@ a {
 }
 
 .logout-btn:hover {
-  background: rgba(120, 140, 170, 0.12);
+  background: var(--nav-hover);
   color: var(--text-1);
 }
 
@@ -559,16 +554,16 @@ a {
 
 .page-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 28px;
 }
 
 .page-title {
-  font-size: calc(26px * var(--fs, 1));
-  font-weight: 800;
+  font-size: calc(24px * var(--fs, 1));
+  font-weight: 700;
   color: var(--slate-900);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .page-date {
@@ -655,11 +650,9 @@ a {
   color: var(--slate-900);
 }
 
+/* 제목 앞 세로 막대는 장식이라 감춘다. 제목 글자가 스스로 구역을 말한다 */
 .card-title .accent-bar {
-  width: 4px;
-  height: 18px;
-  border-radius: var(--radius-sm);
-  background: var(--slate-300);
+  display: none;
 }
 
 /* ── 통계 카드 그리드 ── */
@@ -783,9 +776,9 @@ table.data-table {
 
 .data-table thead th {
   text-align: left;
-  font-size: calc(13px * var(--fs, 1));
-  font-weight: 600;
-  color: var(--slate-500);
+  font-size: calc(12px * var(--fs, 1));
+  font-weight: 500;
+  color: var(--text-2);
   padding: 11px 16px;
   border-bottom: 1px solid var(--slate-200);
   white-space: nowrap;
@@ -864,9 +857,9 @@ table.data-table {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  padding: 10px 18px;
+  padding: 8px 14px;
   font-size: calc(14px * var(--fs, 1));
-  font-weight: 600;
+  font-weight: 500;
   font-family: inherit;
   border: 1px solid var(--slate-300);
   background: var(--white);
@@ -888,6 +881,15 @@ table.data-table {
 .btn-primary:hover {
   background: var(--solid-bg-hover);
   border-color: var(--solid-bg-hover);
+}
+
+/* 고른 연도, 고른 보기처럼 '선택됨' 은 채운 버튼이 아니라 옅은 파랑 면이다.
+   파랑으로 채운 버튼은 화면마다 주 행동 하나에만 남긴다 */
+.btn-on,
+.btn-on:hover {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+  border-color: var(--indigo-100);
 }
 
 .btn-ghost {
@@ -919,10 +921,10 @@ table.data-table {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: calc(12px * var(--fs, 1));
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -958,10 +960,10 @@ table.data-table {
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: calc(12px * var(--fs, 1));
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .tag-green {
@@ -1029,8 +1031,8 @@ table.data-table {
 }
 
 .check-yes {
-  color: var(--green-600);
-  font-weight: 700;
+  color: var(--text-1);
+  font-weight: 500;
 }
 
 .check-no {
@@ -1609,6 +1611,13 @@ table.data-table {
    3열을 고정하면 1000px 급 창에서 한 칸이 250px 로 좁아져 답답하고,
    auto-fit 은 상한이 없어 넓은 모니터에서 4열까지 늘어나 6개 카드가 4+2 로 어긋난다.
    1200px(노트북 전체화면)부터 3열. 창을 줄이면 2열로 내려온다 */
+/* 짧은 카드를 옆 카드 키에 맞춰 늘리지 않는다. 늘리면 카드 안에 빈 띠가 생긴다 */
+.dash-grid-auto,
+.dash-grid-4,
+.dash-grid-7-5 {
+  align-items: start;
+}
+
 .dash-grid-auto {
   display: grid;
   grid-template-columns: 1fr;
@@ -1659,14 +1668,12 @@ table.data-table {
 }
 
 /* 구역 제목. 사이드바 메뉴와 같은 단위로 끊어 카드를 찾는 기준을 하나로 만든다 */
+/* 묶음 제목. 카드 밖에서 16px 진한 글자로 이 아래가 무엇인지 말한다 */
 .dash-section {
-  font-size: calc(12px * var(--fs, 1));
-  font-weight: 500;
-  color: var(--text-3);
-  letter-spacing: 0.04em;
-  margin: 26px 0 10px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid var(--slate-200);
+  font-size: calc(16px * var(--fs, 1));
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 36px 0 12px;
 }
 .dash-section + .dash-grid-auto { margin-top: 0; }
 
@@ -1938,3 +1945,46 @@ a.dash-list-row:hover { background: var(--slate-50); }
   font-size: calc(13px * var(--fs, 1));
 }
 .login-cta + .guide { margin-top: 0; }
+
+/* ── 숫자 줄 ──
+   숫자 여러 개는 카드 하나를 1px 선으로 나눠 담는다. 칸마다 카드를 따로 두지 않는다 */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  padding: 0;
+}
+.kpi-cell {
+  padding: 18px 20px;
+  border-left: 1px solid var(--border);
+}
+.kpi-cell:first-child { border-left: 0; }
+.kpi-label {
+  font-size: calc(13px * var(--fs, 1));
+  color: var(--text-2);
+}
+.kpi-value {
+  margin-top: 4px;
+  font-size: calc(24px * var(--fs, 1));
+  font-weight: 600;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+.kpi-unit {
+  margin-left: 2px;
+  font-size: calc(13px * var(--fs, 1));
+  font-weight: 400;
+  color: var(--text-2);
+}
+@media (max-width: 640px) {
+  .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi-cell { border-left: 0; border-top: 1px solid var(--border); }
+  .kpi-cell:nth-child(-n+2) { border-top: 0; }
+  .kpi-cell:nth-child(2n) { border-left: 1px solid var(--border); }
+  .kpi-cell:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+.page-sub {
+  margin: 6px 0 0;
+  font-size: calc(14px * var(--fs, 1));
+  color: var(--text-2);
+}

@@ -95,7 +95,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
           <g key={t}>
             <line x1={padL} y1={yOf(t)} x2={W - padR} y2={yOf(t)}
                   stroke="var(--chart-grid)" strokeWidth={1} strokeDasharray="3 4" />
-            <text x={padL - 6} y={yOf(t) + 3.5} textAnchor="end" fontSize={10} fill="var(--text-3)">{t}</text>
+            <text x={padL - 6} y={yOf(t) + 3.5} textAnchor="end" fontSize={12} fill="var(--text-3)">{t}</text>
           </g>
         ))}
 
@@ -134,7 +134,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
 
         {series.map((d, i) => (
           <g key={d.year}>
-            <text x={padL + slot * (i + 0.5)} y={H - 5} textAnchor="middle" fontSize={10}
+            <text x={padL + slot * (i + 0.5)} y={H - 5} textAnchor="middle" fontSize={12}
                   fill={hover === d.year ? 'var(--text-1)' : 'var(--text-3)'}>{d.year}</text>
             {/* 마우스 판정용 투명 세로 띠. 막대만 판정하면 사이가 죽은 영역이 된다 */}
             <rect x={padL + slot * i} y={0} width={slot} height={H} fill="transparent"

@@ -81,7 +81,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {AXES.map((a) => (
-            <button key={a.key} type="button" className={`btn btn-sm${axis === a.key ? ' btn-primary' : ''}`} onClick={() => setAxis(a.key)}>
+            <button key={a.key} type="button" className={`btn btn-sm${axis === a.key ? ' btn-on' : ''}`} onClick={() => setAxis(a.key)}>
               {a.label}
             </button>
           ))}

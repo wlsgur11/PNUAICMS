@@ -55,7 +55,7 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
           {ticks.map((t) => (
             <span key={t} style={{
               position: 'absolute', right: 0, bottom: `${(t / max) * 100}%`,
-              transform: 'translateY(50%)', fontSize: 'calc(10px * var(--fs, 1))', color: 'var(--text-3)', whiteSpace: 'nowrap',
+              transform: 'translateY(50%)', fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)', whiteSpace: 'nowrap',
             }}>{pct(t)}</span>
           ))}
         </div>
@@ -153,7 +153,7 @@ export default function GoalTrendChart({ data }: { data: GoalTrendPoint[] }) {
       <div style={{ display: 'flex', gap: 10, marginTop: 6, marginLeft: 42 }}>
         {series.map((d) => (
           <div key={d.year} style={{
-            flex: 1, textAlign: 'center', fontSize: 'calc(10px * var(--fs, 1))',
+            flex: 1, textAlign: 'center', fontSize: 'calc(11px * var(--fs, 1))',
             color: hover === d.year ? 'var(--text-1)' : 'var(--text-3)',
           }}>{d.year}</div>
         ))}
