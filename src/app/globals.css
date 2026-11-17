@@ -2118,3 +2118,110 @@ a.dash-list-row:hover { background: var(--slate-50); }
   .dash-fill, .modal-backdrop, .modal-card { animation: none; }
   .dash-fill, .site-card, .btn, .dash-hero-figures dd.dash-hero-more { transition: none; }
 }
+
+/* 첫 띠 숫자는 누를 수 있다. 올리면 화살표가 내려오며 '아래에 더 있다' 를 알린다 */
+.dash-hero-fig { cursor: pointer; transition: background .15s ease; padding-top: 6px; padding-bottom: 6px; }
+.dash-hero-fig:hover { background: rgba(255, 255, 255, 0.06); }
+.dash-hero-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.dash-hero-fig:hover .dash-hero-arrow,
+.dash-hero-fig:focus-visible .dash-hero-arrow { opacity: 1; transform: none; }
+
+/* 구역으로 내려갈 때 위에 붙는 바에 가리지 않게 띄워 둔다 */
+.dash-section[id], .dash-anchor { scroll-margin-top: 72px; }
+.dash-anchor { height: 0; }
+
+/* 도착한 구역 제목을 옅은 파랑으로 잠깐 비춘다 */
+.dash-flash { animation: dash-flash 1.4s ease-out; border-radius: 6px; }
+@keyframes dash-flash {
+  0%, 30% { background: var(--accent-soft); box-shadow: 0 0 0 8px var(--accent-soft); }
+  100% { background: transparent; box-shadow: 0 0 0 8px transparent; }
+}
+
+/* 위에 붙는 구역 바. 첫 띠가 화면 밖으로 나가면 위에서 내려온다. 흐림 없는 불투명 면.
+   높이만큼 아래 여백을 빼서 자리를 차지하지 않는다 */
+.dash-bar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 56px;
+  margin: 0 -40px -56px;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.dash-bar-sticky.shown { opacity: 1; transform: none; pointer-events: auto; }
+.dash-bar-chips {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+.dash-bar-chips button {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: calc(14px * var(--fs, 1));
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.dash-bar-chips button:hover { background: var(--nav-hover, rgba(17, 24, 39, 0.05)); color: var(--text-1); }
+.dash-bar-chips button.on { background: var(--accent-soft); color: var(--accent-on-soft); font-weight: 600; }
+.dash-bar-year {
+  flex: none;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-1);
+  font: inherit;
+  font-size: calc(14px * var(--fs, 1));
+}
+@media (max-width: 768px) {
+  .dash-bar-sticky { top: 48px; height: 52px; margin: 0 -16px -52px; padding: 0 16px; }
+}
+
+/* 목록 줄: 올리면 옅은 면과 함께 오른쪽 끝에 화살표가 들어온다(눌러서 해당 목록으로 간다) */
+a.dash-list-row { position: relative; border-radius: 6px; margin: 0 -8px; padding-left: 8px; padding-right: 8px; transition: background .12s ease, padding .15s ease; }
+a.dash-list-row:hover { background: var(--accent-soft); padding-right: 26px; }
+a.dash-list-row::after {
+  content: '→';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translate(-4px, -50%);
+  opacity: 0;
+  color: var(--accent);
+  transition: opacity .15s ease, transform .15s ease;
+}
+a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
+.dash-bar > span { transition: width .6s cubic-bezier(.22, 1, .36, 1), filter .12s ease; }
+
+/* 그림 카드: 올리면 그림이 아주 조금 다가온다 */
+.site-card img { transition: transform .4s cubic-bezier(.22, 1, .36, 1); }
+.site-card:hover img { transform: scale(1.025); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-flash { animation: none; }
+  .dash-bar-sticky, a.dash-list-row, a.dash-list-row::after, .site-card img, .dash-hero-arrow { transition: none; }
+}
+.site-card :has(> img) { overflow: hidden; }

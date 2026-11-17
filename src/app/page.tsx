@@ -22,9 +22,20 @@ import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import SwcuSlidesBlock from '@/components/dashboard/SwcuSlidesBlock';
 import DashHero from '@/components/dashboard/DashHero';
+import DashSectionBar from '@/components/dashboard/DashSectionBar';
 import GuideBlock from '@/components/dashboard/GuideBlock';
 import LoginCta from '@/components/dashboard/LoginCta';
 import type { DashboardData } from '@/lib/dashboard-shape';
+
+// 위에 붙는 구역 바의 칩. 화면에 없는 구역(로그인 전)은 바가 알아서 뺀다
+const SECTIONS = [
+  { id: 'sec-goals', label: '목표와 실적' },
+  { id: 'sec-services', label: '운영 서비스' },
+  { id: 'sec-tracks', label: 'AI대학' },
+  { id: 'sec-companies', label: '기업' },
+  { id: 'sec-records', label: '산학·인턴십' },
+  { id: 'sec-swcu', label: 'SW중심대학' },
+];
 
 export default function DashboardPage() {
   const me = useMe();
@@ -46,6 +57,7 @@ export default function DashboardPage() {
     <>
       {/* 랜딩을 겸하는 첫 화면이라 제목, 한 줄 요약, 큰 숫자를 파란 띠 하나에 담는다 */}
       <DashHero data={data} finding={goalFinding(data)} years={data.years} onYear={setYear} />
+      <DashSectionBar sections={SECTIONS} years={data.years} year={data.year} onYear={setYear} />
 
       {isGeneral && (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -64,7 +76,7 @@ export default function DashboardPage() {
       <GuideBlock open={isGeneral} />
 
       {/* 제목이 '산학협력 성과' 라서 목표 대비 카드가 첫 띠 바로 아래에 온다 */}
-      <div className="dash-section">산학협력 목표와 실적</div>
+      <div className="dash-section" id="sec-goals">산학협력 목표와 실적</div>
       <FadeContent>
         <div className="dash-grid-7-5">
           <GoalCard
@@ -80,6 +92,7 @@ export default function DashboardPage() {
         </div>
       </FadeContent>
 
+      <div id="sec-services" className="dash-anchor" />
       {/* 교육원이 운영하는 서비스 다섯 개. 로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
       <FadeContent>
         <SiteMetricsBlock aicms={{
@@ -109,7 +122,7 @@ export default function DashboardPage() {
           ],
           asOf: null,
         }} />
-        <div className="dash-section">AI대학과 신기술 특화 트랙</div>
+        <div className="dash-section" id="sec-tracks">AI대학과 신기술 특화 트랙</div>
         <SwcuSlidesBlock />
       </FadeContent>
 
@@ -121,7 +134,7 @@ export default function DashboardPage() {
               행을 반만 채우지 않는다. 최근 컨택은 4열 표라 좁은 칸에 넣지 않고
               구역 밖 전체 폭에 둔다 */}
           <FadeContent delay={100}>
-            <div className="dash-section">기업</div>
+            <div className="dash-section" id="sec-companies">기업</div>
             {/* 다음 컨택 대상을 파이프라인 왼쪽에 둔다. 파이프라인이 '몇 곳이
                 어느 단계인가' 라면 이쪽은 '그래서 누구부터 연락하나' 라서,
                 숫자를 보고 바로 이름으로 넘어가는 순서가 된다 */}
@@ -133,7 +146,7 @@ export default function DashboardPage() {
           </FadeContent>
 
           <FadeContent delay={150}>
-            <div className="dash-section">산학·인턴십 실적</div>
+            <div className="dash-section" id="sec-records">산학·인턴십 실적</div>
             <div className="dash-grid-4">
               <DistributionBlock distribution={data.distribution} />
               {data.projectHeadcount && (
@@ -153,7 +166,7 @@ export default function DashboardPage() {
           <FadeContent delay={200}>
             {/* 학생을 지표와 같은 구역에 둔다. SW중심대학 참여율 지표의 분모가
                 재학생이라 두 카드를 같이 보는 편이 맞다 */}
-            <div className="dash-section">SW중심대학 성과와 학생</div>
+            <div className="dash-section" id="sec-swcu">SW중심대학 성과와 학생</div>
             <div className="dash-grid-auto">
               <SwcuBlock swcu={data.goals.swcu} year={data.year} />
               <SwcuAreaCard areas={data.goals.swcu.areas} year={data.year} />
