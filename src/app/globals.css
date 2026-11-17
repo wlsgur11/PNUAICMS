@@ -295,6 +295,22 @@ a {
   transition: color 0.12s;
 }
 
+/* 휴대폰에서만 보이는 메뉴 버튼 */
+.menu-toggle {
+  display: none;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--text-1);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.menu-toggle:hover { background: var(--nav-hover); }
+
 .sidebar-collapse:hover {
   color: var(--text-1);
 }
@@ -1377,7 +1393,8 @@ table.data-table {
    ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-  /* 사이드바 → 상단 가로 바 */
+  /* 사이드바 → 48px 위 막대(로고 + 메뉴 버튼). 메뉴를 누르면 화면 전체를 덮는 시트로 펼친다.
+     예전엔 메뉴가 가로로 줄줄이 감겨서 첫 화면의 1/3 을 먹었다 */
   .app-shell {
     flex-direction: column;
   }
@@ -1385,19 +1402,22 @@ table.data-table {
   .sidebar {
     width: 100%;
     height: auto;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 10px;
-    padding: 10px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 0;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid var(--sidebar-border);
   }
 
   .brand {
-    margin-bottom: 0;
+    height: 48px;
+    margin: 0;
+    padding: 0 8px 0 16px;
   }
+
+  .brand-logo { width: 26px; height: 26px; }
 
   .brand-sub,
   .brand-divider,
@@ -1405,81 +1425,37 @@ table.data-table {
     display: none;
   }
 
-  .nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px;
-    width: auto;
-    flex: 1;
+  .menu-toggle {
+    display: inline-flex;
   }
 
-  .nav-group {
-    width: auto;
-  }
-
-  .nav-item,
-  .nav-group-header {
-    padding: 7px 10px;
-    font-size: calc(13px * var(--fs, 1));
-  }
-
-  .nav-sub {
-    padding-left: 28px;
-  }
-
-  .nav-family {
-    width: auto;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-  }
-
-  /* 하단 묶음: 모바일에선 가로 우측 정렬, 토글 라벨/푸터 숨김 */
-  .sidebar-bottom {
-    margin-top: 0;
-    margin-left: auto;
-    padding-top: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .theme-toggle {
-    width: auto;
-    margin-bottom: 0;
-    padding: 6px 10px;
-  }
-
-  .sidebar-bottom .theme-toggle span {
+  /* 접힌 동안에는 로고 줄만 */
+  .sidebar:not(.menu-open) > :not(.brand) {
     display: none;
   }
 
-  .sidebar-user {
-    margin-bottom: 0;
-    padding: 6px 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .sidebar.menu-open {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    padding-bottom: 24px;
   }
 
-  .sidebar-user .user-name {
-    font-size: calc(12px * var(--fs, 1));
+  .sidebar.menu-open .nav,
+  .sidebar.menu-open .nav-family,
+  .sidebar.menu-open .sidebar-bottom {
+    padding: 0 12px;
   }
 
-  .sidebar-user .user-email {
-    display: none;
+  .sidebar.menu-open .nav { margin-top: 8px; }
+
+  .sidebar.menu-open .nav-item,
+  .sidebar.menu-open .nav-group-header {
+    min-height: 44px;
   }
 
-  .sidebar-footer {
-    display: none;
-  }
-
-  .logout-btn {
-    margin-top: 0;
-    width: auto;
-    padding: 6px 10px;
-    font-size: calc(11px * var(--fs, 1));
-  }
+  .sidebar.menu-open .sidebar-bottom { padding-top: 16px; }
 
   /* 본문 여백 축소 */
   .main {
@@ -1930,7 +1906,7 @@ a.dash-list-row:hover { background: var(--slate-50); }
 .login-btn svg { flex-shrink: 0; }
 .sidebar-login { margin-bottom: 10px; }
 /* 사이드바는 글자색 토큰이 밝은 색으로 바뀌어 있어서, 흰 버튼 위 글자색을 직접 정한다 */
-.sidebar-login .login-btn { padding: 9px 12px; font-size: calc(13px * var(--fs, 1)); background: #fff; color: #1f2a37; border-color: transparent; }
+.sidebar-login .login-btn { padding: 9px 12px; font-size: calc(13px * var(--fs, 1)); background: #fff; color: #1f2a37; border-color: var(--border); }
 .sidebar-login .login-btn:hover { background: #eef1f6; }
 
 /* 대시보드 로그인 안내 (로그인 전) */

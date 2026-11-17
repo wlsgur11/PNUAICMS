@@ -100,6 +100,9 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
   const activeGroup = GROUPS.find((g) => g.items.some((i) => i.href === activeHref))?.key ?? null;
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
   const [familyOpen, setFamilyOpen] = useState(false);
+  // 휴대폰 메뉴 시트. 다른 화면으로 가면 닫는다
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   // 사이드바 접힘(아이콘 레일). data-sidebar 속성/localStorage 와 동기화.
   const [collapsed, setCollapsed] = useState(false);
@@ -128,13 +131,24 @@ export default function Sidebar({ userEmail, userName, role, logoutSlot, version
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${menuOpen ? ' menu-open' : ''}`}>
       <div className="brand">
         <img className="brand-logo" src="/emblem.png" alt="부산대학교" width={32} height={32} />
         <div className="brand-text">
           <div className="brand-name">PNU-ICEx</div>
           <div className="brand-sub">부산대 AI융합교육원</div>
         </div>
+        <button
+          type="button"
+          className="menu-toggle"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
       </div>
       <button
         type="button"
