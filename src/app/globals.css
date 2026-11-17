@@ -2059,3 +2059,9 @@ a.dash-list-row:hover { background: var(--slate-50); }
   .dash-hero-figures > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .dash-hero-figures dd { font-size: calc(30px * var(--fs, 1)); }
 }
+
+/* 운영 서비스 카드의 숫자는 첫 띠보다 한 단계 작게. 띠의 숫자가 이 화면의 주인공이다 */
+.site-card .dash-metric-value,
+.site-summary .dash-metric-value {
+  font-size: calc(28px * var(--fs, 1));
+}

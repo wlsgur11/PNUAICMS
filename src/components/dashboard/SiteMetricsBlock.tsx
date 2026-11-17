@@ -45,7 +45,7 @@ function SiteCardView({ site, live, onOpen }: { site: SiteCard; live?: boolean; 
 
       <dl style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', margin: '14px 0 0', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
         {/* 아직 못 뽑은 세부 숫자는 '-' 로 두면 미완성처럼 보여서 숨긴다. 대표 숫자는 늘 보인다 */}
-        {site.metrics.filter((m) => m.value != null).map((m) => (
+        {site.metrics.filter((m) => m.value != null).slice(0, 4).map((m) => (
           <div key={m.label} style={{ display: 'contents' }}>
             <dt style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{m.label}</dt>
             <dd style={{ margin: 0, textAlign: 'right', fontWeight: 600, fontSize: 'calc(15px * var(--fs, 1))', fontVariantNumeric: 'tabular-nums' }}>
@@ -55,24 +55,7 @@ function SiteCardView({ site, live, onOpen }: { site: SiteCard; live?: boolean; 
         ))}
       </dl>
 
-      {site.usedIn.length > 0 && (
-        <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: small, color: 'var(--text-3)', marginBottom: 6 }}>활용</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {site.usedIn.map((u) => (
-              <span key={u} className="tag tag-slate" style={{ padding: '3px 8px', fontWeight: 500 }}>{u}</span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {site.features.length > 0 && (
-        <div style={{ marginTop: 12, fontSize: small, color: 'var(--text-2)', lineHeight: 1.6 }}>
-          <span style={{ color: 'var(--text-3)', marginRight: 6 }}>주요 기능</span>
-          {site.features.join(', ')}
-        </div>
-      )}
-
+      {/* 활용 교과목과 주요 기능은 상세 창에만 둔다. 카드마다 길이가 달라 줄 높이가 어긋났다 */}
       <div style={{ marginTop: 'auto', paddingTop: 14, display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
         <a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}
            onClick={(e) => e.stopPropagation()}>{site.url.replace('https://', '')} ↗</a>
@@ -171,10 +154,9 @@ function SummaryStat({ label, value, unit, note, first }: { label: string; value
 
 function SummaryBar({ services, users, usedIn }: { services: number; users: number | null; usedIn: number }) {
   return (
-    <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+    <div className="card site-summary" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
       <div style={{ minWidth: 260, flex: '1 1 260px' }}>
-        <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-3)' }}>부산대학교 AI융합교육원</div>
-        <div style={{ fontSize: 'calc(22px * var(--fs, 1))', fontWeight: 700, marginTop: 4, color: 'var(--text-1)' }}>교육원 운영 서비스</div>
+        <h2 style={{ margin: 0, fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 700, color: 'var(--text-1)' }}>교육원 운영 서비스</h2>
         <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>
           교육원이 직접 개발하고 교내 서버에서 운영하는 서비스입니다.
         </div>

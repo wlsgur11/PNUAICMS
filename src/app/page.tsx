@@ -63,8 +63,24 @@ export default function DashboardPage() {
           첫 화면에 실적 숫자가 먼저 보이게 한다 */}
       <GuideBlock open={isGeneral} />
 
-      {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다.
-          로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
+      {/* 제목이 '산학협력 성과' 라서 목표 대비 카드가 첫 띠 바로 아래에 온다 */}
+      <div className="dash-section">산학협력 목표와 실적</div>
+      <FadeContent>
+        <div className="dash-grid-7-5">
+          <GoalCard
+            industry={data.goals.industry}
+            internship={data.goals.internship}
+            swcu={data.goals.swcu}
+            year={data.year}
+            trend={data.trend}
+            goalTrend={data.goalTrend}
+            headcount={data.headcount}
+          />
+          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
+        </div>
+      </FadeContent>
+
+      {/* 교육원이 운영하는 서비스 다섯 개. 로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
       <FadeContent>
         <SiteMetricsBlock aicms={{
           name: 'AICMS',
@@ -95,23 +111,8 @@ export default function DashboardPage() {
         }} />
         <div className="dash-section">AI대학과 신기술 특화 트랙</div>
         <SwcuSlidesBlock />
-        <div className="dash-section">산학협력 목표와 실적</div>
       </FadeContent>
 
-      <FadeContent>
-        <div className="dash-grid-7-5">
-          <GoalCard
-            industry={data.goals.industry}
-            internship={data.goals.internship}
-            swcu={data.goals.swcu}
-            year={data.year}
-            trend={data.trend}
-            goalTrend={data.goalTrend}
-            headcount={data.headcount}
-          />
-          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
-        </div>
-      </FadeContent>
 
       {data.pipeline && data.distribution && (
         <>
