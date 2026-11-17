@@ -21,6 +21,7 @@ import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import SwcuSlidesBlock from '@/components/dashboard/SwcuSlidesBlock';
+import DashHero from '@/components/dashboard/DashHero';
 import GuideBlock from '@/components/dashboard/GuideBlock';
 import LoginCta from '@/components/dashboard/LoginCta';
 import type { DashboardData } from '@/lib/dashboard-shape';
@@ -43,22 +44,8 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader
-        title="산학협력 성과"
-        sub={goalFinding(data)}
-        extra={data.years.length > 1 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>연도</span>
-            {data.years.map((y) => (
-              <button key={y} type="button"
-                      className={`btn btn-sm${y === data.year ? ' btn-on' : ''}`}
-                      onClick={() => setYear(y)}>
-                {y}
-              </button>
-            ))}
-          </div>
-        ) : undefined}
-      />
+      {/* 랜딩을 겸하는 첫 화면이라 제목, 한 줄 요약, 큰 숫자를 파란 띠 하나에 담는다 */}
+      <DashHero data={data} finding={goalFinding(data)} years={data.years} onYear={setYear} />
 
       {isGeneral && (
         <div className="card" style={{ marginBottom: 16 }}>
