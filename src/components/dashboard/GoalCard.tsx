@@ -15,28 +15,35 @@ const pct = (n: number | null) => (n == null ? '-' : `${(n * 100).toFixed(1)}%`)
  */
 function Metric({ label, m }: { label: string; m: GoalMetric }) {
   const met = m.target != null && m.achieved != null && m.achieved >= m.target;
-  const ratio = m.target && m.target > 0 && m.achieved != null
-    ? Math.min(100, (m.achieved / m.target) * 100) : 0;
+  // 막대 끝은 목표의 1.25배(또는 실적이 더 크면 실적)까지. 목표 눈금이 막대 안쪽에 오게 한다
+  const scale = Math.max((m.target ?? 0) * 1.25, (m.achieved ?? 0) * 1.05, 0.01);
   const diff = m.achieved != null && m.prevAchieved != null ? (m.achieved - m.prevAchieved) * 100 : null;
+  const gap = m.target != null && m.achieved != null ? (m.achieved - m.target) * 100 : null;
 
   return (
     <div>
       <div className="dash-metric-label">{label}</div>
       <div className={`dash-metric-value${met ? ' met' : ''}`}>{pct(m.achieved)}</div>
-      <div className="dash-track"><div className={`dash-fill${met ? ' met' : ''}`} style={{ width: `${ratio}%` }} /></div>
+      {/* 막대는 실적, 검은 세로선은 목표. 선을 넘으면 초록 */}
+      <div className="goal-bar">
+        <div className="dash-track"><div className={`dash-fill${met ? ' met' : ''}`} style={{ width: `${((m.achieved ?? 0) / scale) * 100}%` }} /></div>
+        {m.target != null && (
+          <span className="goal-tick" style={{ left: `${(m.target / scale) * 100}%` }}>
+            <i aria-hidden="true" /><em>목표 {pct(m.target)}</em>
+          </span>
+        )}
+      </div>
       <div className="dash-metric-sub">
-        {m.target == null || m.achieved == null
+        {gap == null
           ? '목표 또는 실적 값 없음'
-          : met
-            ? `목표 ${pct(m.target)} 초과`
-            : `목표 ${pct(m.target)}, ${((m.target - m.achieved) * 100).toFixed(1)}%p 부족`}
+          : <b className={met ? 'goal-ok' : 'goal-short'}>{met ? `목표 달성 (+${gap.toFixed(1)}%p)` : `목표까지 ${(-gap).toFixed(1)}%p`}</b>}
         {m.students != null && <><br />참여 학부생 {m.students}명</>}
         {diff != null && (
           <>
             <br />
-            전년 {pct(m.prevAchieved)}에서{' '}
+            전년 {pct(m.prevAchieved)} 대비{' '}
             <span className={`dash-delta ${diff >= 0 ? 'up' : 'down'}`}>
-              {diff >= 0 ? '▲' : '▼'}{Math.abs(diff).toFixed(1)}%p
+              {diff >= 0 ? '+' : '-'}{Math.abs(diff).toFixed(1)}%p
             </span>
           </>
         )}
@@ -99,30 +106,34 @@ export default function GoalCard({ industry, internship, swcu, year, trend, goal
           <div className="dash-metric-value">
             {swcu.met}<span className="unit">/ {swcu.total}</span>
           </div>
-          {/* 지표 하나당 눈금 하나. 개수와 달성 여부만 읽히면 되므로 얇게 둔다 */}
-          <div style={{ display: 'flex', gap: 2, marginTop: 12, height: 6 }}>
-            {swcu.cells.map((c, i) => (
-              /* na 는 목표치가 없어 판정을 못 한 칸이다. 사선으로 둬야 미달과 구분된다 */
-              <div
-                key={i}
-                className={c === 'na' ? 'chart-gap' : undefined}
-                style={{
-                  flex: 1, borderRadius: 1,
-                  background: c === 'met' ? 'var(--chart-met)' : c === 'unmet' ? 'var(--chart-unmet)' : undefined,
-                }}
-              />
-            ))}
-          </div>
+          {/* 지표 칸 14개를 일일이 그리지 않고 달성, 미달, 판정 없음 세 덩어리로 묶는다. 칸 수를 세지 않아도 비율이 읽힌다 */}
+          {swcu.total > 0 && (() => {
+            const na = swcu.cells.filter((c) => c === 'na').length;
+            const unmet = swcu.cells.filter((c) => c === 'unmet').length;
+            return (
+              <>
+                <div className="split-bar">
+                  {swcu.met > 0 && <span className="met" style={{ flex: swcu.met }} />}
+                  {unmet > 0 && <span className="unmet" style={{ flex: unmet }} />}
+                  {na > 0 && <span className="na" style={{ flex: na }} />}
+                </div>
+                <div className="split-legend">
+                  <span><i className="met" />달성 {swcu.met}</span>
+                  {unmet > 0 && <span><i className="unmet" />미달 {unmet}</span>}
+                  {na > 0 && <span><i className="na" />판정 없음 {na}</span>}
+                </div>
+              </>
+            );
+          })()}
           <div className="dash-metric-sub">
-            {swcu.total === 0 ? '해당 연도 지표 없음' : <>미달 {swcu.unmetCount}개</>}
+            {swcu.total === 0 ? '해당 연도 지표 없음' : null}
             {/* 그 해 지표가 아직 등록되지 않았으면 증감을 내지 않는다. 0 과 12 를
                 견주면 '12개 떨어졌다' 가 되는데, 지표가 없는 것과 못 채운 것은 다르다 */}
             {swcu.total > 0 && swcuDiff != null && swcu.prevTotal != null && (
               <>
-                <br />
-                전년 {swcu.prevMet}/{swcu.prevTotal}에서{' '}
+                전년 {swcu.prevMet}/{swcu.prevTotal} 대비{' '}
                 <span className={`dash-delta ${swcuDiff >= 0 ? 'up' : 'down'}`}>
-                  {swcuDiff >= 0 ? '▲' : '▼'}{Math.abs(swcuDiff)}개
+                  {swcuDiff >= 0 ? '+' : '-'}{Math.abs(swcuDiff)}개
                 </span>
               </>
             )}

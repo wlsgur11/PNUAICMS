@@ -59,7 +59,7 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
       });
 
       // ── 막대: 왼쪽에서 차오른다 ──
-      gsap.utils.toArray<HTMLElement>('.dash-fill, .dash-bar > span', root.current).forEach((bar) => {
+      gsap.utils.toArray<HTMLElement>('.dash-fill, .dash-bar > span, .split-bar > span', root.current).forEach((bar) => {
         gsap.from(bar, {
           scaleX: 0, transformOrigin: 'left center', duration: 0.7, ease: 'power2.out',
           scrollTrigger: { trigger: bar, start: 'top 95%', once: true },

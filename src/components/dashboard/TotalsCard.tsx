@@ -43,9 +43,9 @@ function Tile({ label, tile, year, unit, extra }: {
             ? ' · 전년과 동일'
             : (
               <>
-                {' '}
+                {' · 전년 대비 '}
                 <span className={`dash-delta ${d > 0 ? 'up' : 'down'}`}>
-                  {d > 0 ? '▲' : '▼'}{Math.abs(d)}
+                  {d > 0 ? '+' : '-'}{Math.abs(d)}
                 </span>
               </>
             )
