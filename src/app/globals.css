@@ -2414,3 +2414,15 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .fill-rows { display: flex; flex-direction: column; }
 .dash-grid-records > .card > .fill-rows { flex: 1; }
 .dash-grid-records > .card > .fill-rows > .dash-list-row { flex: 1 1 auto; align-items: center; max-height: 52px; }
+
+/* 항목별 인원 막대(CountBars). 이름, 막대, 인원과 비율 세 칸 */
+.cb-list { display: grid; gap: 2px; }
+.cb-row {
+  display: grid; grid-template-columns: minmax(48px, 7.5em) minmax(60px, 1fr) 6.5em;
+  gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--slate-100);
+}
+.cb-row:last-child { border-bottom: 0; }
+.cb-label { font-size: calc(13px * var(--fs, 1)); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-row .yr-val { text-align: right; }
+
+.kpi-sub { margin-top: 2px; font-size: calc(12px * var(--fs, 1)); color: var(--text-3); }

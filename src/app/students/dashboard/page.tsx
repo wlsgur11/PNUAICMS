@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountBars from '@/components/CountBars';
 import { gradeLabel } from '@/lib/enums';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
@@ -28,20 +29,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
 }
 
 function Bars({ items }: { items: { label: string; count: number }[] }) {
-  const max = Math.max(...items.map((i) => i.count), 1);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {items.map((it) => (
-        <div key={it.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 64, fontSize: 'calc(13px * var(--fs, 1))' }} className="muted">{it.label}</div>
-          <div style={{ flex: 1, background: 'var(--slate-100)', borderRadius: 6, height: 18 }}>
-            <div style={{ width: `${(it.count / max) * 100}%`, background: 'var(--indigo-500)', height: '100%', borderRadius: 6 }} />
-          </div>
-          <div style={{ width: 32, textAlign: 'right', fontWeight: 600 }}>{it.count}</div>
-        </div>
-      ))}
-    </div>
-  );
+  return <CountBars items={items} />;
 }
 
 export default function StudentDashboardPage() {

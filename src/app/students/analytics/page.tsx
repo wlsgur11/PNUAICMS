@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import PageHeader from '@/components/PageHeader';
+import CountBars from '@/components/CountBars';
 import { gradeLabel } from '@/lib/enums';
 import CountUp from '@/components/CountUp';
 import FadeContent from '@/components/FadeContent';
@@ -12,24 +13,11 @@ type Stats = {
   departmentCounts: { label: string; count: number }[]; careerCounts: { label: string; count: number }[];
 };
 
-function Bars({ title, items }: { title: string; items: { label: string; count: number }[] }) {
-  const max = Math.max(...items.map((i) => i.count), 1);
+function Bars({ title, items, of }: { title: string; items: { label: string; count: number }[]; of?: number }) {
   return (
     <div className="card">
-      <div className="card-title" style={{ marginBottom: 12 }}><span className="accent-bar" />{title}</div>
-      {items.length === 0 ? <div className="empty">데이터 없음</div> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {items.map((it) => (
-            <div key={it.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 130, fontSize: 'calc(13px * var(--fs, 1))' }} className="muted">{it.label}</div>
-              <div style={{ flex: 1, background: 'var(--slate-100)', borderRadius: 6, height: 18 }}>
-                <div style={{ width: `${(it.count / max) * 100}%`, background: 'var(--indigo-500)', height: '100%', borderRadius: 6 }} />
-              </div>
-              <div style={{ width: 32, textAlign: 'right', fontWeight: 600 }}>{it.count}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="card-title" style={{ marginBottom: 12 }}>{title}</div>
+      <CountBars items={items} of={of} />
     </div>
   );
 }
@@ -39,27 +27,26 @@ export default function StudentAnalyticsPage() {
   if (error && !data) return <div className="empty">불러오기 실패: {(error as Error).message}</div>;
   if (!data) return <div className="loading">불러오는 중…</div>;
 
-  const engagement = [
-    { label: '인턴십 참여', count: data.internParticipants },
-    { label: '산학 참여', count: data.projectParticipants },
-    { label: '졸업생', count: data.graduated },
-    { label: '3학년 이상', count: data.highGrade },
+  // 위 숫자 줄. 아래 '주요 참여지표' 막대와 숫자가 겹쳐서 하나로 합치고 전체 대비 비율을 붙였다
+  const pct = (n: number) => (data.total > 0 ? `전체의 ${Math.round((n / data.total) * 100)}%` : '');
+  const kpis = [
+    { label: '전체 학생', value: data.total, sub: '' },
+    { label: '인턴십 참여', value: data.internParticipants, sub: pct(data.internParticipants) },
+    { label: '산학 참여', value: data.projectParticipants, sub: pct(data.projectParticipants) },
+    { label: '3학년 이상', value: data.highGrade, sub: pct(data.highGrade) },
+    { label: '졸업생', value: data.graduated, sub: pct(data.graduated) },
   ];
 
   return (
     <>
       <PageHeader title="통계분석" />
       <FadeContent>
-      <div className="tile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
-        {[
-          { label: '전체 학생', value: data.total },
-          { label: '인턴십 참여', value: data.internParticipants },
-          { label: '산학 참여', value: data.projectParticipants },
-          { label: '졸업생', value: data.graduated },
-        ].map((c) => (
-          <div key={c.label} className="card">
-            <div className="muted" style={{ fontSize: 'calc(13px * var(--fs, 1))' }}>{c.label}</div>
-            <div style={{ fontSize: 'calc(26px * var(--fs, 1))', fontWeight: 700 }}><CountUp end={c.value} /><span className="muted" style={{ fontSize: 'calc(14px * var(--fs, 1))', fontWeight: 400 }}>명</span></div>
+      <div className="card kpi-strip">
+        {kpis.map((c) => (
+          <div key={c.label} className="kpi-cell">
+            <div className="kpi-label">{c.label}</div>
+            <div className="kpi-value"><CountUp end={c.value} /><span className="kpi-unit">명</span></div>
+            {c.sub && <div className="kpi-sub">{c.sub}</div>}
           </div>
         ))}
       </div>
@@ -69,7 +56,6 @@ export default function StudentAnalyticsPage() {
         <Bars title="학년별 분포" items={data.gradeDistribution.map((g) => ({ label: gradeLabel(g.grade), count: g.count }))} />
         <Bars title="학과별 분포" items={data.departmentCounts} />
         <Bars title="진로희망 분포" items={data.careerCounts} />
-        <Bars title="주요 참여지표" items={engagement} />
       </div>
       </FadeContent>
     </>
