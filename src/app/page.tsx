@@ -22,6 +22,7 @@ import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import SwcuSlidesBlock from '@/components/dashboard/SwcuSlidesBlock';
 import DashHero from '@/components/dashboard/DashHero';
+import DashMotion from '@/components/dashboard/DashMotion';
 import DashSectionBar from '@/components/dashboard/DashSectionBar';
 import GuideBlock from '@/components/dashboard/GuideBlock';
 import LoginCta from '@/components/dashboard/LoginCta';
@@ -54,7 +55,7 @@ export default function DashboardPage() {
   if (!data) return <><PageHeader title="산학협력 성과" /><div className="loading">불러오는 중…</div></>;
 
   return (
-    <>
+    <DashMotion>
       {/* 랜딩을 겸하는 첫 화면이라 제목, 한 줄 요약, 큰 숫자를 파란 띠 하나에 담는다 */}
       <DashHero data={data} finding={goalFinding(data)} years={data.years} onYear={setYear} />
       <DashSectionBar sections={SECTIONS} years={data.years} year={data.year} onYear={setYear} />
@@ -191,7 +192,7 @@ export default function DashboardPage() {
         </>
       )}
 
-    </>
+    </DashMotion>
   );
 }
 

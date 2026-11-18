@@ -107,7 +107,7 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
                 const h = (d[s.key] / max) * plotH;
                 return (
                   <rect
-                    key={d.year}
+                    key={d.year} data-bar
                     x={centerOf(i, si) - barW / 2} y={padT + plotH - h}
                     width={barW} height={h} rx={2}
                     fill={d.year === nowYear ? `url(#${uid}-${s.key})` : s.color}
@@ -118,14 +118,14 @@ export default function TrendChart({ data }: { data: TrendPoint[] }) {
               })}
               {/* 막대 끝을 잇는 직선. 방향만 읽는 보조선이라 얇게 둔다 */}
               {series.length > 1 && (
-                <polyline
+                <polyline data-line
                   points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
                   fill="none" stroke={s.color} strokeWidth={1.5}
                   strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
                 />
               )}
               {pts.map((p, i) => (
-                <circle key={series[i].year} cx={p.x} cy={p.y} r={2.6}
+                <circle key={series[i].year} data-dot cx={p.x} cy={p.y} r={2.6}
                         fill="var(--surface)" stroke={s.color} strokeWidth={1.5} />
               ))}
             </g>

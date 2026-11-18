@@ -2094,9 +2094,8 @@ a.dash-list-row:hover { background: var(--slate-50); }
 }
 .dash-hero-fig:focus-visible { box-shadow: 0 0 0 2px #ffffff; }
 
-/* 목표 막대: 처음 그릴 때 왼쪽에서 차오르고, 연도를 바꾸면 새 길이로 늘거나 준다 */
-.dash-fill { transform-origin: left center; animation: fill-in .7s cubic-bezier(.22, 1, .36, 1) both; transition: width .6s cubic-bezier(.22, 1, .36, 1); }
-@keyframes fill-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* 목표 막대: 연도를 바꾸면 새 길이로 늘거나 준다. 처음 차오르는 연출은 DashMotion(GSAP)이 맡는다 */
+.dash-fill { transform-origin: left center; transition: width .6s cubic-bezier(.22, 1, .36, 1); }
 
 /* 서비스 카드: 올리면 테두리가 파랑의 옅은 단계로, 누르면 살짝 눌린다 */
 .site-card { transition: border-color .15s ease, transform .12s ease; }
@@ -2115,7 +2114,7 @@ a.dash-list-row:hover { background: var(--slate-50); }
 .dash-hero-years button:active { transform: scale(.96); }
 
 @media (prefers-reduced-motion: reduce) {
-  .dash-fill, .modal-backdrop, .modal-card { animation: none; }
+  .modal-backdrop, .modal-card { animation: none; }
   .dash-fill, .site-card, .btn, .dash-hero-figures dd.dash-hero-more { transition: none; }
 }
 
@@ -2222,6 +2221,6 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
   .dash-flash { animation: none; }
-  .dash-bar-sticky, a.dash-list-row, a.dash-list-row::after, .site-card img, .dash-hero-arrow { transition: none; }
+  .dash-bar-sticky, a.dash-list-row, a.dash-list-row::after, .dash-hero-arrow { transition: none; }
 }
 .site-card :has(> img) { overflow: hidden; }
