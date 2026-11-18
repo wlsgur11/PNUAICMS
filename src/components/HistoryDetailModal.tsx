@@ -51,7 +51,7 @@ export default function HistoryDetailModal({
         </div>
         <div className="form-actions">
           {onDelete && <button className="btn btn-danger" onClick={() => onDelete(h)}>삭제</button>}
-          {onEdit && <button className="btn" onClick={() => onEdit(h)}>✎ 수정</button>}
+          {onEdit && <button className="btn" onClick={() => onEdit(h)}>수정</button>}
           <button className="btn btn-primary" onClick={onClose}>닫기</button>
         </div>
       </div>

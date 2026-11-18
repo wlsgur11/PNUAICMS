@@ -1,57 +1,14 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-
-type Props = {
+/**
+ * 예전에는 아래에서 떠오르며 나타났다. 지금은 효과 없이 바로 그린다.
+ * 매일 쓰는 화면이라 들어올 때마다 움직이면 숫자를 읽는 데 방해가 된다
+ * (taste-skill 앱 화면 규칙, AIPMS 와 같은 결정). 부르는 곳을 다 고치지 않으려고 이름은 남긴다.
+ */
+export default function FadeContent({ children, className }: {
   children: React.ReactNode;
-  /** 등장 지연(ms) — 여러 섹션을 순차로 떠오르게 할 때 */
   delay?: number;
-  /** 떠오르는 거리(px) */
   distance?: number;
-  /** 지속(ms) */
   duration?: number;
   className?: string;
-};
-
-/**
- * 자식 요소가 마운트될 때 살짝 아래에서 떠오르며 페이드인.
- * 외부 라이브러리 없이 CSS transition으로 동작하며,
- * 모션 최소화 설정 시 애니메이션 없이 즉시 표시한다.
- */
-export default function FadeContent({
-  children,
-  delay = 0,
-  distance = 8,
-  duration = 320,
-  className,
-}: Props) {
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReduced) {
-      setShown(true);
-      return;
-    }
-
-    const id = setTimeout(() => setShown(true), delay);
-    return () => clearTimeout(id);
-  }, [delay]);
-
-  return (
-    <div
-      className={className}
-      style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? 'none' : `translateY(${distance}px)`,
-        transition: `opacity ${duration}ms ease, transform ${duration}ms ease`,
-        willChange: 'opacity, transform',
-      }}
-    >
-      {children}
-    </div>
-  );
+}) {
+  return className ? <div className={className}>{children}</div> : <>{children}</>;
 }

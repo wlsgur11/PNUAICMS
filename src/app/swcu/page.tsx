@@ -36,11 +36,6 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
     : null;
   const vals = series.flatMap((s) => [s.actual ?? 0, s.target ?? 0]);
   const axisMax = Math.max(0.0001, ...vals) * 1.18;
-  const W = 360, H = 200, padL = 40, padR = 12, padT = 16, padB = 46;
-  const plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
-  const gw = plotW / Math.max(1, series.length);
-  const bw = Math.min(48, gw - 24);
-  const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
   return (
     <div
       className="card"
@@ -51,64 +46,67 @@ function KpiTrend({ title, years, indicatorName, onClick, showKmac }: { title: s
       title={onClick ? '클릭하면 산출 근거' : undefined}
     >
       <div className="card-title" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span className="accent-bar" />
         <span style={{ flex: 1 }}>{title}{unit ? <span className="muted" style={{ fontWeight: 400 }}> ({unit})</span> : ''}</span>
         {latestKmac?.verifyResult && (
           <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', fontWeight: 400 }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{latestKmac.verifyResult}</span>
+            검증 <span className={`tag ${latestKmac.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(11px * var(--fs, 1))' }}>{latestKmac.verifyResult}</span>
           </span>
         )}
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%">
-        <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="var(--slate-200)" />
-        {series.map((s, i) => {
-          const x = padL + i * gw + (gw - bw) / 2;
-          const y = s.actual == null ? baseY : yOf(s.actual);
-          const barColor =
-            s.actual != null && s.target != null && s.actual >= s.target
-              ? '#16a34a'
-              : 'var(--indigo-600)';
+      {/* 한 해 한 줄(최근 해가 위). 막대는 실적, 검은 세로선은 목표, 넘으면 초록. 값과 목표를 글로 늘 적는다 */}
+      <div className="yr-chart" role="table" aria-label={`${title} 연도별 실적`}>
+        {[...series].reverse().map((s) => {
+          const lower = LOWER_BETTER.has(indicatorName);
+          const met = s.actual != null && s.target != null && (lower ? s.actual <= s.target : s.actual >= s.target);
           return (
-            <g key={s.year}>
-              <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill={barColor} />
-              {s.target != null && <line x1={x - 4} y1={yOf(s.target)} x2={x + bw + 4} y2={yOf(s.target)} stroke="#1f2937" strokeWidth={1.5} strokeDasharray="4 3" />}
-              <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={11} fontWeight={700} fill={barColor}>{fmt(s.actual, unit)}</text>
-              <text x={x + bw / 2} y={baseY + 16} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
-              {s.target != null && <text x={x + bw / 2} y={baseY + 32} textAnchor="middle" fontSize={10} fill="var(--slate-400)">목표 {fmt(s.target, unit)}</text>}
-            </g>
+            <div key={s.year} className="yr-row" role="row">
+              <div className="yr-year" role="rowheader">{s.year}</div>
+              <div className={`yr-line${met ? ' met' : ''}`} role="cell">
+                <div className="yr-bar">
+                  {s.actual != null && <span style={{ width: `${(s.actual / axisMax) * 100}%` }} />}
+                  {s.target != null && <i className="yr-target" style={{ left: `${(s.target / axisMax) * 100}%` }} aria-hidden="true" />}
+                </div>
+                <div className="yr-val">
+                  {s.actual == null ? <span className="muted">값 없음</span> : <b>{fmt(s.actual, unit)}</b>}
+                  {s.target != null && <em className={met ? 'up' : undefined}>{met ? '달성' : `목표 ${fmt(s.target, unit)}`}</em>}
+                </div>
+              </div>
+            </div>
           );
         })}
-      </svg>
-      <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>막대=실적(초록=목표 달성), 가는 검정선=목표</div>
+      </div>
+      <div className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))', marginTop: 8 }}>
+        막대는 실적, 검은 세로선은 목표{LOWER_BETTER.has(indicatorName) ? '(낮을수록 좋은 지표)' : ''}. 목표를 채우면 초록
+      </div>
     </div>
   );
 }
 
 /** 원시값 항목 하나의 연도별 추이 막대그래프 (모달용) */
 function RawTrend({ series }: { series: { year: number; value: number | null }[] }) {
-  const vals = series.map((s) => s.value ?? 0);
-  const axisMax = Math.max(1, ...vals) * 1.2;
-  const W = 380, H = 200, padL = 16, padR = 16, padT = 24, padB = 28;
-  const plotW = W - padL - padR, plotH = H - padT - padB, baseY = padT + plotH;
-  const gw = plotW / Math.max(1, series.length);
-  const bw = Math.min(64, gw - 28);
-  const yOf = (v: number) => padT + plotH * (1 - v / axisMax);
-  const fmtN = (v: number | null) => (v == null ? '-' : Number.isInteger(v) ? String(v) : String(Math.round(v * 1000) / 1000));
+  const max = Math.max(1, ...series.map((s) => s.value ?? 0));
+  const fmtN = (v: number | null) => (v == null ? '-' : Number.isInteger(v) ? v.toLocaleString('ko-KR') : String(Math.round(v * 1000) / 1000));
+  const byYear = new Map(series.map((s) => [s.year, s.value]));
+  // 한 해 한 줄(최근 해가 위). 막대 끝에 값과 전년 대비를 적는다
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%">
-      <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="var(--slate-200)" />
-      {series.map((s, i) => {
-        const x = padL + i * gw + (gw - bw) / 2;
-        const y = s.value == null ? baseY : yOf(s.value);
+    <div className="yr-chart" role="table" aria-label="연도별 값">
+      {[...series].sort((a, b) => b.year - a.year).map((s) => {
+        const prev = byYear.get(s.year - 1);
+        const diff = s.value != null && prev != null ? Math.round((s.value - prev) * 1000) / 1000 : null;
         return (
-          <g key={s.year}>
-            <rect x={x} y={y} width={bw} height={baseY - y} rx={3} fill="var(--indigo-600)" />
-            <text x={x + bw / 2} y={y - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--indigo-600)">{fmtN(s.value)}</text>
-            <text x={x + bw / 2} y={baseY + 18} textAnchor="middle" fontSize={12} fill="var(--slate-600)">{s.year}</text>
-          </g>
+          <div key={s.year} className="yr-row" role="row">
+            <div className="yr-year" role="rowheader">{s.year}</div>
+            <div className="yr-line" role="cell">
+              <div className="yr-bar">{s.value != null && <span style={{ width: `${(s.value / max) * 100}%` }} />}</div>
+              <div className="yr-val">
+                {s.value == null ? <span className="muted">값 없음</span> : <b>{fmtN(s.value)}</b>}
+                {diff != null && <em className={diff > 0 ? 'up' : diff < 0 ? 'down' : undefined}>({diff > 0 ? `+${fmtN(diff)}` : diff === 0 ? '변화 없음' : `-${fmtN(-diff)}`})</em>}
+              </div>
+            </div>
+          </div>
         );
       })}
-    </svg>
+    </div>
   );
 }
 
@@ -206,13 +204,13 @@ export default function SwcuDashboardPage() {
                       (LOWER_BETTER.has(name) ? ind.actual <= normTarget : ind.actual >= normTarget);
                     return (
                       <td key={y.year} className="center">
-                        <span style={{ fontWeight: 700, color: met ? '#16a34a' : 'inherit' }}>
+                        <span style={{ fontWeight: 700, color: met ? 'var(--green-600)' : 'inherit' }}>
                           {fmt(ind.actual, unitOf[name])}
                         </span>
                         {normTarget != null && <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }}>목표 {fmt(normTarget, unitOf[name])}</span>}
                         {ind.verifyResult && (
                           <span className="muted" style={{ fontSize: 'calc(11px * var(--fs, 1))', display: 'block' }} title="KMAC 평가기관 검증 결과 (O=통과, X=보완 요청)">
-                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(10px * var(--fs, 1))' }}>{ind.verifyResult}</span>
+                            검증 {fmt(ind.verifiedActual, unitOf[name])} <span className={`tag ${ind.verifyResult === 'O' ? 'tag-green' : 'tag-indigo'}`} style={{ fontSize: 'calc(11px * var(--fs, 1))' }}>{ind.verifyResult}</span>
                           </span>
                         )}
                       </td>
@@ -231,7 +229,7 @@ export default function SwcuDashboardPage() {
           <div className="card-title"><span className="accent-bar" />총괄 원시값 (자세히 보기)</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {years.map((y) => (
-              <button key={y.year} className={`btn btn-sm${y.year === activeRawYear ? ' btn-primary' : ''}`} onClick={() => setRawYear(y.year)}>{y.year}</button>
+              <button key={y.year} className={`btn btn-sm${y.year === activeRawYear ? ' btn-on' : ''}`} onClick={() => setRawYear(y.year)}>{y.year}</button>
             ))}
           </div>
         </div>

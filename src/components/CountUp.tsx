@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Props = {
   /** 최종 표시할 값 */
@@ -18,6 +18,9 @@ type Props = {
  */
 export default function CountUp({ end, duration = 900, decimals = 0 }: Props) {
   const [value, setValue] = useState(0);
+  // 연도를 바꾸면 0 부터가 아니라 지금 보이는 값에서 새 값으로 굴러간다
+  const shown = useRef(0);
+  shown.current = value;
 
   useEffect(() => {
     const prefersReduced =
@@ -31,12 +34,13 @@ export default function CountUp({ end, duration = 900, decimals = 0 }: Props) {
 
     let raf = 0;
     let startTs = 0;
+    const from = shown.current;
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
     const tick = (ts: number) => {
       if (!startTs) startTs = ts;
       const progress = Math.min(1, (ts - startTs) / duration);
-      setValue(end * easeOutCubic(progress));
+      setValue(from + (end - from) * easeOutCubic(progress));
       if (progress < 1) raf = requestAnimationFrame(tick);
       else setValue(end);
     };

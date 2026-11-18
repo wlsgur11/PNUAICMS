@@ -65,15 +65,14 @@ export default function StudentBlock({ s }: { s: StudentSummary }) {
 
           {hasGrade && <>
           <div className="dash-metric-label" style={{ marginBottom: 10 }}>학년별 분포</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+          {/* 한 학년 한 줄. 막대 끝에 인원을 적는다 */}
+          <div className="yr-chart">
             {s.gradeDistribution.map((g) => (
-              <div key={g.grade}>
-                <div className="dash-bar" style={{ marginBottom: 6 }}>
-                  <span style={{ width: `${(g.count / maxGrade) * 100}%` }} />
-                </div>
-                <div style={{ fontSize: 'calc(12px * var(--fs, 1))', color: 'var(--text-2)', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{g.grade}학년</span>
-                  <span className="dash-num" style={{ color: 'var(--text-1)' }}>{g.count}</span>
+              <div key={g.grade} className="yr-row">
+                <div className="yr-year">{g.grade}학년</div>
+                <div className="yr-line">
+                  <div className="yr-bar"><span style={{ width: `${(g.count / maxGrade) * 100}%` }} /></div>
+                  <div className="yr-val"><b>{g.count}</b>명</div>
                 </div>
               </div>
             ))}

@@ -120,7 +120,7 @@ export default function CompanyDetailPage() {
           ← 목록으로 돌아가기
         </Link>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn" onClick={() => router.push(`/companies/${id}/edit`)}>✎ 기본정보 수정</button>
+          <button className="btn" onClick={() => router.push(`/companies/${id}/edit`)}>기본정보 수정</button>
           {c.isActive
             ? <button className="btn btn-danger" onClick={deactivate}>비활성</button>
             : <>
@@ -174,7 +174,7 @@ export default function CompanyDetailPage() {
         <div className="card">
           <div className="card-head">
             <div className="card-title"><span className="accent-bar" />인턴십 및 채용연계 정보</div>
-            <button className="btn btn-ghost btn-sm" onClick={() => setModal('collab')}>✎ 수정</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setModal('collab')}>수정</button>
           </div>
           <div className="info-list">
             {COLLAB_FIELDS.map((cf) => {

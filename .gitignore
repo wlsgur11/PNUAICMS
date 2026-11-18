@@ -65,3 +65,6 @@ docs/agents/
 # CMS 로그인과 무관하며, 별도 basic auth 로 막혀 있다.
 # 슬래시 없이 적는다. 심링크는 git 이 파일로 취급해 `/aice/` 로는 안 걸린다.
 /aice
+
+# 디자인 검사 결과물
+.taste-skill/
