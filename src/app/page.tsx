@@ -21,9 +21,22 @@ import RecentContactsBlock from '@/components/dashboard/RecentContactsBlock';
 import ActivityBlock from '@/components/dashboard/ActivityBlock';
 import SiteMetricsBlock from '@/components/dashboard/SiteMetricsBlock';
 import SwcuSlidesBlock from '@/components/dashboard/SwcuSlidesBlock';
+import DashHero from '@/components/dashboard/DashHero';
+import DashMotion from '@/components/dashboard/DashMotion';
+import DashSectionBar from '@/components/dashboard/DashSectionBar';
 import GuideBlock from '@/components/dashboard/GuideBlock';
 import LoginCta from '@/components/dashboard/LoginCta';
 import type { DashboardData } from '@/lib/dashboard-shape';
+
+// 위에 붙는 구역 바의 칩. 화면에 없는 구역(로그인 전)은 바가 알아서 뺀다
+const SECTIONS = [
+  { id: 'sec-goals', label: '목표와 실적' },
+  { id: 'sec-services', label: '운영 서비스' },
+  { id: 'sec-tracks', label: 'AI대학' },
+  { id: 'sec-companies', label: '기업' },
+  { id: 'sec-records', label: '산학·인턴십' },
+  { id: 'sec-swcu', label: 'SW중심대학' },
+];
 
 export default function DashboardPage() {
   const me = useMe();
@@ -42,22 +55,10 @@ export default function DashboardPage() {
   if (!data) return <><PageHeader title="산학협력 성과" /><div className="loading">불러오는 중…</div></>;
 
   return (
-    <>
-      <PageHeader
-        title="산학협력 성과"
-        extra={data.years.length > 1 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span className="muted" style={{ fontSize: 'calc(12px * var(--fs, 1))' }}>연도</span>
-            {data.years.map((y) => (
-              <button key={y} type="button"
-                      className={`btn btn-sm${y === data.year ? ' btn-primary' : ''}`}
-                      onClick={() => setYear(y)}>
-                {y}
-              </button>
-            ))}
-          </div>
-        ) : undefined}
-      />
+    <DashMotion>
+      {/* 랜딩을 겸하는 첫 화면이라 제목, 한 줄 요약, 큰 숫자를 파란 띠 하나에 담는다 */}
+      <DashHero data={data} finding={goalFinding(data)} years={data.years} onYear={setYear} />
+      <DashSectionBar sections={SECTIONS} years={data.years} year={data.year} onYear={setYear} />
 
       {isGeneral && (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -75,8 +76,25 @@ export default function DashboardPage() {
           첫 화면에 실적 숫자가 먼저 보이게 한다 */}
       <GuideBlock open={isGeneral} />
 
-      {/* 현장평가 대비로 당분간 맨 위에 둔다. 평가가 끝나면 아래로 내린다.
-          로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
+      {/* 제목이 '산학협력 성과' 라서 목표 대비 카드가 첫 띠 바로 아래에 온다 */}
+      <div className="dash-section" id="sec-goals">산학협력 목표와 실적</div>
+      <FadeContent>
+        <div className="dash-grid-7-5">
+          <GoalCard
+            industry={data.goals.industry}
+            internship={data.goals.internship}
+            swcu={data.goals.swcu}
+            year={data.year}
+            trend={data.trend}
+            goalTrend={data.goalTrend}
+            headcount={data.headcount}
+          />
+          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
+        </div>
+      </FadeContent>
+
+      <div id="sec-services" className="dash-anchor" />
+      {/* 교육원이 운영하는 서비스 다섯 개. 로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
       <FadeContent>
         <SiteMetricsBlock aicms={{
           name: 'AICMS',
@@ -105,25 +123,10 @@ export default function DashboardPage() {
           ],
           asOf: null,
         }} />
-        <div className="dash-section">AI대학과 신기술 특화 트랙</div>
+        <div className="dash-section" id="sec-tracks">AI대학과 신기술 특화 트랙</div>
         <SwcuSlidesBlock />
-        <div className="dash-section">산학협력 목표와 실적</div>
       </FadeContent>
 
-      <FadeContent>
-        <div className="dash-grid-7-5">
-          <GoalCard
-            industry={data.goals.industry}
-            internship={data.goals.internship}
-            swcu={data.goals.swcu}
-            year={data.year}
-            trend={data.trend}
-            goalTrend={data.goalTrend}
-            headcount={data.headcount}
-          />
-          <TotalsCard totals={data.totals} partnerCompanies={data.partnerCompanies} year={data.year} />
-        </div>
-      </FadeContent>
 
       {data.pipeline && data.distribution && (
         <>
@@ -132,7 +135,7 @@ export default function DashboardPage() {
               행을 반만 채우지 않는다. 최근 컨택은 4열 표라 좁은 칸에 넣지 않고
               구역 밖 전체 폭에 둔다 */}
           <FadeContent delay={100}>
-            <div className="dash-section">기업</div>
+            <div className="dash-section" id="sec-companies">기업</div>
             {/* 다음 컨택 대상을 파이프라인 왼쪽에 둔다. 파이프라인이 '몇 곳이
                 어느 단계인가' 라면 이쪽은 '그래서 누구부터 연락하나' 라서,
                 숫자를 보고 바로 이름으로 넘어가는 순서가 된다 */}
@@ -144,8 +147,9 @@ export default function DashboardPage() {
           </FadeContent>
 
           <FadeContent delay={150}>
-            <div className="dash-section">산학·인턴십 실적</div>
-            <div className="dash-grid-4">
+            <div className="dash-section" id="sec-records">산학·인턴십 실적</div>
+            {/* 위 줄 산학 세 장, 아래 줄 인턴십 한 장(가로). 높이가 크게 다른 넷을 한 줄에 두면 빈 칸이 생겼다 */}
+            <div className="dash-grid-records">
               <DistributionBlock distribution={data.distribution} />
               {data.projectHeadcount && (
                 <ProjectHeadcountCard year={data.year} data={data.projectHeadcount} />
@@ -164,7 +168,7 @@ export default function DashboardPage() {
           <FadeContent delay={200}>
             {/* 학생을 지표와 같은 구역에 둔다. SW중심대학 참여율 지표의 분모가
                 재학생이라 두 카드를 같이 보는 편이 맞다 */}
-            <div className="dash-section">SW중심대학 성과와 학생</div>
+            <div className="dash-section" id="sec-swcu">SW중심대학 성과와 학생</div>
             <div className="dash-grid-auto">
               <SwcuBlock swcu={data.goals.swcu} year={data.year} />
               <SwcuAreaCard areas={data.goals.swcu.areas} year={data.year} />
@@ -189,6 +193,22 @@ export default function DashboardPage() {
         </>
       )}
 
-    </>
+    </DashMotion>
   );
+}
+
+// 제목 아래 한 줄. 올해 목표 대비 어디까지 왔는지를 실제 값으로 말한다. 값이 없는 항목은 뺀다
+function goalFinding(d: DashboardData): string | null {
+  const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const part = (name: string, m: DashboardData['goals']['industry']) =>
+    m.achieved == null ? null
+      : m.target == null ? `${name} ${pct(m.achieved)}`
+      : `${name} ${pct(m.achieved)}(목표 ${pct(m.target)}${m.achieved >= m.target ? ' 달성' : ''})`;
+  const s = d.goals.swcu;
+  const parts = [
+    part('산학협력 참여율', d.goals.industry),
+    part('인턴십 참여율', d.goals.internship),
+    s.total > 0 ? `SW중심대학 지표 ${s.met}/${s.total}개 달성` : null,
+  ].filter(Boolean);
+  return parts.length ? `${d.year}년 ${parts.join(', ')}` : null;
 }

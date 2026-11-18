@@ -207,8 +207,8 @@ function CompaniesInner() {
                   <td className="center">
                     <span className={`badge ${r.mou ? 'badge-mou-yes' : 'badge-mou-no'}`}>{r.mou ? '체결' : '미체결'}</span>
                   </td>
-                  <td className="center">{r.internship ? <span className="check-yes">✔</span> : <span className="check-no">–</span>}</td>
-                  <td className="center">{r.employment ? <span className="check-yes">✔</span> : <span className="check-no">–</span>}</td>
+                  <td className="center">{r.internship ? <span className="check-yes">있음</span> : <span className="check-no">–</span>}</td>
+                  <td className="center">{r.employment ? <span className="check-yes">있음</span> : <span className="check-no">–</span>}</td>
                   <td>{r.lastMeeting || '-'}</td>
                   <td className="center">{r.priority ? <span className={`badge badge-${r.priority}`}>{r.priority}</span> : '-'}</td>
                 </tr>

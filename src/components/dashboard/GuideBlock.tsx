@@ -39,7 +39,7 @@ export default function GuideBlock({ open }: { open: boolean }) {
           <ol className="guide-steps">
             {STEPS.map((s, i) => (
               <li key={s.title}>
-                <span className="guide-no">{String(i + 1).padStart(2, '0')}</span>
+                <span className="guide-no">{i + 1}</span>
                 <div><strong>{s.title}</strong><p>{s.desc}</p></div>
               </li>
             ))}

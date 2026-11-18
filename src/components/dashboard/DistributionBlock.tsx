@@ -81,7 +81,7 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {AXES.map((a) => (
-            <button key={a.key} type="button" className={`btn btn-sm${axis === a.key ? ' btn-primary' : ''}`} onClick={() => setAxis(a.key)}>
+            <button key={a.key} type="button" className={`btn btn-sm${axis === a.key ? ' btn-on' : ''}`} onClick={() => setAxis(a.key)}>
               {a.label}
             </button>
           ))}
@@ -111,8 +111,8 @@ export default function DistributionBlock({ distribution }: { distribution: Dist
             ))}
           </div>
 
-          {/* 항목이 적어도 넓게 퍼지도록 여러 열로 배치한다 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 28px' }}>
+          {/* 한 항목 한 줄. 옆 카드보다 짧으면 줄 간격을 넓혀 카드 높이를 채운다(.fill-rows) */}
+          <div className="fill-rows">
             {items.map((x, i) => {
               const href = hrefFor(x);
               const rowProps = {
