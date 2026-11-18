@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import type { SwcuSummary, SwcuTrendPoint } from '@/lib/dashboard-shape';
 import { formatSwcuValue } from '@/lib/swcu-format';
@@ -13,96 +12,34 @@ import { formatSwcuValue } from '@/lib/swcu-format';
  * 지표가 줄어 올라간 해와 실제로 더 달성한 해가 같아 보인다.
  */
 function MetTrend({ trend, year }: { trend: SwcuTrendPoint[]; year: number }) {
-  const [hover, setHover] = useState<number | null>(null);
   if (trend.length < 2) return null;
-  const max = Math.max(1, ...trend.map((t) => t.total));
-  const hoverIdx = hover == null ? -1 : trend.findIndex((t) => t.year === hover);
-  const active = hoverIdx < 0 ? null : trend[hoverIdx];
+  // 한 해가 한 줄(최근 해가 위). 막대 전체가 그해 지표 수, 초록이 달성 개수. 숫자는 늘 적는다
+  const rows = [...trend].sort((x, y) => y.year - x.year);
+  const byYear = new Map(rows.map((t) => [t.year, t]));
   return (
     <div style={{ marginTop: 18 }}>
-      <div className="dash-metric-label" style={{ marginBottom: 10 }}>연도별 달성 개수</div>
-      <div style={{ position: 'relative' }}>
-      {/* 막대 줄과 라벨 줄을 나눈다. 라벨을 고정 높이 안에 같이 넣으면 flex 가
-          막대를 눌러서, 높이를 키워도 라벨이 먹은 만큼 빼고 남은 몫만 막대가 된다 */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 92 }}>
-        {trend.map((t) => (
-          <div
-            key={t.year}
-            onMouseEnter={() => setHover(t.year)}
-            onMouseLeave={() => setHover(null)}
-            style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-          >
-            {/* 전체 지표 수만큼의 트랙 안에 달성분을 채운다. 트랙 높이가 그 해의
-                지표 수라, 분모가 바뀐 해는 기둥 자체가 짧아져 눈에 걸린다.
-                폭을 묶어 둔다. flex 로만 두면 연도가 셋일 때 한 칸이 190px 이 되어
-                막대가 가로로 누운 블록으로 보인다 */}
-            <div
-              style={{
-                height: `${(t.total / max) * 100}%`,
-                width: '100%', maxWidth: 34,
-                background: 'var(--chart-track)',
-                borderRadius: 2, overflow: 'hidden',
-                display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                outline: t.year === year ? '1px solid var(--accent)' : undefined,
-                outlineOffset: 1,
-                opacity: hover == null || hover === t.year ? 1 : 0.35,
-                transition: 'opacity 160ms',
-              }}
-            >
-              <div style={{ height: `${t.total ? (t.met / t.total) * 100 : 0}%`, background: 'var(--chart-met)' }} />
+      <div className="dash-metric-label" style={{ marginBottom: 6 }}>연도별 달성 개수</div>
+      <div className="yr-chart" role="table" aria-label="연도별 SW중심대학 지표 달성 개수">
+        {rows.map((t) => {
+          const prev = byYear.get(t.year - 1);
+          const diff = prev ? t.met - prev.met : null;
+          return (
+            <div key={t.year} className="yr-row" role="row" style={t.year === year ? { background: 'var(--accent-soft)' } : undefined}>
+              <div className="yr-year" role="rowheader">{t.year}</div>
+              <div className="yr-line met" role="cell">
+                <div className="yr-bar">
+                  <span style={{ width: `${t.total ? (t.met / t.total) * 100 : 0}%` }} />
+                </div>
+                <div className="yr-val">
+                  <b>{t.met}</b>/{t.total}개 달성
+                  {diff != null && (
+                    <em className={diff > 0 ? 'up' : diff < 0 ? 'down' : undefined}>({diff > 0 ? `+${diff}` : diff === 0 ? '변화 없음' : diff})</em>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      {/* 값 표시는 연도별 실적 차트와 같은 말풍선을 쓴다. 한 화면에서 같은 동작에
-          다른 모양을 쓰면 두 차트가 서로 다른 것으로 읽힌다 */}
-      {active && (
-        <div
-          style={{
-            // 기둥 위에 얹는다. 안쪽에 두면 가리킨 기둥을 스스로 가린다
-            position: 'absolute', left: `${((hoverIdx + 0.5) / trend.length) * 100}%`, top: -6,
-            transform: `translate(${hoverIdx === 0 ? '-10%' : hoverIdx === trend.length - 1 ? '-90%' : '-50%'}, -100%)`,
-            background: 'var(--slate-900)', color: 'var(--surface)',
-            borderRadius: 'var(--radius-sm)', padding: '7px 10px',
-            fontSize: 'calc(11px * var(--fs, 1))', lineHeight: 1.6, whiteSpace: 'nowrap',
-            pointerEvents: 'none', boxShadow: 'var(--shadow-md)', zIndex: 1,
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 2 }}>{active.year}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 6, height: 6, background: 'var(--chart-met)', borderRadius: 1, flexShrink: 0 }} />
-            달성 {active.met}개
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 6, height: 6, background: 'var(--chart-track)', borderRadius: 1, flexShrink: 0 }} />
-            나머지 {active.total - active.met}개
-          </div>
-          <div style={{ color: 'var(--slate-400)', marginTop: 2 }}>전체 지표 {active.total}개</div>
-        </div>
-      )}
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
-        {trend.map((t) => (
-          <div
-            key={t.year}
-            onMouseEnter={() => setHover(t.year)}
-            onMouseLeave={() => setHover(null)}
-            style={{ flex: 1, textAlign: 'center' }}
-          >
-            <div style={{
-              fontSize: 'calc(11px * var(--fs, 1))',
-              color: t.year === year ? 'var(--text-1)' : 'var(--text-2)',
-              fontWeight: t.year === year ? 500 : 400,
-            }}>
-              {t.met}<span style={{ color: 'var(--text-3)', fontWeight: 400 }}>/{t.total}</span>
-            </div>
-            <div style={{ fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>{t.year}</div>
-          </div>
-        ))}
-      </div>
-      <div className="dash-note" style={{ marginTop: 8 }}>
-        회색 기둥 전체가 그 해 지표 수, 초록이 달성한 개수입니다.
+          );
+        })}
       </div>
     </div>
   );
