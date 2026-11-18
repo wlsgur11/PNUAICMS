@@ -23,7 +23,7 @@ export default function SwcuAreaCard({ areas, year }: { areas: SwcuArea[]; year:
       ) : (
         <>
           {areas.map((a) => (
-            <div key={a.area} style={{ padding: '10px 0', borderBottom: '1px solid var(--slate-100)' }}>
+            <div key={a.area} className="area-row" style={{ padding: '10px 0', borderBottom: '1px solid var(--slate-100)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 7 }}>
                 <span style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{a.area}</span>
                 <span className="dash-num" style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>

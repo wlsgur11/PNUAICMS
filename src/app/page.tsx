@@ -148,7 +148,8 @@ export default function DashboardPage() {
 
           <FadeContent delay={150}>
             <div className="dash-section" id="sec-records">산학·인턴십 실적</div>
-            <div className="dash-grid-4">
+            {/* 위 줄 산학 세 장, 아래 줄 인턴십 한 장(가로). 높이가 크게 다른 넷을 한 줄에 두면 빈 칸이 생겼다 */}
+            <div className="dash-grid-records">
               <DistributionBlock distribution={data.distribution} />
               {data.projectHeadcount && (
                 <ProjectHeadcountCard year={data.year} data={data.projectHeadcount} />

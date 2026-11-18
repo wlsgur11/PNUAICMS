@@ -60,12 +60,13 @@ export default function InternshipStatsCard({ year, data, composition }: {
   const comp = hasYear ? composition.year : composition.total;
 
   return (
-    <div className="card dash-card">
+    <div className="card dash-card intern-card">
       <div className="dash-head">
         <h2>인턴십 교육 실적</h2>
         <p>실적 자료의 교육인원과 연계취업자를 합산한 값입니다. 해외 인턴십은 SW중심대학 성과지표에도 반영됩니다.</p>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* 넓은 화면에서는 올해, 전체 누적, 구성을 세 칸으로 나란히 둔다(카드가 구역 폭 전체를 쓴다) */}
+      <div className="intern-body">
         <Row label={`${year}년`} h={data.year} />
         <Row label="전체 누적" h={data.total} />
 

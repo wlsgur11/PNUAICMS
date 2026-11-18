@@ -55,13 +55,14 @@ export default function ProjectHeadcountCard({ year, data }: {
               return (
                 <div key={key} className="yr-row">
                   <div className="yr-year">{label}</div>
-                  <div>
-                    <div className="yr-line">
-                      <div className="yr-bar"><span style={{ width: `${(d.sum / maxSum) * 100}%` }} /></div>
-                      <div className="yr-val"><b>{d.sum}</b>명</div>
-                    </div>
-                    <div className="yr-sub">
-                      {d.filled === 0 ? '인원이 기재된 과제 없음' : d.filled === p.projects ? `과제 ${p.projects}건 모두 기재` : `과제 ${p.projects}건 중 ${d.filled}건만 인원 기재`}
+                  <div className="yr-line">
+                    <div className="yr-bar"><span style={{ width: `${(d.sum / maxSum) * 100}%` }} /></div>
+                    <div className="yr-val">
+                      <b>{d.sum}</b>명
+                      {/* 기재 현황은 숫자 옆 회색으로. 줄을 따로 두면 카드가 옆 카드보다 훨씬 길어졌다 */}
+                      <em title={`과제 ${p.projects}건 중 ${d.filled}건에 인원 기재`}>
+                        {d.filled === 0 ? '기재 없음' : d.filled === p.projects ? '전부 기재' : `${d.filled}/${p.projects}건 기재`}
+                      </em>
                     </div>
                   </div>
                 </div>
