@@ -48,7 +48,7 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
       });
 
       // ── 카드: 같은 순간 들어온 카드끼리 묶어 차례로 올린다 ──
-      const cards = gsap.utils.toArray<HTMLElement>('.card', root.current).filter((c) => !c.closest('.dash-hero'));
+      const cards = gsap.utils.toArray<HTMLElement>('.card', root.current).filter((c) => !c.closest('.dash-hero') && !c.closest('.icex'));
       // 빠르게(2026-11-18 사용자 요청): 화면 아래 끝에 닿자마자 시작, 짧게 올라온다
       gsap.set(cards, { y: 18, opacity: 0 });
       ScrollTrigger.batch(cards, {
@@ -72,6 +72,21 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
         tl.from(chart.querySelectorAll('.yr-bar > span'), { scaleX: 0, duration: 0.6, ease: 'power2.out', stagger: 0.06 })
           .from(chart.querySelectorAll('.yr-val, .yr-target'), { opacity: 0, x: -6, duration: 0.3, stagger: 0.04 }, 0.2);
       });
+
+      // ── ICEx 흐름: 레일이 왼쪽부터 그어지고, 단계 카드가 순서대로 올라온다 ──
+      const icex = root.current?.querySelector<HTMLElement>('.icex');
+      if (icex) {
+        const tl = gsap.timeline({ scrollTrigger: { trigger: icex, start: 'top 80%', once: true } });
+        // 가운데 ICEx 가 커지고, 고리가 시계 방향으로 그어지는 동안 단계 카드가 차례로 나타난다
+        tl.from(icex.querySelector('.icex-core'), { scale: 0.6, opacity: 0, duration: 0.5, ease: 'back.out(1.6)' })
+          .fromTo(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: 1, strokeDasharray: '1 1' }, { strokeDashoffset: 0, duration: 1.2, ease: 'power1.inOut', clearProps: 'strokeDasharray,strokeDashoffset' }, 0.2)
+          .from(icex.querySelectorAll('.icex-step'), { scale: 0.92, opacity: 0, duration: 0.4, ease, stagger: 0.25 }, 0.3)
+          .from(icex.querySelectorAll('.icex-arrow'), { opacity: 0, duration: 0.3, stagger: 0.25 }, 0.55)
+          .from(icex.querySelector('.icex-cms'), { y: 16, opacity: 0, duration: 0.4, ease }, '-=0.1');
+
+        // 다 그린 뒤에는 고리 점선이 천천히 돌아 흐름이 이어지고 있음을 보여 준다
+        gsap.to(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: -1, duration: 40, ease: 'none', repeat: -1, delay: 2 });
+      }
 
       // ── AI대학, 트랙 그림: 틀 안에서 스크롤에 따라 위아래로 조금 움직인다 ──
       gsap.utils.toArray<HTMLImageElement>('.site-card img', root.current).forEach((img) => {

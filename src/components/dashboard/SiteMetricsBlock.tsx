@@ -25,46 +25,6 @@ function Num({ m, size }: { m: SiteMetric; size?: 'lg' }) {
   );
 }
 
-function SiteCardView({ site, live, onOpen }: { site: SiteCard; live?: boolean; onOpen: () => void }) {
-  return (
-    <div className="card site-card" role="button" tabIndex={0} onClick={onOpen}
-         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-         style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div className="card-title" style={{ margin: 0 }}><span className="accent-bar" />{site.name}</div>
-        <span className="tag tag-slate" style={{ padding: '2px 8px', fontSize: 'calc(11px * var(--fs, 1))' }}>
-          {site.since ? `${site.since}부터 운영` : '운영 중'}
-        </span>
-      </div>
-      <div style={{ fontSize: small, color: 'var(--text-2)', marginTop: 4 }}>{site.summary}</div>
-
-      <div style={{ marginTop: 16 }}>
-        <div className="dash-metric-label">{site.headline.label}</div>
-        <div className="dash-metric-value"><Num m={site.headline} size="lg" /></div>
-      </div>
-
-      <dl style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', margin: '14px 0 0', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-        {/* 아직 못 뽑은 세부 숫자는 '-' 로 두면 미완성처럼 보여서 숨긴다. 대표 숫자는 늘 보인다 */}
-        {site.metrics.filter((m) => m.value != null).slice(0, 4).map((m) => (
-          <div key={m.label} style={{ display: 'contents' }}>
-            <dt style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)' }}>{m.label}</dt>
-            <dd style={{ margin: 0, textAlign: 'right', fontWeight: 600, fontSize: 'calc(15px * var(--fs, 1))', fontVariantNumeric: 'tabular-nums' }}>
-              <Num m={m} />
-            </dd>
-          </div>
-        ))}
-      </dl>
-
-      {/* 활용 교과목과 주요 기능은 상세 창에만 둔다. 카드마다 길이가 달라 줄 높이가 어긋났다 */}
-      <div style={{ marginTop: 'auto', paddingTop: 14, display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
-        <a href={site.url} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}
-           onClick={(e) => e.stopPropagation()}>{site.url.replace('https://', '')} ↗</a>
-        <span>{live ? '실시간' : site.asOf ? `${site.asOf} 기준` : '집계 전'} · 자세히</span>
-      </div>
-    </div>
-  );
-}
-
 /* 카드를 누르면 뜨는 상세. 카드에서 숨긴 숫자와 상세 전용 숫자까지 모두 보여 준다 */
 function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolean; onClose: () => void }) {
   useEffect(() => {
@@ -141,32 +101,30 @@ function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolea
   );
 }
 
-/* 맨 위 가로 요약. 왼쪽에 구역 제목, 오른쪽에 숫자 셋을 세로 구분선으로 나눈다 */
-function SummaryStat({ label, value, unit, note, first }: { label: string; value: number | null; unit: string; note?: string; first?: boolean }) {
-  return (
-    <div style={{ padding: '0 28px', borderLeft: first ? undefined : '1px solid var(--border)', minWidth: 150 }}>
-      <div className="dash-metric-label">{label}</div>
-      <div className="dash-metric-value"><Num m={{ label, value, unit }} size="lg" /></div>
-      <div className="dash-metric-sub" style={{ marginTop: 4, minHeight: '1.5em' }}>{note}</div>
-    </div>
-  );
-}
+/**
+ * ICEx 흐름에서 서비스마다 맡는 단계. 인프라 다이어그램 세션(2026-11-10)의 슬라이드와 같은 순서다:
+ * 실습(코드플레이스) → 개발(피클) → 프로젝트(AIPMS) → 역량 인정(AI 역량지원시스템).
+ * AICMS 는 이 흐름에 기업과 산학 실적을 붙이는 관리 사이트라 흐름 밖, 아래 줄에 둔다.
+ */
+const FLOW: { name: string; stage: string; does: string }[] = [
+  { name: '코드플레이스', stage: '실습', does: '교과목 코딩 실습, 자동 채점, AI 조교' },
+  { name: '피클', stage: '개발', does: '실습 VM 과 LLM API 키를 내어 줌' },
+  { name: 'AIPMS', stage: '프로젝트', does: '팀 프로젝트 등록부터 결과물 공개까지' },
+  { name: 'AI 역량지원시스템', stage: '역량 인정', does: '실적 신청, 이수 판정, 진로 추천' },
+];
 
-function SummaryBar({ services, users, usedIn }: { services: number; users: number | null; usedIn: number }) {
+function Step({ site, stage, does, onOpen }: { site: SiteCard; stage: string; does: string; onOpen: () => void }) {
   return (
-    <div className="card site-summary" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-      <div style={{ minWidth: 260, flex: '1 1 260px' }}>
-        <h2 style={{ margin: 0, fontSize: 'calc(20px * var(--fs, 1))', fontWeight: 700, color: 'var(--text-1)' }}>교육원 운영 서비스</h2>
-        <div style={{ fontSize: 'calc(13px * var(--fs, 1))', color: 'var(--text-2)', marginTop: 6, lineHeight: 1.6 }}>
-          교육원이 직접 개발하고 교내 서버에서 운영하는 서비스입니다.
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', rowGap: 16 }}>
-        <SummaryStat first label="운영 서비스" value={services} unit="개" />
-        <SummaryStat label="서비스 이용자" value={users} unit="명" note="서비스별 합계, 중복 포함" />
-        <SummaryStat label="활용 교과목, 사업" value={usedIn} unit="개" />
-      </div>
-    </div>
+    <li className="icex-step">
+      <button type="button" className="icex-card" onClick={onOpen} aria-label={`${site.name} 자세히`}>
+        <span className="icex-stage">{stage}</span>
+        <span className="icex-name">{site.name}</span>
+        <span className="icex-does">{does}</span>
+        <span className="icex-num"><Num m={site.headline} size="lg" /></span>
+        <span className="icex-label">{site.headline.label}</span>
+        <span className="icex-more" aria-hidden="true">자세히 →</span>
+      </button>
+    </li>
   );
 }
 
@@ -176,20 +134,59 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
     .flatMap((s) => [s.headline, ...s.metrics])
     .filter((m) => m.users && m.value != null)
     .map((m) => m.value as number);
-  const usedIn = new Set(sites.flatMap((s) => s.usedIn));
+  const users = userValues.length ? userValues.reduce((a, b) => a + b, 0) : null;
+  const usedIn = new Set(sites.flatMap((s) => s.usedIn)).size;
   const [open, setOpen] = useState<SiteCard | null>(null);
+  const flow = FLOW.map((f) => ({ ...f, site: sites.find((s) => s.name === f.name) })).filter((f) => f.site);
 
   return (
-    <>
-      <SummaryBar
-        services={sites.length}
-        users={userValues.length ? userValues.reduce((a, b) => a + b, 0) : null}
-        usedIn={usedIn.size}
-      />
-      <div className="dash-grid-sites">
-        {sites.map((s) => <SiteCardView key={s.name} site={s} live={s === aicms} onOpen={() => setOpen(s)} />)}
+    <section className="icex" aria-labelledby="icex-title">
+      <header className="icex-head">
+        <h2 id="icex-title">PNU ICEx 교육 플랫폼</h2>
+        <p>실습에서 역량 인정까지 한 바퀴로 이어지는 교육원 서비스입니다. 모두 교내 DevCloud 서버실에서 운영합니다.</p>
+      </header>
+
+      {/* 가운데 ICEx, 둘레에 네 단계가 시계 방향으로 돈다(실습 → 개발 → 프로젝트 → 역량 인정 → 다시 실습).
+          좁은 화면에서는 고리를 걷고 차례대로 쌓는다 */}
+      <div className="icex-orbit">
+        <svg className="icex-ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <ellipse cx="50" cy="50" rx="33.3" ry="33.3" pathLength={1} vectorEffect="non-scaling-stroke" />
+        </svg>
+        {/* 고리 위 방향 표시. 대각선 네 곳에 시계 방향으로 놓는다 */}
+        {[-45, 45, 135, 225].map((deg) => {
+          const r = (deg * Math.PI) / 180;
+          return (
+            <span key={deg} className="icex-arrow" aria-hidden="true"
+                  style={{ left: `${50 + 33.3 * Math.cos(r)}%`, top: `${50 + 33.3 * Math.sin(r)}%`, transform: `translate(-50%, -50%) rotate(${deg + 90}deg)` }} />
+          );
+        })}
+        <div className="icex-core">
+          <span className="icex-core-name">PNU ICEx</span>
+          <dl>
+            <div><dt>서비스</dt><dd>{sites.length}개</dd></div>
+            {users != null && <div><dt>이용자 합계</dt><dd>{users.toLocaleString('ko-KR')}명</dd></div>}
+            <div><dt>활용 교과목, 사업</dt><dd>{usedIn}개</dd></div>
+          </dl>
+        </div>
+        <ol className="icex-flow">
+          {flow.map((f) => <Step key={f.name} site={f.site!} stage={f.stage} does={f.does} onOpen={() => setOpen(f.site!)} />)}
+        </ol>
       </div>
+
+      <button type="button" className="icex-cms" onClick={() => setOpen(aicms)} aria-label="AICMS 자세히">
+        <span className="icex-cms-text">
+          <span className="icex-stage">산학 연계</span>
+          <span className="icex-name">AICMS</span>
+          <span className="icex-does">위 흐름에 협력 기업, 산학 과제, 인턴십, 학생 상담 실적을 붙입니다</span>
+        </span>
+        <span className="icex-cms-num">
+          <span className="icex-num"><Num m={aicms.headline} size="lg" /></span>
+          <span className="icex-label">{aicms.headline.label}</span>
+        </span>
+        <span className="icex-more" aria-hidden="true">자세히 →</span>
+      </button>
+
       {open && <SiteDetailModal site={open} live={open.name === aicms.name} onClose={() => setOpen(null)} />}
-    </>
+    </section>
   );
 }

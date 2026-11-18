@@ -2280,7 +2280,6 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
   .yr-line { grid-template-columns: 1fr 118px; }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.site-summary { margin-top: 36px; }
 
 /* ── 목표 막대: 막대는 실적, 검은 세로선은 목표. 선 아래에 '목표 15.0%' 를 적는다 ── */
 .goal-bar { position: relative; margin-top: 12px; padding-bottom: 20px; }
@@ -2311,3 +2310,106 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 /* 줄 차트 아래 보조 한 줄(기재 현황 등) */
 .yr-sub { margin-top: 3px; font-size: calc(12px * var(--fs, 1)); color: var(--text-3); }
 .card .yr-line { grid-template-columns: 1fr minmax(64px, auto); }
+
+/* ── PNU ICEx 흐름 ──
+   실습 → 개발 → 프로젝트 → 역량 인정 네 단계가 한 줄로 이어지고, AICMS 가 아래에서 받친다.
+   숫자는 단계마다 하나만 크게. 세부 숫자는 누르면 뜨는 상세 창에 있다 */
+.icex {
+  margin-top: 36px;
+  padding: 32px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+.icex-head h2 { margin: 0; font-size: calc(24px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.02em; color: var(--accent-on-soft); }
+.icex-head p { margin: 6px 0 0; font-size: calc(14px * var(--fs, 1)); color: var(--text-2); }
+
+/* 고리 배치: 3x3 격자. 가운데 ICEx, 위 오른쪽 아래 왼쪽에 네 단계. 고리는 네 카드의 가운데를 지난다 */
+.icex-orbit {
+  position: relative; margin-top: 24px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, auto);
+  grid-template-areas: ". s1 ." "s4 core s2" ". s3 .";
+  gap: 16px 24px; align-items: center;
+}
+.icex-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.icex-ring ellipse { fill: none; stroke: var(--indigo-500); stroke-width: 2; stroke-dasharray: 0.012 0.008; }
+.icex-arrow {
+  position: absolute; width: 0; height: 0; pointer-events: none;
+  border: 7px solid transparent; border-left: 11px solid var(--indigo-500); border-right: 0;
+}
+.icex-flow { display: contents; list-style: none; }
+.icex-step { position: relative; display: flex; z-index: 1; }
+.icex-step:nth-child(1) { grid-area: s1; }
+.icex-step:nth-child(2) { grid-area: s2; }
+.icex-step:nth-child(3) { grid-area: s3; }
+.icex-step:nth-child(4) { grid-area: s4; }
+.icex-core {
+  grid-area: core; z-index: 1; justify-self: center;
+  width: 200px; aspect-ratio: 1; border-radius: 50%;
+  background: var(--solid-bg); color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
+.icex-core-name { font-size: calc(22px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.01em; }
+.icex-core dl { margin: 10px 0 0; display: grid; gap: 2px; }
+.icex-core dl > div { display: flex; gap: 6px; justify-content: center; font-size: calc(12px * var(--fs, 1)); }
+.icex-core dt { color: rgba(255, 255, 255, 0.82); }
+.icex-core dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+:root[data-theme="dark"] .icex-core { background: #0b3a66; }
+.icex-card, .icex-cms {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start;
+  width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--indigo-100); border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.icex-card:hover, .icex-cms:hover { border-color: var(--indigo-500); transform: translateY(-2px); }
+.icex-card:active, .icex-cms:active { transform: translateY(0); }
+.icex-card:focus-visible, .icex-cms:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icex-stage {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  background: var(--solid-bg); color: var(--solid-text);
+  font-size: calc(12px * var(--fs, 1)); font-weight: 600;
+}
+.icex-name { margin-top: 12px; font-size: calc(18px * var(--fs, 1)); font-weight: 700; color: var(--text-1); }
+.icex-does { margin-top: 4px; font-size: calc(13px * var(--fs, 1)); color: var(--text-2); line-height: 1.5; min-height: 2.9em; }
+.icex-num { margin-top: 14px; font-size: calc(30px * var(--fs, 1)); font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text-1); }
+.icex-num .unit { margin-left: 3px; font-size: calc(14px * var(--fs, 1)); font-weight: 400; letter-spacing: 0; color: var(--text-2); }
+.icex-label { margin-top: 2px; font-size: calc(13px * var(--fs, 1)); color: var(--text-2); }
+.icex-more {
+  margin-top: 12px; font-size: calc(13px * var(--fs, 1)); color: var(--accent);
+  opacity: 0; transform: translateX(-4px); transition: opacity .15s ease, transform .15s ease;
+}
+.icex-card:hover .icex-more, .icex-cms:hover .icex-more,
+.icex-card:focus-visible .icex-more, .icex-cms:focus-visible .icex-more { opacity: 1; transform: none; }
+
+/* AICMS 는 흐름 아래 한 줄로 받친다 */
+.icex-cms {
+  margin-top: 16px; flex-direction: row; align-items: center; gap: 24px; flex-wrap: wrap;
+  border-style: dashed;
+}
+.icex-cms .icex-stage { background: var(--surface); color: var(--accent-on-soft); border: 1px solid var(--indigo-100); }
+.icex-cms-text { display: flex; flex-direction: column; align-items: flex-start; flex: 1 1 320px; }
+.icex-cms-text .icex-does { min-height: 0; }
+.icex-cms-num { display: flex; flex-direction: column; align-items: flex-end; }
+.icex-cms-num .icex-num { margin-top: 0; }
+.icex-cms .icex-more { margin-top: 0; }
+
+:root[data-theme="dark"] .icex { background: #14202c; }
+
+@media (max-width: 1100px) {
+  /* 고리를 걷고 ICEx 를 맨 위 띠로, 단계는 두 칸씩 */
+  .icex-orbit { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "core core" "s1 s2" "s4 s3"; }
+  .icex-ring, .icex-arrow { display: none; }
+  .icex-core { width: 100%; aspect-ratio: auto; border-radius: var(--radius); padding: 16px; flex-direction: row; justify-content: space-between; text-align: left; }
+  .icex-core dl { margin: 0; grid-auto-flow: column; gap: 16px; }
+}
+@media (max-width: 640px) {
+  .icex { padding: 20px 16px; }
+  .icex-orbit { grid-template-columns: 1fr; grid-template-areas: "core" "s1" "s2" "s3" "s4"; gap: 12px; }
+  .icex-core { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .icex-core dl { grid-auto-flow: row; }
+  .icex-does { min-height: 0; }
+  .icex-more { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icex-card, .icex-cms, .icex-more { transition: none; }
+}
