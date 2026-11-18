@@ -703,7 +703,6 @@ a {
 
 .stat-card-link:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
   border-color: var(--slate-400);
 }
 
@@ -1213,7 +1212,7 @@ table.data-table {
   overflow-y: auto;
   border-radius: var(--radius);
   padding: 28px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25); /* taste-skill-ignore: 대화상자는 떠 있다 */
 }
 
 .modal-title {
@@ -1335,7 +1334,7 @@ table.data-table {
   height: 17px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28); /* taste-skill-ignore: 스위치 손잡이는 떠 있는 조작부 */
   transition: transform 0.18s ease;
 }
 
@@ -1803,27 +1802,7 @@ a.dash-list-row:hover { background: var(--slate-50); }
 :root[data-theme="dark"] .diff-row.del { background: rgba(241, 121, 122, 0.14); color: #f3a9a9; }
 :root[data-theme="dark"] .diff-row.add { background: rgba(95, 207, 151, 0.14); color: #8fe0b4; }
 
-/* 불완전한 데이터 몫. 솔리드는 확인된 값, 사선은 아직 채워지지 않은 값이다.
-   미기재 과제 인원과 아직 끝나지 않은 연도에 같은 표기를 쓴다. 표기가 하나여야
-   '사선 = 이 숫자는 덜 찼다' 가 한 번만 학습된다 */
-.chart-gap {
-  background-color: var(--chart-gap-bg);
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--chart-gap-fg) 0 1.5px,
-    transparent 1.5px 5px
-  );
-}
-
-/* 값은 있지만 아직 확정이 아닌 몫(진행중인 연도). 아래 계열색을 살려야 어느 계열인지
-   읽히므로 배경은 건드리지 않고 사선만 얹는다. 줄 색은 표면색이라 두 테마에서 같이 산다 */
-.chart-gap-overlay {
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--surface) 0 1.5px,
-    transparent 1.5px 5px
-  );
-}
+/* 사선 무늬(.chart-gap)는 쓰던 곳을 모두 글자 표시로 바꿔서 지웠다(2026-11-18) */
 
 /* 목록 행의 비율 막대. 세 카드가 같은 구조를 인라인으로 되풀이하고 있었다.
    색은 --bar-color 로 받는다. 인라인 background 로 덮으면 :hover 규칙이 못 이긴다 */
@@ -1852,7 +1831,7 @@ a.dash-list-row:hover { background: var(--slate-50); }
 
 /* 대시보드 운영 서비스 카드. 눌러서 상세를 연다 */
 .site-card { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
-.site-card:hover { border-color: var(--slate-300); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+.site-card:hover { border-color: var(--slate-300); }
 .site-card:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }
 
 /* 대시보드 이용 안내. <details> 라 평소엔 제목 줄만 보인다 */
@@ -1901,7 +1880,7 @@ a.dash-list-row:hover { background: var(--slate-50); }
   font-size: calc(14px * var(--fs, 1)); font-weight: 600; font-family: inherit;
   cursor: pointer; transition: background .15s ease, box-shadow .15s ease;
 }
-.login-btn:hover { background: var(--slate-50); box-shadow: var(--shadow-md); }
+.login-btn:hover { background: var(--slate-50); }
 .login-btn:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }
 .login-btn svg { flex-shrink: 0; }
 .sidebar-login { margin-bottom: 10px; }
@@ -2323,13 +2302,8 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .icex-head h2 { margin: 0; font-size: calc(24px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.02em; color: var(--accent-on-soft); }
 .icex-head p { margin: 6px 0 0; font-size: calc(14px * var(--fs, 1)); color: var(--text-2); }
 
-/* 고리 배치: 3x3 격자. 가운데 ICEx, 위 오른쪽 아래 왼쪽에 네 단계. 고리는 네 카드의 가운데를 지난다 */
-.icex-orbit {
-  position: relative; margin-top: 24px;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, auto);
-  grid-template-areas: ". s1 ." "s4 core s2" ". s3 .";
-  gap: 16px 24px; align-items: center;
-}
+/* 고리 배치(넓은 화면): 다섯 서비스를 타원 위 다섯 자리에 놓는다. 자리는 컴포넌트가 --x, --y 로 넘긴다 */
+.icex-orbit { position: relative; margin-top: 16px; height: 780px; }
 .icex-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .icex-ring ellipse { fill: none; stroke: var(--indigo-500); stroke-width: 2; stroke-dasharray: 0.012 0.008; }
 .icex-arrow {
@@ -2337,13 +2311,13 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
   border: 7px solid transparent; border-left: 11px solid var(--indigo-500); border-right: 0;
 }
 .icex-flow { display: contents; list-style: none; }
-.icex-step { position: relative; display: flex; z-index: 1; }
-.icex-step:nth-child(1) { grid-area: s1; }
-.icex-step:nth-child(2) { grid-area: s2; }
-.icex-step:nth-child(3) { grid-area: s3; }
-.icex-step:nth-child(4) { grid-area: s4; }
+.icex-step {
+  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%);
+  width: min(260px, 26%); display: flex; z-index: 1;
+}
+.icex-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .icex-core {
-  grid-area: core; z-index: 1; justify-self: center;
+  z-index: 1;
   width: 200px; aspect-ratio: 1; border-radius: 50%;
   background: var(--solid-bg); color: #fff;
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
@@ -2354,16 +2328,16 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .icex-core dt { color: rgba(255, 255, 255, 0.82); }
 .icex-core dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 :root[data-theme="dark"] .icex-core { background: #0b3a66; }
-.icex-card, .icex-cms {
+.icex-card {
   position: relative; display: flex; flex-direction: column; align-items: flex-start;
   width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
   background: var(--surface); border: 1px solid var(--indigo-100); border-radius: var(--radius);
   padding: 18px 20px 16px;
   transition: border-color .15s ease, transform .15s ease;
 }
-.icex-card:hover, .icex-cms:hover { border-color: var(--indigo-500); transform: translateY(-2px); }
-.icex-card:active, .icex-cms:active { transform: translateY(0); }
-.icex-card:focus-visible, .icex-cms:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icex-card:hover { border-color: var(--indigo-500); transform: translateY(-2px); }
+.icex-card:active { transform: translateY(0); }
+.icex-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .icex-stage {
   display: inline-block; padding: 2px 10px; border-radius: 999px;
   background: var(--solid-bg); color: var(--solid-text);
@@ -2375,41 +2349,36 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .icex-num .unit { margin-left: 3px; font-size: calc(14px * var(--fs, 1)); font-weight: 400; letter-spacing: 0; color: var(--text-2); }
 .icex-label { margin-top: 2px; font-size: calc(13px * var(--fs, 1)); color: var(--text-2); }
 .icex-more {
-  margin-top: 12px; font-size: calc(13px * var(--fs, 1)); color: var(--accent);
+  position: absolute; right: 16px; bottom: 14px; font-size: calc(13px * var(--fs, 1)); color: var(--accent);
   opacity: 0; transform: translateX(-4px); transition: opacity .15s ease, transform .15s ease;
 }
-.icex-card:hover .icex-more, .icex-cms:hover .icex-more,
-.icex-card:focus-visible .icex-more, .icex-cms:focus-visible .icex-more { opacity: 1; transform: none; }
+.icex-card:hover .icex-more,
+.icex-card:focus-visible .icex-more { opacity: 1; transform: none; }
 
-/* AICMS 는 흐름 아래 한 줄로 받친다 */
-.icex-cms {
-  margin-top: 16px; flex-direction: row; align-items: center; gap: 24px; flex-wrap: wrap;
-  border-style: dashed;
-}
-.icex-cms .icex-stage { background: var(--surface); color: var(--accent-on-soft); border: 1px solid var(--indigo-100); }
-.icex-cms-text { display: flex; flex-direction: column; align-items: flex-start; flex: 1 1 320px; }
-.icex-cms-text .icex-does { min-height: 0; }
-.icex-cms-num { display: flex; flex-direction: column; align-items: flex-end; }
-.icex-cms-num .icex-num { margin-top: 0; }
-.icex-cms .icex-more { margin-top: 0; }
 
 :root[data-theme="dark"] .icex { background: #14202c; }
 
 @media (max-width: 1100px) {
-  /* 고리를 걷고 ICEx 를 맨 위 띠로, 단계는 두 칸씩 */
-  .icex-orbit { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "core core" "s1 s2" "s4 s3"; }
+  /* 고리를 걷고 ICEx 를 맨 위 띠로, 서비스는 순서대로 두 칸씩 */
+  .icex-orbit { height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .icex-ring, .icex-arrow { display: none; }
-  .icex-core { width: 100%; aspect-ratio: auto; border-radius: var(--radius); padding: 16px; flex-direction: row; justify-content: space-between; text-align: left; }
+  .icex-step { position: static; transform: none; width: auto; }
+  .icex-core {
+    position: static; transform: none; grid-column: 1 / -1;
+    width: 100%; aspect-ratio: auto; border-radius: var(--radius); padding: 16px;
+    flex-direction: row; justify-content: space-between; text-align: left;
+  }
   .icex-core dl { margin: 0; grid-auto-flow: column; gap: 16px; }
 }
 @media (max-width: 640px) {
   .icex { padding: 20px 16px; }
-  .icex-orbit { grid-template-columns: 1fr; grid-template-areas: "core" "s1" "s2" "s3" "s4"; gap: 12px; }
+  .icex-orbit { grid-template-columns: 1fr; gap: 12px; }
   .icex-core { flex-direction: column; align-items: flex-start; gap: 8px; }
   .icex-core dl { grid-auto-flow: row; }
+  .icex-core dl > div { justify-content: flex-start; }
   .icex-does { min-height: 0; }
   .icex-more { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .icex-card, .icex-cms, .icex-more { transition: none; }
+  .icex-card, .icex-more { transition: none; }
 }

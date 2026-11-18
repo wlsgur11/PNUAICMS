@@ -103,19 +103,27 @@ function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolea
 
 /**
  * ICEx 흐름에서 서비스마다 맡는 단계. 인프라 다이어그램 세션(2026-11-10)의 슬라이드와 같은 순서다:
- * 실습(코드플레이스) → 개발(피클) → 프로젝트(AIPMS) → 역량 인정(AI 역량지원시스템).
- * AICMS 는 이 흐름에 기업과 산학 실적을 붙이는 관리 사이트라 흐름 밖, 아래 줄에 둔다.
+ * 실습(코드플레이스) → 개발(피클) → 프로젝트(AIPMS) → 역량 인정(AI 역량지원시스템) → 산학 연계(AICMS).
+ * 처음엔 AICMS 를 고리 아래 따로 뒀는데, 사용자 요청(2026-11-18)으로 다섯을 한 고리에 둔다.
  */
 const FLOW: { name: string; stage: string; does: string }[] = [
   { name: '코드플레이스', stage: '실습', does: '교과목 코딩 실습, 자동 채점, AI 조교' },
   { name: '피클', stage: '개발', does: '실습 VM 과 LLM API 키를 내어 줌' },
   { name: 'AIPMS', stage: '프로젝트', does: '팀 프로젝트 등록부터 결과물 공개까지' },
   { name: 'AI 역량지원시스템', stage: '역량 인정', does: '실적 신청, 이수 판정, 진로 추천' },
+  { name: 'AICMS', stage: '산학 연계', does: '협력 기업, 산학 과제, 인턴십, 학생 상담' },
 ];
 
-function Step({ site, stage, does, onOpen }: { site: SiteCard; stage: string; does: string; onOpen: () => void }) {
+// 고리 위 자리. 위에서 시작해 시계 방향으로 72도씩. 넓은 화면에서만 이 좌표를 쓴다
+const RX = 38, RY = 36;
+const at = (deg: number) => {
+  const r = (deg * Math.PI) / 180;
+  return { x: 50 + RX * Math.cos(r), y: 50 + RY * Math.sin(r) };
+};
+
+function Step({ site, stage, does, pos, onOpen }: { site: SiteCard; stage: string; does: string; pos: { x: number; y: number }; onOpen: () => void }) {
   return (
-    <li className="icex-step">
+    <li className="icex-step" style={{ '--x': `${pos.x}%`, '--y': `${pos.y}%` } as React.CSSProperties}>
       <button type="button" className="icex-card" onClick={onOpen} aria-label={`${site.name} 자세히`}>
         <span className="icex-stage">{stage}</span>
         <span className="icex-name">{site.name}</span>
@@ -143,21 +151,25 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
     <section className="icex" aria-labelledby="icex-title">
       <header className="icex-head">
         <h2 id="icex-title">PNU ICEx 교육 플랫폼</h2>
-        <p>실습에서 역량 인정까지 한 바퀴로 이어지는 교육원 서비스입니다. 모두 교내 DevCloud 서버실에서 운영합니다.</p>
+        <p>실습에서 역량 인정, 산학 연계까지 한 바퀴로 이어지는 교육원 서비스 다섯 개입니다. 모두 교내 DevCloud 서버실에서 운영합니다.</p>
       </header>
 
       {/* 가운데 ICEx, 둘레에 네 단계가 시계 방향으로 돈다(실습 → 개발 → 프로젝트 → 역량 인정 → 다시 실습).
           좁은 화면에서는 고리를 걷고 차례대로 쌓는다 */}
       <div className="icex-orbit">
         <svg className="icex-ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <ellipse cx="50" cy="50" rx="33.3" ry="33.3" pathLength={1} vectorEffect="non-scaling-stroke" />
+          <ellipse cx="50" cy="50" rx={RX} ry={RY} pathLength={1} vectorEffect="non-scaling-stroke" />
         </svg>
-        {/* 고리 위 방향 표시. 대각선 네 곳에 시계 방향으로 놓는다 */}
-        {[-45, 45, 135, 225].map((deg) => {
+        {/* 고리 위 방향 표시. 두 서비스 사이 가운데에 시계 방향으로 놓는다 */}
+        {flow.map((_, i) => {
+          const deg = -90 + 72 * i + 36;
+          const p = at(deg);
+          // 타원이라 접선 각도를 실제 기울기로 구한다
           const r = (deg * Math.PI) / 180;
+          const tangent = (Math.atan2(RY * Math.cos(r), -RX * Math.sin(r)) * 180) / Math.PI;
           return (
             <span key={deg} className="icex-arrow" aria-hidden="true"
-                  style={{ left: `${50 + 33.3 * Math.cos(r)}%`, top: `${50 + 33.3 * Math.sin(r)}%`, transform: `translate(-50%, -50%) rotate(${deg + 90}deg)` }} />
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `translate(-50%, -50%) rotate(${tangent}deg)` }} />
           );
         })}
         <div className="icex-core">
@@ -169,22 +181,9 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
           </dl>
         </div>
         <ol className="icex-flow">
-          {flow.map((f) => <Step key={f.name} site={f.site!} stage={f.stage} does={f.does} onOpen={() => setOpen(f.site!)} />)}
+          {flow.map((f, i) => <Step key={f.name} site={f.site!} stage={f.stage} does={f.does} pos={at(-90 + 72 * i)} onOpen={() => setOpen(f.site!)} />)}
         </ol>
       </div>
-
-      <button type="button" className="icex-cms" onClick={() => setOpen(aicms)} aria-label="AICMS 자세히">
-        <span className="icex-cms-text">
-          <span className="icex-stage">산학 연계</span>
-          <span className="icex-name">AICMS</span>
-          <span className="icex-does">위 흐름에 협력 기업, 산학 과제, 인턴십, 학생 상담 실적을 붙입니다</span>
-        </span>
-        <span className="icex-cms-num">
-          <span className="icex-num"><Num m={aicms.headline} size="lg" /></span>
-          <span className="icex-label">{aicms.headline.label}</span>
-        </span>
-        <span className="icex-more" aria-hidden="true">자세히 →</span>
-      </button>
 
       {open && <SiteDetailModal site={open} live={open.name === aicms.name} onClose={() => setOpen(null)} />}
     </section>

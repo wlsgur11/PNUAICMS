@@ -78,11 +78,10 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
       if (icex) {
         const tl = gsap.timeline({ scrollTrigger: { trigger: icex, start: 'top 80%', once: true } });
         // 가운데 ICEx 가 커지고, 고리가 시계 방향으로 그어지는 동안 단계 카드가 차례로 나타난다
-        tl.from(icex.querySelector('.icex-core'), { scale: 0.6, opacity: 0, duration: 0.5, ease: 'back.out(1.6)' })
+        tl.from(icex.querySelector('.icex-core-name')?.parentElement ?? [], { scale: 0.6, opacity: 0, duration: 0.5, ease: 'back.out(1.6)', clearProps: 'transform,opacity' })
           .fromTo(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: 1, strokeDasharray: '1 1' }, { strokeDashoffset: 0, duration: 1.2, ease: 'power1.inOut', clearProps: 'strokeDasharray,strokeDashoffset' }, 0.2)
-          .from(icex.querySelectorAll('.icex-step'), { scale: 0.92, opacity: 0, duration: 0.4, ease, stagger: 0.25 }, 0.3)
-          .from(icex.querySelectorAll('.icex-arrow'), { opacity: 0, duration: 0.3, stagger: 0.25 }, 0.55)
-          .from(icex.querySelector('.icex-cms'), { y: 16, opacity: 0, duration: 0.4, ease }, '-=0.1');
+          .from(icex.querySelectorAll('.icex-card'), { scale: 0.92, opacity: 0, duration: 0.4, ease, stagger: 0.2, clearProps: 'transform,opacity' }, 0.3)
+          .from(icex.querySelectorAll('.icex-arrow'), { opacity: 0, duration: 0.3, stagger: 0.25 }, 0.55);
 
         // 다 그린 뒤에는 고리 점선이 천천히 돌아 흐름이 이어지고 있음을 보여 준다
         gsap.to(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: -1, duration: 40, ease: 'none', repeat: -1, delay: 2 });

@@ -25,7 +25,7 @@ type SaveState = { state: 'saving' | 'saved' | 'error'; field: SaveField };
 /** 저장 진행/완료 표시 (변경한 컨트롤 옆에만 노출). */
 function SaveTag({ st, field }: { st?: SaveState; field: SaveField }) {
   if (!st || st.field !== field) return null;
-  const text = st.state === 'saving' ? '저장 중…' : st.state === 'saved' ? '저장됨 ✓' : '실패';
+  const text = st.state === 'saving' ? '저장 중…' : st.state === 'saved' ? '저장됨' : '실패';
   return <span className={`save-tag ${st.state}`}>{text}</span>;
 }
 

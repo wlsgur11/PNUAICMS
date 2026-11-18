@@ -65,7 +65,7 @@ export default function CompanyForm({ initial, mode }: { initial?: CompanyFormDa
         );
         if (!r.duplicate || !r.match) { setDupMsg(''); setDupBlocks(false); return; }
         if (r.match.isActive) {
-          setDupMsg(`⚠ 이미 등록된 기관명입니다 (${r.match.name}).`);
+          setDupMsg(`이미 등록된 기관명입니다 (${r.match.name}).`);
           setDupBlocks(true);
         } else {
           setDupMsg(`ℹ 비활성 상태인 동일 기관이 있습니다. 등록하면 다시 활성화됩니다.`);
