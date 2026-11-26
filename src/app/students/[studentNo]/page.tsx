@@ -12,6 +12,8 @@ import { listHref } from '@/lib/use-url-filters';
 import { confirmLeave, useLeaveGuard } from '@/lib/use-leave-guard';
 import { ENUMS, gradeLabel } from '@/lib/enums';
 import type { StudentDetail, CounselingItem } from '@/lib/student-shape';
+import SurveyAnswers from '@/components/SurveyAnswers';
+import type { Answer } from '@/lib/career-survey';
 
 type ProjectDetail = {
   id: string;
@@ -188,6 +190,32 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   );
 }
 
+/** 진로조사 응답(연도별). 응답이 없으면 카드를 그리지 않는다 */
+function CareerSurveyCard({ studentNo }: { studentNo: string }) {
+  const { data } = useSWR<{ year: number; submittedAt: string | null; answers: Answer[] }[]>(
+    `/api/career-surveys?studentNo=${encodeURIComponent(studentNo)}`,
+  );
+  const [year, setYear] = useState<number | null>(null);
+  if (!data || data.length === 0) return null;
+  const cur = data.find((d) => d.year === year) ?? data[0];
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <div className="card-head">
+        <div className="card-title"><span className="accent-bar" />진로조사 응답</div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {data.map((d) => (
+            <button key={d.year} type="button" className={`btn btn-sm${d.year === cur.year ? ' btn-on' : ''}`} onClick={() => setYear(d.year)}>
+              {d.year}년
+            </button>
+          ))}
+        </div>
+      </div>
+      {cur.submittedAt && <div className="muted" style={{ marginBottom: 8 }}>응답일 {cur.submittedAt}</div>}
+      <SurveyAnswers answers={cur.answers} />
+    </div>
+  );
+}
+
 export default function StudentDetailPage() {
   const { studentNo } = useParams<{ studentNo: string }>();
   const router = useRouter();
@@ -322,6 +350,8 @@ export default function StudentDetailPage() {
           )}
         </div>
       </div>
+
+      <CareerSurveyCard studentNo={studentNo} />
 
       {selectedProjectId && (
         <div className="modal-root">
