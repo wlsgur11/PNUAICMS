@@ -70,6 +70,7 @@ const GROUPS: Group[] = [
       { href: '/students/new', label: '신규 학생 등록' },
       { href: '/students/analytics', label: '통계분석' },
       { href: '/students/career-survey', label: '진로조사' },
+      { href: '/students/topcit', label: 'TOPCIT' },
     ],
   },
 ];
