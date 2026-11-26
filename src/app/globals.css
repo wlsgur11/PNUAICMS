@@ -621,7 +621,8 @@ a {
 .dash-grid-auto .card+.card,
 .dash-grid-sites .card+.card,
 .dash-grid-2 .card+.card,
-.dash-grid-4 .card+.card {
+.dash-grid-4 .card+.card,
+.dash-grid-records .card+.card {
   margin-top: 0;
 }
 
@@ -1597,7 +1598,8 @@ table.data-table {
 .dash-grid-7-5 {
   align-items: start;
 }
-@media (min-width: 1200px) {
+/* 2열이 되는 960px 부터 같은 줄 카드 높이를 맞춘다(2026-11-26 사용자 요청. 예전엔 3열인 1200px 부터만) */
+@media (min-width: 960px) {
   .dash-grid-auto { align-items: stretch; }
   .dash-grid-auto > .card { display: flex; flex-direction: column; }
   .dash-grid-auto > .card > .dash-note:last-child { margin-top: auto; padding-top: 14px; }
@@ -2239,7 +2241,7 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .card .yr-line { grid-template-columns: 1fr minmax(64px, auto); }
 
 /* ── PNU ICEx 흐름 ──
-   실습 → 개발 → 프로젝트 → 역량 인정 네 단계가 한 줄로 이어지고, AICMS 가 아래에서 받친다.
+   실습 → 개발 → 프로젝트 → 역량 인정 → 산학 연계 다섯 단계 박스.
    숫자는 단계마다 하나만 크게. 세부 숫자는 누르면 뜨는 상세 창에 있다 */
 .icex {
   margin-top: 36px;
@@ -2250,32 +2252,6 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 .icex-head h2 { margin: 0; font-size: calc(24px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.02em; color: var(--accent-on-soft); }
 .icex-head p { margin: 6px 0 0; font-size: calc(14px * var(--fs, 1)); color: var(--text-2); }
 
-/* 고리 배치(넓은 화면): 다섯 서비스를 타원 위 다섯 자리에 놓는다. 자리는 컴포넌트가 --x, --y 로 넘긴다 */
-.icex-orbit { position: relative; margin-top: 16px; height: 780px; }
-.icex-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.icex-ring ellipse { fill: none; stroke: var(--indigo-500); stroke-width: 2; stroke-dasharray: 0.012 0.008; }
-.icex-arrow {
-  position: absolute; width: 0; height: 0; pointer-events: none;
-  border: 7px solid transparent; border-left: 11px solid var(--indigo-500); border-right: 0;
-}
-.icex-flow { display: contents; list-style: none; }
-.icex-step {
-  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%);
-  width: min(260px, 26%); display: flex; z-index: 1;
-}
-.icex-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-.icex-core {
-  z-index: 1;
-  width: 200px; aspect-ratio: 1; border-radius: 50%;
-  background: var(--solid-bg); color: #fff;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-}
-.icex-core-name { font-size: calc(22px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.01em; }
-.icex-core dl { margin: 10px 0 0; display: grid; gap: 2px; }
-.icex-core dl > div { display: flex; gap: 6px; justify-content: center; font-size: calc(12px * var(--fs, 1)); }
-.icex-core dt { color: rgba(255, 255, 255, 0.82); }
-.icex-core dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-:root[data-theme="dark"] .icex-core { background: #0b3a66; }
 .icex-card {
   position: relative; display: flex; flex-direction: column; align-items: flex-start;
   width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
@@ -2306,24 +2282,8 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 
 :root[data-theme="dark"] .icex { background: #14202c; }
 
-@media (max-width: 1100px) {
-  /* 고리를 걷고 ICEx 를 맨 위 띠로, 서비스는 순서대로 두 칸씩 */
-  .icex-orbit { height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .icex-ring, .icex-arrow { display: none; }
-  .icex-step { position: static; transform: none; width: auto; }
-  .icex-core {
-    position: static; transform: none; grid-column: 1 / -1;
-    width: 100%; aspect-ratio: auto; border-radius: var(--radius); padding: 16px;
-    flex-direction: row; justify-content: space-between; text-align: left;
-  }
-  .icex-core dl { margin: 0; grid-auto-flow: column; gap: 16px; }
-}
 @media (max-width: 640px) {
   .icex { padding: 20px 16px; }
-  .icex-orbit { grid-template-columns: 1fr; gap: 12px; }
-  .icex-core { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .icex-core dl { grid-auto-flow: row; }
-  .icex-core dl > div { justify-content: flex-start; }
   .icex-does { min-height: 0; }
   .icex-more { opacity: 1; transform: none; }
 }
@@ -2441,16 +2401,28 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
   .dash-grid-7-5 .totals-grid > div > :nth-child(4) { grid-column: 2; grid-row: 2; align-self: start; margin-top: 4px !important; }
 }
 
-/* ICEx 고리: 화면 높이의 대부분을 차지하던 그림을 줄인다 */
+/* ICEx: 고리 그림을 걷고 박스 한 줄(2026-11-26). 넓은 화면 5칸, 중간 2칸(마지막 한 장은 두 칸), 좁으면 1칸.
+   박스는 같은 높이, 요약 숫자는 제목 오른쪽 */
 .icex { padding: 24px 28px; }
+.icex-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; }
 .icex-head h2 { font-size: calc(20px * var(--fs, 1)); }
-.icex-orbit { height: 600px; }
-.icex-step { width: min(220px, 24%); }
-.icex-card { padding: 14px 16px 12px; min-height: 168px; }
-.icex-name { margin-top: 8px; font-size: calc(16px * var(--fs, 1)); }
-.icex-num { margin-top: 10px; font-size: calc(24px * var(--fs, 1)); }
-.icex-core { width: 170px; }
-@media (max-width: 1100px) { .icex-orbit { height: auto; } }
+.icex-sum { margin: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.icex-sum > div { padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--indigo-100); display: flex; gap: 6px; font-size: calc(13px * var(--fs, 1)); }
+.icex-sum dt { color: var(--text-2); }
+.icex-sum dd { margin: 0; font-weight: 700; color: var(--accent-on-soft); font-variant-numeric: tabular-nums; }
+.icex-flow { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 12px; }
+.icex-step { display: flex; }
+.icex-card { padding: 16px 18px 14px; }
+.icex-name { margin-top: 10px; font-size: calc(16px * var(--fs, 1)); }
+.icex-num { margin-top: auto; padding-top: 12px; font-size: calc(26px * var(--fs, 1)); }
+@media (min-width: 768px) {
+  .icex-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .icex-flow > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (min-width: 1200px) {
+  .icex-flow { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .icex-flow > :last-child:nth-child(odd) { grid-column: auto; }
+}
 /* 이용 안내: 로그인 띠와 같은 얇은 줄. 두 띠를 붙여 두고 그 아래에 첫 띠 */
 .guide { padding: 12px 20px; margin-bottom: 16px; }
 .guide .card-title { font-size: calc(14px * var(--fs, 1)); font-weight: 600; }

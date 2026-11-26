@@ -104,7 +104,7 @@ function SiteDetailModal({ site, live, onClose }: { site: SiteCard; live: boolea
 /**
  * ICEx 흐름에서 서비스마다 맡는 단계. 인프라 다이어그램 세션(2026-11-10)의 슬라이드와 같은 순서다:
  * 실습(코드플레이스) → 개발(피클) → 프로젝트(AIPMS) → 역량 인정(AI 역량지원시스템) → 산학 연계(AICMS).
- * 처음엔 AICMS 를 고리 아래 따로 뒀는데, 사용자 요청(2026-11-18)으로 다섯을 한 고리에 둔다.
+ * 처음엔 고리 그림이었는데 크기를 줄이려고 박스 한 줄로 바꿨다(2026-11-26).
  */
 const FLOW: { name: string; stage: string; does: string }[] = [
   { name: '코드플레이스', stage: '실습', does: '교과목 코딩 실습, 자동 채점, AI 조교' },
@@ -114,18 +114,11 @@ const FLOW: { name: string; stage: string; does: string }[] = [
   { name: 'AICMS', stage: '산학 연계', does: '협력 기업, 산학 과제, 인턴십, 학생 상담' },
 ];
 
-// 고리 위 자리. 위에서 시작해 시계 방향으로 72도씩. 넓은 화면에서만 이 좌표를 쓴다
-const RX = 38, RY = 36;
-const at = (deg: number) => {
-  const r = (deg * Math.PI) / 180;
-  return { x: 50 + RX * Math.cos(r), y: 50 + RY * Math.sin(r) };
-};
-
-function Step({ site, stage, does, pos, onOpen }: { site: SiteCard; stage: string; does: string; pos: { x: number; y: number }; onOpen: () => void }) {
+function Step({ n, site, stage, does, onOpen }: { n: number; site: SiteCard; stage: string; does: string; onOpen: () => void }) {
   return (
-    <li className="icex-step" style={{ '--x': `${pos.x}%`, '--y': `${pos.y}%` } as React.CSSProperties}>
+    <li className="icex-step">
       <button type="button" className="icex-card" onClick={onOpen} aria-label={`${site.name} 자세히`}>
-        <span className="icex-stage">{stage}</span>
+        <span className="icex-stage">{n}. {stage}</span>
         <span className="icex-name">{site.name}</span>
         <span className="icex-does">{does}</span>
         <span className="icex-num"><Num m={site.headline} size="lg" /></span>
@@ -150,40 +143,22 @@ export default function SiteMetricsBlock({ aicms }: { aicms: SiteCard }) {
   return (
     <section className="icex" aria-labelledby="icex-title">
       <header className="icex-head">
-        <h2 id="icex-title">PNU ICEx 교육 플랫폼</h2>
-        <p>실습에서 역량 인정, 산학 연계까지 한 바퀴로 이어지는 교육원 서비스 다섯 개입니다. 모두 교내 DevCloud 서버실에서 운영합니다.</p>
+        <div>
+          <h2 id="icex-title">PNU ICEx 교육 플랫폼</h2>
+          <p>실습에서 역량 인정, 산학 연계까지 이어지는 교육원 서비스 다섯 개입니다. 모두 교내 DevCloud 서버실에서 운영합니다.</p>
+        </div>
+        <dl className="icex-sum">
+          <div><dt>서비스</dt><dd>{sites.length}개</dd></div>
+          {users != null && <div><dt>이용자 합계</dt><dd>{users.toLocaleString('ko-KR')}명</dd></div>}
+          <div><dt>활용 교과목, 사업</dt><dd>{usedIn}개</dd></div>
+        </dl>
       </header>
 
-      {/* 가운데 ICEx, 둘레에 네 단계가 시계 방향으로 돈다(실습 → 개발 → 프로젝트 → 역량 인정 → 다시 실습).
-          좁은 화면에서는 고리를 걷고 차례대로 쌓는다 */}
-      <div className="icex-orbit">
-        <svg className="icex-ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <ellipse cx="50" cy="50" rx={RX} ry={RY} pathLength={1} vectorEffect="non-scaling-stroke" />
-        </svg>
-        {/* 고리 위 방향 표시. 두 서비스 사이 가운데에 시계 방향으로 놓는다 */}
-        {flow.map((_, i) => {
-          const deg = -90 + 72 * i + 36;
-          const p = at(deg);
-          // 타원이라 접선 각도를 실제 기울기로 구한다
-          const r = (deg * Math.PI) / 180;
-          const tangent = (Math.atan2(RY * Math.cos(r), -RX * Math.sin(r)) * 180) / Math.PI;
-          return (
-            <span key={deg} className="icex-arrow" aria-hidden="true"
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, transform: `translate(-50%, -50%) rotate(${tangent}deg)` }} />
-          );
-        })}
-        <div className="icex-core">
-          <span className="icex-core-name">PNU ICEx</span>
-          <dl>
-            <div><dt>서비스</dt><dd>{sites.length}개</dd></div>
-            {users != null && <div><dt>이용자 합계</dt><dd>{users.toLocaleString('ko-KR')}명</dd></div>}
-            <div><dt>활용 교과목, 사업</dt><dd>{usedIn}개</dd></div>
-          </dl>
-        </div>
-        <ol className="icex-flow">
-          {flow.map((f, i) => <Step key={f.name} site={f.site!} stage={f.stage} does={f.does} pos={at(-90 + 72 * i)} onOpen={() => setOpen(f.site!)} />)}
-        </ol>
-      </div>
+      {/* 고리 그림을 걷고 박스 한 줄로 돌렸다(2026-11-26 사용자 결정). 고리 모양을 지키면서는
+          크기를 줄일 수 없었다. 흐름 순서는 단계 번호로 보인다 */}
+      <ol className="icex-flow">
+        {flow.map((f, i) => <Step key={f.name} n={i + 1} site={f.site!} stage={f.stage} does={f.does} onOpen={() => setOpen(f.site!)} />)}
+      </ol>
 
       {open && <SiteDetailModal site={open} live={open.name === aicms.name} onClose={() => setOpen(null)} />}
     </section>
