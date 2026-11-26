@@ -76,7 +76,7 @@ function SlideCard({ s, onOpen }: { s: Slide; onOpen: () => void }) {
       <div style={{ fontSize: small, color: 'var(--text-2)', marginTop: 4, lineHeight: 1.6 }}>{s.summary}</div>
       {/* 두 슬라이드 그림의 가로세로 비가 달라 칸 비율을 맞춰 두 카드 높이를 같게 한다 */}
       <div style={{ ...frame, marginTop: 14 }}>
-        <img src={s.image} alt={s.title} style={{ display: 'block', width: '100%', aspectRatio: '2.25', objectFit: 'contain' }} />
+        <img src={s.image} alt={s.title} style={{ display: 'block', width: '100%', height: 180, objectFit: 'contain' }} />
       </div>
       <div style={{ marginTop: 'auto', paddingTop: 12, textAlign: 'right', fontSize: 'calc(11px * var(--fs, 1))', color: 'var(--text-3)' }}>
         눌러서 숫자 보기

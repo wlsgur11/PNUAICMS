@@ -31,9 +31,10 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
       if (hero) {
         const tl = gsap.timeline({ defaults: { ease } });
         tl.from(hero, { clipPath: 'inset(0 0 100% 0 round 8px)', duration: 0.7, ease: 'power4.inOut' })
-          .from(hero.querySelectorAll('.dash-hero-title, .dash-hero-finding'), { y: 24, opacity: 0, duration: 0.6, stagger: 0.08 }, '-=0.25')
+          .from(hero.querySelectorAll('.dash-hero-title'), { y: 24, opacity: 0, duration: 0.6 }, '-=0.25')
           .from(hero.querySelector('.dash-hero-years'), { y: -8, opacity: 0, duration: 0.4 }, '<0.1')
-          .from(hero.querySelectorAll('.dash-hero-fig'), { y: 28, opacity: 0, duration: 0.6, stagger: 0.09 }, '-=0.35');
+          .from(hero.querySelectorAll('.dash-hero-fig'), { y: 28, opacity: 0, duration: 0.6, stagger: 0.07 }, '-=0.35')
+          .from(hero.querySelectorAll('.dash-hero-wins li'), { y: 8, opacity: 0, duration: 0.4, stagger: 0.08 }, '-=0.3');
 
         // 띠가 화면 밖으로 나가는 동안 안쪽 글자가 조금 늦게 따라 올라간다(시차)
         gsap.to(hero.querySelector('.dash-hero-top'), {

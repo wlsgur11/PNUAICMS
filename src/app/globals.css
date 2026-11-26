@@ -1981,13 +1981,6 @@ a.dash-list-row:hover { background: var(--slate-50); }
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
-.dash-hero-finding {
-  margin: 12px 0 0;
-  max-width: 62ch;
-  font-size: calc(16px * var(--fs, 1));
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.88);
-}
 .dash-hero-years {
   display: flex;
   gap: 4px;
@@ -2010,42 +2003,9 @@ a.dash-list-row:hover { background: var(--slate-50); }
 .dash-hero-years button:hover { background: rgba(255, 255, 255, 0.16); }
 .dash-hero-years button.on { background: #ffffff; color: #053c6e; font-weight: 600; }
 .dash-hero-years button:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
-.dash-hero-figures {
-  margin: 36px 0 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
-}
-.dash-hero-figures > div {
-  padding-left: 20px;
-  border-left: 1px solid rgba(255, 255, 255, 0.24);
-}
-.dash-hero-figures > div:first-child { padding-left: 0; border-left: 0; }
-.dash-hero-figures dt {
-  font-size: calc(14px * var(--fs, 1));
-  color: rgba(255, 255, 255, 0.82);
-}
-.dash-hero-figures dd {
-  margin: 6px 0 0;
-  font-size: calc(40px * var(--fs, 1));
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.dash-hero-figures dd .u {
-  margin-left: 4px;
-  font-size: calc(15px * var(--fs, 1));
-  font-weight: 400;
-  letter-spacing: 0;
-  color: rgba(255, 255, 255, 0.82);
-}
 @media (max-width: 768px) {
   .dash-hero { padding: 24px 20px; }
   .dash-hero-title { font-size: calc(24px * var(--fs, 1)); }
-  .dash-hero-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; margin-top: 24px; }
-  .dash-hero-figures > div:nth-child(odd) { padding-left: 0; border-left: 0; }
-  .dash-hero-figures dd { font-size: calc(30px * var(--fs, 1)); }
 }
 
 /* 운영 서비스 카드의 숫자는 첫 띠보다 한 단계 작게. 띠의 숫자가 이 화면의 주인공이다 */
@@ -2060,26 +2020,6 @@ a.dash-list-row:hover { background: var(--slate-50); }
 /* 첫 띠 숫자: 올리거나 탭으로 오면 그해 실적과 전년 대비 한 줄이 펼쳐진다.
    마우스가 없는 휴대폰에서는 처음부터 펼쳐 둔다 */
 .dash-hero-fig { border-radius: 6px; outline: none; }
-.dash-hero-figures dd.dash-hero-more {
-  margin-top: 8px;
-  font-size: calc(13px * var(--fs, 1));
-  font-weight: 400;
-  letter-spacing: 0;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.4;
-}
-@media (hover: hover) {
-  .dash-hero-figures dd.dash-hero-more {
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity .18s ease, transform .18s ease;
-  }
-  .dash-hero-fig:hover dd.dash-hero-more,
-  .dash-hero-fig:focus-visible dd.dash-hero-more {
-    opacity: 1;
-    transform: none;
-  }
-}
 .dash-hero-fig:focus-visible { box-shadow: 0 0 0 2px #ffffff; }
 
 /* 목표 막대: 연도를 바꾸면 새 길이로 늘거나 준다. 처음 차오르는 연출은 DashMotion(GSAP)이 맡는다 */
@@ -2103,7 +2043,6 @@ a.dash-list-row:hover { background: var(--slate-50); }
 
 @media (prefers-reduced-motion: reduce) {
   .modal-backdrop, .modal-card { animation: none; }
-  .dash-fill, .site-card, .btn, .dash-hero-figures dd.dash-hero-more { transition: none; }
 }
 
 /* 첫 띠 숫자는 누를 수 있다. 올리면 화살표가 내려오며 '아래에 더 있다' 를 알린다 */
@@ -2445,3 +2384,87 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 /* TOPCIT 회차별 평균 총점: 막대 옆에 점수 */
 .topcit-avg { display: grid; grid-template-columns: minmax(60px, 1fr) 4.5em; gap: 10px; align-items: center; }
 .topcit-avg b { text-align: right; }
+
+/* ── 대시보드 정돈 (2026-11-26 실장님 의견) ──
+   로그인 띠는 맨 위 얇게, 첫 띠는 목표 대비 세 숫자(큰 단)와 누적 실적(작은 단) 두 단,
+   구역 제목은 카드 제목보다 한 단계 크게, 같은 줄 카드는 높이를 맞추고, 그림은 작게 */
+.login-cta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px;
+  margin-bottom: 16px; padding: 12px 20px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+}
+.login-cta-text { flex: 1 1 360px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.login-cta-text > strong { font-size: calc(14px * var(--fs, 1)); font-weight: 600; color: var(--text-1); }
+.login-cta-action { flex: 0 0 auto; min-width: 0; }
+.login-cta-action .login-btn { padding: 8px 14px; }
+.login-cta-error { flex-basis: 100%; margin: 6px 0 0; }
+
+.dash-hero { padding: 28px 32px; }
+.dash-hero-top { align-items: center; }
+.dash-hero-title { font-size: calc(26px * var(--fs, 1)); }
+.dash-hero-goals { margin-top: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.dash-hero-fig.goal { padding: 16px 18px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); }
+.dash-hero-fig.goal:hover { background: rgba(255, 255, 255, 0.14); }
+.dash-hero-label { font-size: calc(13px * var(--fs, 1)); color: rgba(255, 255, 255, 0.82); }
+.dash-hero-big { margin-top: 4px; font-size: calc(40px * var(--fs, 1)); font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.dash-hero-big .u { margin-left: 4px; font-size: calc(15px * var(--fs, 1)); font-weight: 400; letter-spacing: 0; color: rgba(255, 255, 255, 0.82); }
+.dash-hero-status { margin-top: 8px; font-size: calc(13px * var(--fs, 1)); color: rgba(255, 255, 255, 0.82); }
+.dash-hero-goals .dash-hero-fig.goal { display: flex; flex-direction: column; }
+.dash-hero-from { margin-top: 8px; font-size: calc(13px * var(--fs, 1)); font-weight: 600; color: #ffd25e; }
+.dash-hero-goals .dash-hero-status { margin-top: auto; padding-top: 8px; }
+/* 그해 목표를 넘긴 지표. 못 미친 지표는 띠에 올리지 않는다 */
+.dash-hero-wins { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-hero-wins li {
+  padding: 5px 12px; border-radius: 999px; background: rgba(255, 210, 94, 0.16); color: #ffd25e;
+  font-size: calc(13px * var(--fs, 1)); font-weight: 600;
+}
+@media (max-width: 900px) {
+  .dash-hero-goals { grid-template-columns: 1fr; }
+  .dash-hero-big { font-size: calc(32px * var(--fs, 1)); }
+}
+
+/* 구역 제목은 카드 제목(15~16px)보다 확실히 크게. 계층이 제목 크기로 갈린다 */
+.dash-section { font-size: calc(20px * var(--fs, 1)); font-weight: 700; letter-spacing: -0.01em; margin: 44px 0 14px; }
+
+/* 목표 대비(왼쪽)와 실적 요약(오른쪽)은 높이를 맞추고, 짧은 쪽은 숫자 칸을 고르게 벌린다 */
+@media (min-width: 1181px) {
+  .dash-grid-7-5 { align-items: stretch; }
+  /* 늘어난 높이를 빈 띠 대신 네 줄 목록으로 나눠 쓴다. 왼쪽에 항목과 숫자, 오른쪽에 기준과 누적 */
+  .dash-grid-7-5 .totals-grid { flex: 1 1 auto; grid-template-columns: 1fr !important; grid-auto-rows: 1fr; gap: 0 !important; }
+  .dash-grid-7-5 .totals-grid > div {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 16px;
+    align-content: center; padding: 12px 0; border-top: 1px solid var(--slate-100);
+  }
+  .dash-grid-7-5 .totals-grid > div > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .dash-grid-7-5 .totals-grid > div > :nth-child(2) { grid-column: 1; grid-row: 2; }
+  .dash-grid-7-5 .totals-grid > div > :nth-child(3) { grid-column: 2; grid-row: 1; align-self: end; }
+  .dash-grid-7-5 .totals-grid > div > :nth-child(4) { grid-column: 2; grid-row: 2; align-self: start; margin-top: 4px !important; }
+}
+
+/* ICEx 고리: 화면 높이의 대부분을 차지하던 그림을 줄인다 */
+.icex { padding: 24px 28px; }
+.icex-head h2 { font-size: calc(20px * var(--fs, 1)); }
+.icex-orbit { height: 600px; }
+.icex-step { width: min(220px, 24%); }
+.icex-card { padding: 14px 16px 12px; min-height: 168px; }
+.icex-name { margin-top: 8px; font-size: calc(16px * var(--fs, 1)); }
+.icex-num { margin-top: 10px; font-size: calc(24px * var(--fs, 1)); }
+.icex-core { width: 170px; }
+@media (max-width: 1100px) { .icex-orbit { height: auto; } }
+/* 이용 안내: 로그인 띠와 같은 얇은 줄. 두 띠를 붙여 두고 그 아래에 첫 띠 */
+.guide { padding: 12px 20px; margin-bottom: 16px; }
+.guide .card-title { font-size: calc(14px * var(--fs, 1)); font-weight: 600; }
+.guide .card-title .accent-bar { display: none; }
+.login-cta { margin-bottom: 8px; }
+.login-cta + .guide { margin-top: 0; }
+/* 로그인 띠 안 '로그인 안내', '이용 안내' 펼치기. 펼친 내용은 띠 아래쪽 전체 폭을 쓴다 */
+.login-cta-toggle {
+  border: 0; background: none; padding: 0; font: inherit; cursor: pointer;
+  font-size: calc(13px * var(--fs, 1)); color: var(--text-3);
+}
+.login-cta-toggle::before { content: '▸ '; }
+.login-cta-toggle[aria-expanded="true"] { color: var(--accent); }
+.login-cta-toggle[aria-expanded="true"]::before { content: '▾ '; }
+.login-cta-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.login-cta-panel { flex-basis: 100%; margin: 4px 0 4px; padding-top: 12px; border-top: 1px solid var(--slate-100); }
+.login-cta-panel .guide-body { margin-top: 0; padding-top: 0; border-top: 0; }
