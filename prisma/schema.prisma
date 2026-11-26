@@ -500,3 +500,27 @@ model CareerSurvey {
   @@index([studentNo])
   @@map("career_surveys")
 }
+
+// ── TOPCIT 정기평가 결과 (회차별 등록접수자 엑셀) ─────────
+// 엑셀에 학번이 없어 올릴 때 이름과 연락처로 CMS 학생을 찾아 studentNo 를 채운다.
+// 연락처와 실명은 저장하지 않는다. 같은 회차를 다시 올리면 그 회차 전체를 교체한다.
+model TopcitResult {
+  id          String   @id @default(cuid())
+  round       Int // 회차(19, 20 ...)
+  examDate    String? // 시험일 yyyy-MM-dd
+  examNo      String // 수험번호
+  nameMasked  String?
+  affiliation String? // 기관명(소속)
+  occupation  String? // 직업 상세(대학생, 고등학교 이하 ...)
+  attended    Boolean
+  level       Int? // 수준 1~5
+  total       Int? // 총점(1000점 만점)
+  scores      Json // [{ area: 영역, score: 점수 }] 회차마다 영역이 다르다
+  studentNo   String? // 이름+연락처로 찾은 CMS 학생
+  createdAt   DateTime @default(now())
+  createdBy   String?
+
+  @@unique([round, examNo])
+  @@index([studentNo])
+  @@map("topcit_results")
+}

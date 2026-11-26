@@ -2442,3 +2442,6 @@ a.dash-list-row:hover::after { opacity: 1; transform: translate(0, -50%); }
 /* 진로조사 선택지는 이름이 길어("현장실습학기제 참여(현장실습지원센터 개설, 학점연계)") 자르지 않고 줄을 바꾼다 */
 .survey-grid .cb-row { grid-template-columns: minmax(0, 1.3fr) minmax(60px, 1fr) 6.5em; }
 .survey-grid .cb-label { white-space: normal; overflow: visible; line-height: 1.4; }
+/* TOPCIT 회차별 평균 총점: 막대 옆에 점수 */
+.topcit-avg { display: grid; grid-template-columns: minmax(60px, 1fr) 4.5em; gap: 10px; align-items: center; }
+.topcit-avg b { text-align: right; }
