@@ -16,16 +16,17 @@ const DASHBOARD = { href: '/', label: '대시보드', icon: 'dashboard' as IconN
 
 // 외부 서비스 바로가기 (패밀리 사이트). 새 탭으로 열림. hint 는 부가 안내용.
 type ExternalLink = { href: string; label: string; hint?: string };
+// 중요한 순서(2026-11-26 요청): 교육원 대표 운영 서비스 -> 학생 대상 공개 서비스 -> 사업 관리 도구 -> 내부 참고 자료
 const FAMILY: ExternalLink[] = [
-  { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터' },
   { href: 'https://code.pusan.ac.kr', label: '코드플레이스' },
+  { href: 'https://pickle.pusan.ac.kr/', label: '서버관리시스템' },
+  { href: 'https://aipms.pusan.ac.kr', label: 'AIPMS' },
+  { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터' },
+  { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU' },
   { href: 'https://pnu-emp.vercel.app', label: '정컴 취업현황' },
   { href: 'https://pnu-bootcamp-student-management.vercel.app/', label: '부트캠프 훈련생 관리' },
-  { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU' },
-  { href: 'https://pnuai.github.io/', label: '브로슈어 협업 시스템' },
   { href: 'https://yunju.work/search-26', label: '국립대육성사업 시스템' },
-  { href: 'https://aipms.pusan.ac.kr', label: 'AIPMS' },
-  { href: 'https://pickle.pusan.ac.kr/', label: '서버관리시스템' },
+  { href: 'https://pnuai.github.io/', label: '브로슈어 협업 시스템' },
   { href: 'https://yunju.work/aiedu-kb', label: 'AI융합교육원 지식검색(KB)' },
   { href: 'https://yunju.work/grant-rules/', label: '산학협력단 규정 · 국가연구개발 기준 · Codex 종합답변' },
 ];
