@@ -56,8 +56,16 @@ export default function DashboardPage() {
 
   return (
     <DashMotion>
-      {/* 랜딩을 겸하는 첫 화면이라 제목, 한 줄 요약, 큰 숫자를 파란 띠 하나에 담는다 */}
-      <DashHero data={data} finding={goalFinding(data)} years={data.years} onYear={setYear} />
+      {/* 로그인 화면이 따로 없어서 로그인은 여기서 한다. 로그인 전에는 맨 위에 둔다(2026-11-26 실장님 의견).
+          ?error= 를 읽어 Suspense 로 감싼다 */}
+      {isPublic && <Suspense fallback={null}><LoginCta /></Suspense>}
+
+      {/* 로그인 전에는 이용 안내가 로그인 띠 안에 들어가고, 로그인 뒤에는 이 띠만 맨 위에 남는다
+          (2026-11-26 사용자 요청). 권한을 기다리는 일반 계정은 볼 데이터가 적으니 펼쳐 둔다 */}
+      {!isPublic && <GuideBlock open={isGeneral} />}
+
+      {/* 랜딩을 겸하는 첫 화면이라 처음 보면 바로 읽혀야 할 숫자를 파란 띠 하나에 담는다 */}
+      <DashHero data={data} years={data.years} onYear={setYear} />
       <DashSectionBar sections={SECTIONS} years={data.years} year={data.year} onYear={setYear} />
 
       {isGeneral && (
@@ -68,13 +76,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* 로그인 화면이 따로 없어서 로그인은 여기서 한다. ?error= 를 읽어 Suspense 로 감싼다 */}
-      {isPublic && <Suspense fallback={null}><LoginCta /></Suspense>}
-
-      {/* 권한을 기다리는 일반 계정은 볼 데이터가 적으니 안내를 펼쳐 둔다. 로그인 전에는 접어 둬서
-          첫 화면에 실적 숫자가 먼저 보이게 한다 */}
-      <GuideBlock open={isGeneral} />
 
       {/* 제목이 '산학협력 성과' 라서 목표 대비 카드가 첫 띠 바로 아래에 온다 */}
       <div className="dash-section" id="sec-goals">산학협력 목표와 실적</div>
@@ -195,20 +196,4 @@ export default function DashboardPage() {
 
     </DashMotion>
   );
-}
-
-// 제목 아래 한 줄. 올해 목표 대비 어디까지 왔는지를 실제 값으로 말한다. 값이 없는 항목은 뺀다
-function goalFinding(d: DashboardData): string | null {
-  const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
-  const part = (name: string, m: DashboardData['goals']['industry']) =>
-    m.achieved == null ? null
-      : m.target == null ? `${name} ${pct(m.achieved)}`
-      : `${name} ${pct(m.achieved)}(목표 ${pct(m.target)}${m.achieved >= m.target ? ' 달성' : ''})`;
-  const s = d.goals.swcu;
-  const parts = [
-    part('산학협력 참여율', d.goals.industry),
-    part('인턴십 참여율', d.goals.internship),
-    s.total > 0 ? `SW중심대학 지표 ${s.met}/${s.total}개 달성` : null,
-  ].filter(Boolean);
-  return parts.length ? `${d.year}년 ${parts.join(', ')}` : null;
 }
