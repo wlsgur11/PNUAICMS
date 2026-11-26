@@ -73,7 +73,7 @@ export default function TotalsCard({ totals, partnerCompanies, year }: {
         <h2>실적 요약</h2>
         <p>산학 과제와 인턴십은 선택한 연도의 연간 실적입니다. 협력 기업과 MOU는 현재 기준입니다.</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 20px' }}>
+      <div className="totals-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 20px' }}>
         <Tile label="협력 기업" tile={totals.companies} year={year} unit="곳" extra={`실적 있는 기업 ${partnerCompanies}곳`} />
         <Tile label="산학 과제" tile={totals.projects} year={year} unit="건" />
         {/* 아래 인턴십 교육 실적 카드에 '교육인원 5765명' 이 있어서, 단위를 안

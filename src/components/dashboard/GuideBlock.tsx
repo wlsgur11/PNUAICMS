@@ -25,14 +25,9 @@ const ROLES = [
   { role: '슈퍼관리자', work: '관리자 권한에 더해 사용자 계정의 역할을 부여하고 회수합니다.' },
 ];
 
-export default function GuideBlock({ open }: { open: boolean }) {
+/** 로그인 띠(로그인 전)와 이용 안내 띠(로그인 후)가 같이 쓰는 본문 */
+export function GuideBody() {
   return (
-    <details className="card guide" open={open}>
-      <summary className="guide-summary">
-        <span className="card-title" style={{ margin: 0 }}><span className="accent-bar" />이용 안내</span>
-        <span className="guide-hint">이용 절차, 주요 기능, 역할별 권한</span>
-      </summary>
-
       <div className="guide-body">
         <section>
           <h3 className="guide-h">이용 절차</h3>
@@ -68,6 +63,18 @@ export default function GuideBlock({ open }: { open: boolean }) {
           </dl>
         </section>
       </div>
+  );
+}
+
+/** 로그인한 뒤에만 보이는 이용 안내 띠. 로그인 전에는 로그인 띠 안에 같은 본문이 들어간다 */
+export default function GuideBlock({ open }: { open: boolean }) {
+  return (
+    <details className="card guide" open={open}>
+      <summary className="guide-summary">
+        <span className="card-title" style={{ margin: 0 }}><span className="accent-bar" />이용 안내</span>
+        <span className="guide-hint">이용 절차, 주요 기능, 역할별 권한</span>
+      </summary>
+      <GuideBody />
     </details>
   );
 }
