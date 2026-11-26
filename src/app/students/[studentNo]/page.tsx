@@ -190,6 +190,31 @@ function CounselingCard({ studentNo, rows, onChanged }: {
   );
 }
 
+/** TOPCIT 회차별 결과. 결과가 없으면 카드를 그리지 않는다 */
+function TopcitCard({ studentNo }: { studentNo: string }) {
+  const { data } = useSWR<{ round: number; examDate: string | null; attended: boolean; level: number | null; total: number | null }[]>(
+    `/api/topcit?studentNo=${encodeURIComponent(studentNo)}`,
+  );
+  if (!data || data.length === 0) return null;
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <div className="card-title" style={{ marginBottom: 10 }}><span className="accent-bar" />TOPCIT ({data.length}회)</div>
+      <table className="data-table">
+        <thead><tr><th>회차</th><th>시험일</th><th>수준</th><th>총점</th></tr></thead>
+        <tbody>
+          {data.map((r) => (
+            <tr key={r.round}>
+              <td>{r.round}회</td>
+              <td>{r.examDate ?? '-'}</td>
+              {r.attended ? <><td>{r.level ?? '-'}</td><td>{r.total ?? '-'}</td></> : <td colSpan={2} className="muted">미응시</td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /** 진로조사 응답(연도별). 응답이 없으면 카드를 그리지 않는다 */
 function CareerSurveyCard({ studentNo }: { studentNo: string }) {
   const { data } = useSWR<{ year: number; submittedAt: string | null; answers: Answer[] }[]>(
@@ -351,6 +376,7 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
+      <TopcitCard studentNo={studentNo} />
       <CareerSurveyCard studentNo={studentNo} />
 
       {selectedProjectId && (
