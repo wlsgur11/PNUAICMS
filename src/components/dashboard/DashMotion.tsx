@@ -14,6 +14,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
  * - 구역 제목과 카드: 화면에 들어올 때 한 번 아래에서 올라온다
  * - 막대: 화면에 들어올 때 왼쪽에서 차오른다
  * - 연도별 줄 차트: 최근 해부터 막대가 차오르고 숫자가 따라 나온다
+ * - ICEx 서비스 박스: 단계 순서대로 올라온다
  * - AI대학, 트랙 그림: 스크롤에 따라 틀 안에서 살짝 움직인다
  *
  * 움직임 줄이기 설정이면 아무것도 하지 않는다. 모든 트윈과 ScrollTrigger 는 useGSAP 가 정리한다.
@@ -74,18 +75,13 @@ export default function DashMotion({ children }: { children: React.ReactNode }) 
           .from(chart.querySelectorAll('.yr-val, .yr-target'), { opacity: 0, x: -6, duration: 0.3, stagger: 0.04 }, 0.2);
       });
 
-      // ── ICEx 흐름: 레일이 왼쪽부터 그어지고, 단계 카드가 순서대로 올라온다 ──
+      // ── ICEx 서비스 박스: 구역이 보이면 단계 순서대로 올라온다 ──
       const icex = root.current?.querySelector<HTMLElement>('.icex');
       if (icex) {
-        const tl = gsap.timeline({ scrollTrigger: { trigger: icex, start: 'top 80%', once: true } });
-        // 가운데 ICEx 가 커지고, 고리가 시계 방향으로 그어지는 동안 단계 카드가 차례로 나타난다
-        tl.from(icex.querySelector('.icex-core-name')?.parentElement ?? [], { scale: 0.6, opacity: 0, duration: 0.5, ease: 'back.out(1.6)', clearProps: 'transform,opacity' })
-          .fromTo(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: 1, strokeDasharray: '1 1' }, { strokeDashoffset: 0, duration: 1.2, ease: 'power1.inOut', clearProps: 'strokeDasharray,strokeDashoffset' }, 0.2)
-          .from(icex.querySelectorAll('.icex-card'), { scale: 0.92, opacity: 0, duration: 0.4, ease, stagger: 0.2, clearProps: 'transform,opacity' }, 0.3)
-          .from(icex.querySelectorAll('.icex-arrow'), { opacity: 0, duration: 0.3, stagger: 0.25 }, 0.55);
-
-        // 다 그린 뒤에는 고리 점선이 천천히 돌아 흐름이 이어지고 있음을 보여 준다
-        gsap.to(icex.querySelector('.icex-ring ellipse'), { strokeDashoffset: -1, duration: 40, ease: 'none', repeat: -1, delay: 2 });
+        gsap.from(icex.querySelectorAll('.icex-card'), {
+          y: 16, opacity: 0, duration: 0.4, ease, stagger: 0.08, clearProps: 'transform,opacity',
+          scrollTrigger: { trigger: icex, start: 'top 85%', once: true },
+        });
       }
 
       // ── AI대학, 트랙 그림: 틀 안에서 스크롤에 따라 위아래로 조금 움직인다 ──
