@@ -31,11 +31,11 @@ import type { DashboardData } from '@/lib/dashboard-shape';
 // 위에 붙는 구역 바의 칩. 화면에 없는 구역(로그인 전)은 바가 알아서 뺀다
 const SECTIONS = [
   { id: 'sec-goals', label: '목표와 실적' },
-  { id: 'sec-services', label: '운영 서비스' },
-  { id: 'sec-tracks', label: 'AI대학' },
   { id: 'sec-companies', label: '기업' },
   { id: 'sec-records', label: '산학·인턴십' },
   { id: 'sec-swcu', label: 'SW중심대학' },
+  { id: 'sec-services', label: '운영 서비스' },
+  { id: 'sec-tracks', label: 'AI대학' },
 ];
 
 export default function DashboardPage() {
@@ -94,47 +94,14 @@ export default function DashboardPage() {
         </div>
       </FadeContent>
 
-      <div id="sec-services" className="dash-anchor" />
-      {/* 교육원이 운영하는 서비스 다섯 개. 로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
-      <FadeContent>
-        <SiteMetricsBlock aicms={{
-          name: 'AICMS',
-          url: 'https://aicms.pusan.ac.kr',
-          summary: '산학협력 기업, 학생, 실적 관리',
-          since: null,
-          headline: { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
-          metrics: [
-            { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
-            { label: '관리 학생', value: data.students?.total ?? null, unit: '명' },
-            { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
-            { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
-            { label: 'SW중심대학 지표 달성', value: data.goals.swcu.met, unit: `/${data.goals.swcu.total}개` },
-          ],
-          usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
-          features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
-          description: '산학협력 기업 컨택부터 과제, 인턴십 실적, 학생 이력과 상담까지 한곳에서 관리하고, SW중심대학 성과지표를 실적에서 바로 계산합니다.',
-          details: [
-            { label: `${data.year}년 산학 과제`, value: data.totals.projects.value, unit: '건' },
-            { label: `${data.year}년 인턴십`, value: data.totals.internships.value, unit: '건' },
-            { label: 'MOU 체결', value: data.totals.mou.value, unit: '건' },
-            { label: `${data.year}년 신규 컨택`, value: data.pipeline?.newThisYear ?? null, unit: '곳' },
-            { label: '과제 참여 학생', value: data.students?.projectParticipants ?? null, unit: '명' },
-            { label: '인턴십 참여 학생', value: data.students?.internParticipants ?? null, unit: '명' },
-            { label: '과제 수행 연구실', value: data.labs?.labCount ?? null, unit: '곳' },
-          ],
-          asOf: null,
-        }} />
-        <div className="dash-section" id="sec-tracks">AI대학과 신기술 특화 트랙</div>
-        <SwcuSlidesBlock />
-      </FadeContent>
 
 
       {data.pipeline && data.distribution && (
         <>
           {/* 구역은 사이드바 메뉴 단위로 끊고, 구역마다 카드 수에 열 수를 맞춘다.
-              카드 수가 기업 2 / 산학·인턴십 4 / 지표·학생 3 이라 어느 구역도
+              카드 수가 기업 3 / 산학·인턴십 4 / 지표·학생 3 이라 어느 구역도
               행을 반만 채우지 않는다. 최근 컨택은 4열 표라 좁은 칸에 넣지 않고
-              구역 밖 전체 폭에 둔다 */}
+              기업 구역 아래 전체 폭에 둔다 */}
           <FadeContent delay={100}>
             <div className="dash-section" id="sec-companies">기업</div>
             {/* 다음 컨택 대상을 파이프라인 왼쪽에 둔다. 파이프라인이 '몇 곳이
@@ -144,6 +111,10 @@ export default function DashboardPage() {
               {data.followUp && <FollowUpBlock data={data.followUp} />}
               <PipelineBlock pipeline={data.pipeline} />
               <CollabBlock items={data.collaboration ?? []} region={data.distribution.region} />
+            </div>
+            {/* 최근 컨택은 다음 컨택 대상, 파이프라인과 같은 일이라 기업 구역 끝에 붙인다(2026-11-26) */}
+            <div className="dash-row">
+              <RecentContactsBlock rows={data.recentHistories} />
             </div>
           </FadeContent>
 
@@ -176,22 +147,52 @@ export default function DashboardPage() {
               {data.students && <StudentBlock s={data.students} />}
             </div>
           </FadeContent>
-
-          <FadeContent delay={250}>
-            <div className="dash-row">
-              <RecentContactsBlock rows={data.recentHistories} />
-            </div>
-          </FadeContent>
-
-          {/* 성과가 아니라 시스템 사용 현황이라 맨 아래에 둔다 */}
-          {data.activity && (
-            <FadeContent delay={300}>
-              <div className="dash-row">
-                <ActivityBlock a={data.activity} />
-              </div>
-            </FadeContent>
-          )}
         </>
+      )}
+
+      {/* 교육원 소개 두 구역은 산학 데이터 뒤로(2026-11-26). 로그인 전에는 위 데이터 구역이 없어
+          첫 띠, 목표와 실적 바로 다음에 온다. 현장평가 뒤 ICEx 허브로 떼어 낼 대상이다 */}
+      <div id="sec-services" className="dash-anchor" />
+      {/* 교육원이 운영하는 서비스 다섯 개. 로그인 전에도 보인다. 학생 숫자는 그때 비어 있어 카드에서 빠진다 */}
+      <FadeContent delay={100}>
+        <SiteMetricsBlock aicms={{
+          name: 'AICMS',
+          url: 'https://aicms.pusan.ac.kr',
+          summary: '산학협력 기업, 학생, 실적 관리',
+          since: null,
+          headline: { label: '관리 기업', value: data.totals.companies.value, unit: '곳' },
+          metrics: [
+            { label: '실적 보유 기업', value: data.partnerCompanies, unit: '곳' },
+            { label: '관리 학생', value: data.students?.total ?? null, unit: '명' },
+            { label: '산학 과제 누적', value: data.totals.projects.total, unit: '건' },
+            { label: '인턴십 누적', value: data.totals.internships.total, unit: '건' },
+            { label: 'SW중심대학 지표 달성', value: data.goals.swcu.met, unit: `/${data.goals.swcu.total}개` },
+          ],
+          usedIn: ['SW중심대학 성과지표', '산학협력 과제', '현장실습, 인턴십'],
+          features: ['기업 컨택 파이프라인', '학생 이력과 상담', '실적 엑셀 업로드', '성과지표 대시보드'],
+          description: '산학협력 기업 컨택부터 과제, 인턴십 실적, 학생 이력과 상담까지 한곳에서 관리하고, SW중심대학 성과지표를 실적에서 바로 계산합니다.',
+          details: [
+            { label: `${data.year}년 산학 과제`, value: data.totals.projects.value, unit: '건' },
+            { label: `${data.year}년 인턴십`, value: data.totals.internships.value, unit: '건' },
+            { label: 'MOU 체결', value: data.totals.mou.value, unit: '건' },
+            { label: `${data.year}년 신규 컨택`, value: data.pipeline?.newThisYear ?? null, unit: '곳' },
+            { label: '과제 참여 학생', value: data.students?.projectParticipants ?? null, unit: '명' },
+            { label: '인턴십 참여 학생', value: data.students?.internParticipants ?? null, unit: '명' },
+            { label: '과제 수행 연구실', value: data.labs?.labCount ?? null, unit: '곳' },
+          ],
+          asOf: null,
+        }} />
+        <div className="dash-section" id="sec-tracks">AI대학과 신기술 특화 트랙</div>
+        <SwcuSlidesBlock />
+      </FadeContent>
+
+      {/* 성과가 아니라 시스템 사용 현황이라 맨 아래에 둔다 */}
+      {data.activity && (
+        <FadeContent delay={150}>
+          <div className="dash-row">
+            <ActivityBlock a={data.activity} />
+          </div>
+        </FadeContent>
       )}
 
     </DashMotion>
