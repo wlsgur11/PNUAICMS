@@ -16,11 +16,10 @@ const DASHBOARD = { href: '/', label: '대시보드', icon: 'dashboard' as IconN
 
 // 외부 서비스 바로가기 (패밀리 사이트). 새 탭으로 열림. hint 는 부가 안내용.
 type ExternalLink = { href: string; label: string; hint?: string };
-// 중요한 순서(2026-11-26 요청): 교육원 대표 운영 서비스 -> 학생 대상 공개 서비스 -> 사업 관리 도구 -> 내부 참고 자료
+// 중요한 순서(2026-11-26 요청): 운영 관리 도구 -> 학생 대상 공개 서비스 -> 사업 관리 도구 -> 내부 참고 자료.
+// 코드플레이스, 서버관리시스템, AIPMS 는 대시보드 ICEx 구역에 있어 뺐다(2026-11-27 요청)
 const FAMILY: ExternalLink[] = [
-  { href: 'https://code.pusan.ac.kr', label: '코드플레이스' },
-  { href: 'https://pickle.pusan.ac.kr/', label: '서버관리시스템' },
-  { href: 'https://aipms.pusan.ac.kr', label: 'AIPMS' },
+  { href: 'https://coordinator.bawicloud.com/login?org=aws-pnu-iot', label: '바위베이스 관리자' },
   { href: 'https://pnu-pcc.vercel.app/cse-trends', label: '코딩역량센터' },
   { href: 'https://arise-ai.pusan.ac.kr/', label: 'Arise PNU' },
   { href: 'https://pnu-emp.vercel.app', label: '정컴 취업현황' },
